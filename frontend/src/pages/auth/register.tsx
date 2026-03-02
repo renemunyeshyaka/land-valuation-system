@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 
@@ -150,16 +151,16 @@ const Register: React.FC = () => {
                 <div className="w-9 h-9 bg-emerald-700 rounded-xl flex items-center justify-center shadow-sm">
                   <i className="fas fa-map-marked-alt text-white text-lg"></i>
                 </div>
-                <a href="/" className="font-bold text-xl tracking-tight text-emerald-900 hover:text-emerald-700 transition">
+                <Link href="/" className="font-bold text-xl tracking-tight text-emerald-900 hover:text-emerald-700 transition">
                   Land<span className="text-emerald-600">Val</span>
-                </a>
+                </Link>
               </div>
 
               {/* Desktop Menu */}
               <div className="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
-                <a href="/" className="hover:text-emerald-700 transition">Home</a>
-                <a href="/search" className="hover:text-emerald-700 transition">Valuation</a>
-                <a href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</a>
+                <Link href="/" className="hover:text-emerald-700 transition">Home</Link>
+                <Link href="/search" className="hover:text-emerald-700 transition">Valuation</Link>
+                <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
                 <a href="#" className="hover:text-emerald-700 transition">How it works</a>
                 <a href="#" className="hover:text-emerald-700 transition">Contact</a>
               </div>
@@ -174,9 +175,12 @@ const Register: React.FC = () => {
                   <i className="fas fa-chevron-down ml-1 text-gray-400 text-xs"></i>
                 </div>
 
-                <a href="/auth/login" className="text-sm font-medium text-emerald-800 hover:text-emerald-900 px-3 py-2 transition">
+                <Link 
+                  href="/auth/login"
+                  className="px-4 py-2 text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors"
+                >
                   Log in
-                </a>
+                </Link>
               </div>
             </div>
           </div>
