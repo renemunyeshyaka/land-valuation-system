@@ -8,7 +8,6 @@ export default function Document() {
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-          integrity="sha512-Fo3rlrZj/k7ujTnHUVmvRVzOXV+sCPkX3IpRGc6Fs3BNRdresponsive-images-unsplash/all.min.css"
           crossOrigin="anonymous"
         />
 
@@ -16,7 +15,6 @@ export default function Document() {
         <link
           rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR97kLpcTknZUZH7v3+zaL6p+00N0rbZH33Q4qvY7ALWX"
           crossOrigin="anonymous"
         />
 
