@@ -7,21 +7,21 @@ import (
 	"backend/internal/services"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
 )
 
 // Setup is an alias for RegisterRoutes for compatibility
 func Setup(router *gin.Engine, db interface{}) {
-	// Type assert db to *sqlx.DB if possible
-	var sqlxDB *sqlx.DB
+	// Type assert db to *gorm.DB if possible
+	var gormDB *gorm.DB
 	if db != nil {
-		sqlxDB, _ = db.(*sqlx.DB)
+		gormDB, _ = db.(*gorm.DB)
 	}
-	RegisterRoutes(router, sqlxDB)
+	RegisterRoutes(router, gormDB)
 }
 
 // RegisterRoutes registers all API routes
-func RegisterRoutes(router *gin.Engine, db *sqlx.DB) {
+func RegisterRoutes(router *gin.Engine, db *gorm.DB) {
 	// Initialize services and handlers
 	setupAuthRoutes(router, db)
 	setupUserRoutes(router, db)
@@ -33,7 +33,7 @@ func RegisterRoutes(router *gin.Engine, db *sqlx.DB) {
 	setupHealthRoutes(router)
 }
 
-func setupAuthRoutes(router *gin.Engine, db *sqlx.DB) {
+func setupAuthRoutes(router *gin.Engine, db *gorm.DB) {
 	authService := services.NewAuthService(db)
 	authHandler := handlers.NewAuthHandler(authService)
 
@@ -51,7 +51,7 @@ func setupAuthRoutes(router *gin.Engine, db *sqlx.DB) {
 	}
 }
 
-func setupUserRoutes(router *gin.Engine, db *sqlx.DB) {
+func setupUserRoutes(router *gin.Engine, db *gorm.DB) {
 	userService := services.NewUserService(db)
 	userHandler := handlers.NewUserHandler(userService)
 
@@ -70,20 +70,18 @@ func setupUserRoutes(router *gin.Engine, db *sqlx.DB) {
 	}
 }
 
-func setupPropertyRoutes(router *gin.Engine, db *sqlx.DB) {
+func setupPropertyRoutes(router *gin.Engine, db *gorm.DB) {
 	// Initialize repositories and services
-	propertyRepo := &repository.PropertyRepository{}
-	valuationRepo := &repository.ValuationRepository{}
-	gazetteService := &services.GazetteService{}
-	valuationService := services.NewValuationService(propertyRepo, valuationRepo, gazetteService)
-	marketplaceService := services.NewMarketplaceService(db)
-	propertyHandler := handlers.NewPropertyHandler(valuationService, marketplaceService)
+	propertyRepo := repository.NewPropertyRepository(db)
+	propertyHandler := handlers.NewPropertyHandler(propertyRepo)
+	marketplaceHandler := handlers.NewMarketplaceHandler(services.NewMarketplaceService(db))
 
 	properties := router.Group("/api/v1/properties")
 	{
 		properties.GET("", propertyHandler.ListProperties)
 		properties.GET("/:id", propertyHandler.GetProperty)
-		properties.POST("/search", propertyHandler.SearchProperties)
+		properties.POST("/search", propertyHandler.SearchNearby)
+		properties.GET("/stats", propertyHandler.GetStatistics)
 
 		protectedProperties := properties.Group("")
 		protectedProperties.Use(middleware.AuthRequired())
@@ -91,18 +89,18 @@ func setupPropertyRoutes(router *gin.Engine, db *sqlx.DB) {
 			protectedProperties.POST("", propertyHandler.CreateProperty)
 			protectedProperties.PUT("/:id", propertyHandler.UpdateProperty)
 			protectedProperties.DELETE("/:id", propertyHandler.DeleteProperty)
-			protectedProperties.GET("/:id/marketplace-listings", propertyHandler.GetMarketplaceListings)
-			protectedProperties.POST("/:id/sync-marketplace", propertyHandler.SyncMarketplaceAPIs)
+			protectedProperties.GET("/:id/marketplace-listings", marketplaceHandler.GetMarketplaceListings)
+			protectedProperties.POST("/:id/sync-marketplace", marketplaceHandler.SyncMarketplaceAPIs)
 		}
 	}
 
 	marketplace := router.Group("/api/v1/marketplace")
 	{
-		marketplace.GET("/properties-for-sale", propertyHandler.GetPropertyListingsOnSale)
+		marketplace.GET("/properties-for-sale", marketplaceHandler.GetPropertyListingsOnSale)
 	}
 }
 
-func setupSubscriptionRoutes(router *gin.Engine, db *sqlx.DB) {
+func setupSubscriptionRoutes(router *gin.Engine, db *gorm.DB) {
 	subscriptionService := services.NewSubscriptionService(db)
 	subscriptionHandler := handlers.NewSubscriptionHandler(subscriptionService)
 
@@ -124,31 +122,25 @@ func setupSubscriptionRoutes(router *gin.Engine, db *sqlx.DB) {
 	}
 }
 
-func setupPaymentRoutes(router *gin.Engine, db *sqlx.DB) {
+func setupPaymentRoutes(router *gin.Engine, db *gorm.DB) {
 	paymentService := services.NewPaymentService(db)
 	paymentHandler := handlers.NewPaymentHandler(paymentService)
 
 	payments := router.Group("/api/v1/payments")
 	payments.Use(middleware.AuthRequired())
 	{
-		payments.POST("/card", paymentHandler.InitiateCardPayment)
 		payments.POST("/mobile-money", paymentHandler.InitiateMobileMoneyPayment)
-		payments.POST("/bank-transfer", paymentHandler.InitiateBankTransfer)
-		payments.GET("/methods", paymentHandler.GetPaymentMethods)
-		payments.POST("/methods", paymentHandler.AddPaymentMethod)
-		payments.DELETE("/methods/:id", paymentHandler.DeletePaymentMethod)
-		payments.GET("/transactions", paymentHandler.GetTransactionHistory)
-		payments.POST("/refund", paymentHandler.RequestRefund)
+		payments.GET("/:transaction_id/status", paymentHandler.CheckPaymentStatus)
 	}
 
 	// Webhook routes (no auth required)
 	webhooks := router.Group("/api/v1/payments/webhook")
 	{
-		webhooks.POST("", paymentHandler.HandleWebhook)
+		webhooks.POST("", paymentHandler.HandlePaymentCallback)
 	}
 }
 
-func setupAnalyticsRoutes(router *gin.Engine, db *sqlx.DB) {
+func setupAnalyticsRoutes(router *gin.Engine, db *gorm.DB) {
 	analyticsService := services.NewAnalyticsService(db)
 	analyticsHandler := handlers.NewAnalyticsHandler(analyticsService)
 
@@ -173,7 +165,7 @@ func setupAnalyticsRoutes(router *gin.Engine, db *sqlx.DB) {
 	}
 }
 
-func setupAdminRoutes(router *gin.Engine, db *sqlx.DB) {
+func setupAdminRoutes(router *gin.Engine, db *gorm.DB) {
 	adminService := services.NewAdminService(db)
 	adminHandler := handlers.NewAdminHandler(adminService)
 

@@ -6,15 +6,15 @@ import (
 	"backend/internal/models"
 	"backend/internal/repository"
 
-	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
 )
 
 type UserService struct {
 	userRepo *repository.UserRepository
-	db       *sqlx.DB
+	db       *gorm.DB
 }
 
-func NewUserService(db *sqlx.DB) *UserService {
+func NewUserService(db *gorm.DB) *UserService {
 	return &UserService{
 		userRepo: repository.NewUserRepository(db),
 		db:       db,

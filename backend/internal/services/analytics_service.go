@@ -3,14 +3,14 @@ package services
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
 )
 
 type AnalyticsService struct {
-	db *sqlx.DB
+	db *gorm.DB
 }
 
-func NewAnalyticsService(db *sqlx.DB) *AnalyticsService {
+func NewAnalyticsService(db *gorm.DB) *AnalyticsService {
 	return &AnalyticsService{
 		db: db,
 	}

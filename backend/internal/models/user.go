@@ -15,11 +15,11 @@ type User struct {
 
 	// Personal Information
 	Email      string `gorm:"uniqueIndex;not null;size:255" json:"email"`
-	Phone      string `gorm:"uniqueIndex;size:20" json:"phone"`
+	Phone      string `gorm:"size:20;index" json:"phone"`
 	Password   string `gorm:"not null" json:"-"`
 	FirstName  string `gorm:"size:100" json:"first_name"`
 	LastName   string `gorm:"size:100" json:"last_name"`
-	NationalID string `gorm:"uniqueIndex;size:16" json:"national_id"`
+	NationalID string `gorm:"size:16;index" json:"national_id"`
 
 	// Account Type
 	UserType   string `gorm:"size:50;default:individual" json:"user_type"` // individual, agent, corporate, government
@@ -49,7 +49,7 @@ type User struct {
 	TwoFASecret      string     `gorm:"column:two_fa_secret" json:"two_fa_secret"`
 
 	// Relationships
-	Properties      []Property `json:"properties,omitempty"`
+	Properties      []Property `gorm:"foreignKey:OwnerID;references:ID" json:"properties,omitempty"`
 	SavedProperties []Property `gorm:"many2many:user_saved_properties;" json:"saved_properties,omitempty"`
 
 	// Fields required by repository

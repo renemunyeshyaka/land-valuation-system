@@ -6,15 +6,15 @@ import (
 	"backend/internal/models"
 	"backend/internal/repository"
 
-	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
 )
 
 type AdminService struct {
 	userRepo *repository.UserRepository
-	db       *sqlx.DB
+	db       *gorm.DB
 }
 
-func NewAdminService(db *sqlx.DB) *AdminService {
+func NewAdminService(db *gorm.DB) *AdminService {
 	return &AdminService{
 		userRepo: repository.NewUserRepository(db),
 		db:       db,
@@ -25,11 +25,11 @@ func NewAdminService(db *sqlx.DB) *AdminService {
 func (s *AdminService) GetAllUsers(ctx context.Context, page, limit int, status, userType string) ([]*models.User, int, error) {
 	offset := (page - 1) * limit
 	filters := map[string]string{}
-	
+
 	if status != "" {
 		filters["status"] = status
 	}
-	
+
 	return s.userRepo.List(ctx, offset, limit, filters)
 }
 
@@ -72,11 +72,11 @@ func (s *AdminService) ModerateContent(ctx context.Context, contentID, action, r
 func (s *AdminService) GetSystemConfig(ctx context.Context) (map[string]interface{}, error) {
 	// TODO: Fetch from config table
 	config := map[string]interface{}{
-		"site_name":          "Land Valuation System",
-		"support_email":      "support@landvaluation.rw",
-		"payment_enabled":    true,
-		"kyc_required":       true,
-		"marketplace_sync":   true,
+		"site_name":        "Land Valuation System",
+		"support_email":    "support@landvaluation.rw",
+		"payment_enabled":  true,
+		"kyc_required":     true,
+		"marketplace_sync": true,
 	}
 
 	return config, nil
@@ -110,11 +110,11 @@ func (s *AdminService) GetAuditLogs(ctx context.Context, page, limit int, action
 func (s *AdminService) GetSystemHealth(ctx context.Context) (map[string]interface{}, error) {
 	// TODO: Check database, cache, elasticsearch connectivity
 	health := map[string]interface{}{
-		"status":         "healthy",
-		"database":       "connected",
-		"cache":          "connected",
-		"elasticsearch":  "connected",
-		"uptime":         "2h 30m",
+		"status":        "healthy",
+		"database":      "connected",
+		"cache":         "connected",
+		"elasticsearch": "connected",
+		"uptime":        "2h 30m",
 	}
 
 	return health, nil

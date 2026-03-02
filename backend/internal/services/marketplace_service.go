@@ -6,11 +6,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
 )
 
 type MarketplaceService struct {
-	db *sqlx.DB
+	db *gorm.DB
 }
 
 func (s *MarketplaceService) GetListingsForProperty(ctx context.Context, propertyID string) ([]interface{}, error) {
@@ -25,7 +25,7 @@ func (s *MarketplaceService) GetAllPropertiesOnSale(ctx context.Context, page, l
 	return []interface{}{}, 0, nil
 }
 
-func NewMarketplaceService(db *sqlx.DB) *MarketplaceService {
+func NewMarketplaceService(db *gorm.DB) *MarketplaceService {
 	return &MarketplaceService{
 		db: db,
 	}

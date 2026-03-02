@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"backend/internal/models"
 	"backend/internal/repository"
 
-	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
 )
 
 const unlimited = -1
@@ -17,15 +18,21 @@ const unlimited = -1
 type SubscriptionService struct {
 	subRepo *repository.SubscriptionRepository
 	txnRepo *repository.TransactionRepository
-	db      *sqlx.DB
+	db      *gorm.DB
 }
 
-func NewSubscriptionService(db *sqlx.DB) *SubscriptionService {
+func NewSubscriptionService(db *gorm.DB) *SubscriptionService {
 	return &SubscriptionService{
 		subRepo: repository.NewSubscriptionRepository(db),
 		txnRepo: repository.NewTransactionRepository(db),
 		db:      db,
 	}
+}
+
+// parseUint safely converts string to uint
+func parseUint(s string) uint {
+	v, _ := strconv.ParseUint(s, 10, 64)
+	return uint(v)
 }
 
 // GetAllPlans retrieves all subscription plans
@@ -145,7 +152,7 @@ func (s *SubscriptionService) GetBillingHistory(ctx context.Context, userID stri
 		})
 	}
 
-	return invoices, total, nil
+	return invoices, int(total), nil
 }
 
 // UpdateBillingInfo updates user billing information
@@ -156,12 +163,17 @@ func (s *SubscriptionService) UpdateBillingInfo(ctx context.Context, userID stri
 
 // GetInvoice retrieves specific invoice
 func (s *SubscriptionService) GetInvoice(ctx context.Context, invoiceID, userID string) (map[string]interface{}, error) {
-	transaction, err := s.txnRepo.GetByID(ctx, invoiceID)
+	invoiceIDUint, err := strconv.ParseUint(invoiceID, 10, 32)
+	if err != nil {
+		return nil, fmt.Errorf("invalid invoice ID: %w", err)
+	}
+
+	transaction, err := s.txnRepo.GetByID(ctx, uint(invoiceIDUint))
 	if err != nil {
 		return nil, err
 	}
 
-	if transaction.UserID != parseUint(userID) {
+	if transaction.BuyerID != parseUint(userID) {
 		return nil, errors.New("unauthorized")
 	}
 

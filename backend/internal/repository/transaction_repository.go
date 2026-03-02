@@ -1,203 +1,147 @@
 package repository
 
 import (
-	"context"
+"context"
+"errors"
+"strconv"
 
-	"backend/internal/models"
+"backend/internal/models"
 
-	"github.com/jmoiron/sqlx"
+"gorm.io/gorm"
 )
 
 type TransactionRepository struct {
-	db *sqlx.DB
+db *gorm.DB
 }
 
-func NewTransactionRepository(db *sqlx.DB) *TransactionRepository {
-	return &TransactionRepository{db: db}
+func NewTransactionRepository(db *gorm.DB) *TransactionRepository {
+return &TransactionRepository{db: db}
 }
 
 // Create creates a new transaction
 func (r *TransactionRepository) Create(ctx context.Context, transaction *models.Transaction) (*models.Transaction, error) {
-	query := `
-		INSERT INTO transactions 
-		(user_id, subscription_id, transaction_type, amount_rwf, payment_method, payment_provider, status, description)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		RETURNING id, user_id, transaction_type, amount_rwf, payment_method, status, created_at, updated_at
-	`
-
-	var savedTx models.Transaction
-	err := r.db.QueryRowContext(ctx, query,
-		transaction.UserID,
-		transaction.SubscriptionID,
-		transaction.TransactionType,
-		transaction.AmountRWF,
-		transaction.PaymentMethod,
-		transaction.PaymentProvider,
-		transaction.Status,
-		transaction.Description,
-	).Scan(
-		&savedTx.ID,
-		&savedTx.UserID,
-		&savedTx.TransactionType,
-		&savedTx.AmountRWF,
-		&savedTx.PaymentMethod,
-		&savedTx.Status,
-		&savedTx.CreatedAt,
-		&savedTx.UpdatedAt,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &savedTx, nil
+result := r.db.WithContext(ctx).Create(transaction)
+if result.Error != nil {
+return nil, result.Error
+}
+return transaction, nil
 }
 
-// GetByID retrieves transaction by ID
-func (r *TransactionRepository) GetByID(ctx context.Context, id string) (*models.Transaction, error) {
-	query := `
-		SELECT id, user_id, subscription_id, transaction_type, amount_rwf, payment_method, provider_transaction_id, status, description, created_at, updated_at
-		FROM transactions
-		WHERE id = $1
-	`
-
-	var tx models.Transaction
-	err := r.db.QueryRowContext(ctx, query, id).Scan(
-		&tx.ID,
-		&tx.UserID,
-		&tx.SubscriptionID,
-		&tx.TransactionType,
-		&tx.AmountRWF,
-		&tx.PaymentMethod,
-		&tx.ProviderTransactionID,
-		&tx.Status,
-		&tx.Description,
-		&tx.CreatedAt,
-		&tx.UpdatedAt,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &tx, nil
+// GetByID retrieves a transaction by ID
+func (r *TransactionRepository) GetByID(ctx context.Context, id uint) (*models.Transaction, error) {
+var transaction models.Transaction
+result := r.db.WithContext(ctx).Where("id = ?", id).First(&transaction)
+if result.Error != nil {
+if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+return nil, errors.New("transaction not found")
+}
+return nil, result.Error
+}
+return &transaction, nil
 }
 
-// GetByUserID retrieves transactions by user ID with pagination
-func (r *TransactionRepository) GetByUserID(ctx context.Context, userID string, offset, limit int) ([]*models.Transaction, int, error) {
-	countQuery := `SELECT COUNT(*) FROM transactions WHERE user_id = $1`
-	var total int
-	err := r.db.QueryRowContext(ctx, countQuery, userID).Scan(&total)
-	if err != nil {
-		return nil, 0, err
-	}
+// GetByProviderTransactionID retrieves transaction by provider reference
+func (r *TransactionRepository) GetByProviderTransactionID(ctx context.Context, providerID string) (*models.Transaction, error) {
+var transaction models.Transaction
+result := r.db.WithContext(ctx).Where("provider_transaction_id = ?", providerID).First(&transaction)
+if result.Error != nil {
+if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+return nil, errors.New("transaction not found")
+}
+return nil, result.Error
+}
+return &transaction, nil
+}
 
-	query := `
-		SELECT id, user_id, transaction_type, amount_rwf, payment_method, status, description, created_at, updated_at
-		FROM transactions
-		WHERE user_id = $1
-		ORDER BY created_at DESC
-		LIMIT $2 OFFSET $3
-	`
-
-	rows, err := r.db.QueryContext(ctx, query, userID, limit, offset)
-	if err != nil {
-		return nil, 0, err
-	}
-	defer rows.Close()
-
-	var transactions []*models.Transaction
-	for rows.Next() {
-		var tx models.Transaction
-		err := rows.Scan(
-			&tx.ID,
-			&tx.UserID,
-			&tx.TransactionType,
-			&tx.AmountRWF,
-			&tx.PaymentMethod,
-			&tx.Status,
-			&tx.Description,
-			&tx.CreatedAt,
-			&tx.UpdatedAt,
-		)
-		if err != nil {
-			return nil, 0, err
-		}
-		transactions = append(transactions, &tx)
-	}
-
-	return transactions, total, nil
+// Update updates a transaction
+func (r *TransactionRepository) Update(ctx context.Context, transaction *models.Transaction) error {
+return r.db.WithContext(ctx).Save(transaction).Error
 }
 
 // UpdateStatus updates transaction status
-func (r *TransactionRepository) UpdateStatus(ctx context.Context, transactionID, status string) error {
-	query := `UPDATE transactions SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`
-	_, err := r.db.ExecContext(ctx, query, status, transactionID)
-	return err
+func (r *TransactionRepository) UpdateStatus(ctx context.Context, transactionID uint, status string) error {
+return r.db.WithContext(ctx).Model(&models.Transaction{}).
+Where("id = ?", transactionID).
+Update("status", status).Error
 }
 
-// UpdateProviderTransactionID updates provider transaction ID
-func (r *TransactionRepository) UpdateProviderTransactionID(ctx context.Context, transactionID, providerID string) error {
-	query := `UPDATE transactions SET provider_transaction_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`
-	_, err := r.db.ExecContext(ctx, query, providerID, transactionID)
-	return err
+// ListByUser retrieves transactions for a user with pagination
+func (r *TransactionRepository) ListByUser(ctx context.Context, userID uint, page, pageSize int) ([]models.Transaction, int64, error) {
+var transactions []models.Transaction
+var total int64
+
+query := r.db.WithContext(ctx).Where("user_id = ? OR buyer_id = ?", userID, userID)
+
+if err := query.Count(&total).Error; err != nil {
+return nil, 0, err
 }
 
-// GetByProviderTransactionID retrieves transaction by provider ID
-func (r *TransactionRepository) GetByProviderTransactionID(ctx context.Context, providerTransactionID string) (*models.Transaction, error) {
-	query := `
-		SELECT id, user_id, transaction_type, amount_rwf, status, created_at
-		FROM transactions
-		WHERE provider_transaction_id = $1
-	`
-
-	var tx models.Transaction
-	err := r.db.QueryRowContext(ctx, query, providerTransactionID).Scan(
-		&tx.ID,
-		&tx.UserID,
-		&tx.TransactionType,
-		&tx.AmountRWF,
-		&tx.Status,
-		&tx.CreatedAt,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &tx, nil
+offset := (page - 1) * pageSize
+result := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&transactions)
+if result.Error != nil {
+return nil, 0, result.Error
 }
 
-// GetBySubscriptionID retrieves transactions by subscription ID
-func (r *TransactionRepository) GetBySubscriptionID(ctx context.Context, subscriptionID string) ([]*models.Transaction, error) {
-	query := `
-		SELECT id, user_id, amount_rwf, status, created_at
-		FROM transactions
-		WHERE subscription_id = $1
-		ORDER BY created_at DESC
-	`
+return transactions, total, nil
+}
 
-	rows, err := r.db.QueryContext(ctx, query, subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+// GetByUserID alias for ListByUser - accepts string userID for compatibility
+func (r *TransactionRepository) GetByUserID(ctx context.Context, userID string, offset, limit int) ([]models.Transaction, int64, error) {
+userIDUint, _ := strconv.ParseUint(userID, 10, 32)
+page := (offset / limit) + 1
 
-	var transactions []*models.Transaction
-	for rows.Next() {
-		var tx models.Transaction
-		err := rows.Scan(
-			&tx.ID,
-			&tx.UserID,
-			&tx.AmountRWF,
-			&tx.Status,
-			&tx.CreatedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-		transactions = append(transactions, &tx)
-	}
+return r.ListByUser(ctx, uint(userIDUint), page, limit)
+}
 
-	return transactions, nil
+// ListBySubscription retrieves transactions for a subscription
+func (r *TransactionRepository) ListBySubscription(ctx context.Context, subscriptionID uint) ([]models.Transaction, error) {
+var transactions []models.Transaction
+result := r.db.WithContext(ctx).Where("subscription_id = ?", subscriptionID).Order("created_at DESC").Find(&transactions)
+if result.Error != nil {
+return nil, result.Error
+}
+return transactions, nil
+}
+
+// GetStatistics returns transaction statistics
+func (r *TransactionRepository) GetStatistics(ctx context.Context, userID uint) (map[string]interface{}, error) {
+stats := make(map[string]interface{})
+
+// Total transactions
+var totalCount int64
+if err := r.db.WithContext(ctx).Model(&models.Transaction{}).
+Where("user_id = ? OR buyer_id = ?", userID, userID).
+Count(&totalCount).Error; err != nil {
+return nil, err
+}
+stats["total_transactions"] = totalCount
+
+// Total amount spent
+var totalSpent float64
+if err := r.db.WithContext(ctx).Model(&models.Transaction{}).
+Where("buyer_id = ? AND payment_status = ?", userID, "completed").
+Select("COALESCE(SUM(amount_rwf), 0)").Scan(&totalSpent).Error; err != nil {
+return nil, err
+}
+stats["total_spent"] = totalSpent
+
+// Total amount earned (as seller)
+var totalEarned float64
+if err := r.db.WithContext(ctx).Model(&models.Transaction{}).
+Where("seller_id = ? AND payment_status = ?", userID, "completed").
+Select("COALESCE(SUM(amount_rwf), 0)").Scan(&totalEarned).Error; err != nil {
+return nil, err
+}
+stats["total_earned"] = totalEarned
+
+// Completed transactions
+var completedCount int64
+if err := r.db.WithContext(ctx).Model(&models.Transaction{}).
+Where("payment_status = ?", "completed").
+Count(&completedCount).Error; err != nil {
+return nil, err
+}
+stats["completed_transactions"] = completedCount
+
+return stats, nil
 }
