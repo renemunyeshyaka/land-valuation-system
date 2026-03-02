@@ -196,6 +196,49 @@ const Dashboard: React.FC = () => {
               </p>
             </div>
 
+            {/* Quick Navigation */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <Link
+                href="/search"
+                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
+              >
+                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                  <i className="fas fa-search text-emerald-700 text-lg"></i>
+                </div>
+                <span className="text-sm font-semibold text-gray-800">Search Properties</span>
+              </Link>
+
+              <Link
+                href="/analytics"
+                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
+              >
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                  <i className="fas fa-chart-line text-blue-700 text-lg"></i>
+                </div>
+                <span className="text-sm font-semibold text-gray-800">Analytics</span>
+              </Link>
+
+              <Link
+                href="/payments"
+                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
+              >
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                  <i className="fas fa-credit-card text-purple-700 text-lg"></i>
+                </div>
+                <span className="text-sm font-semibold text-gray-800">Payment History</span>
+              </Link>
+
+              <Link
+                href="/dashboard/subscription"
+                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
+              >
+                <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                  <i className="fas fa-gem text-amber-700 text-lg"></i>
+                </div>
+                <span className="text-sm font-semibold text-gray-800">Upgrade Plan</span>
+              </Link>
+            </div>
+
             {/* Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
               

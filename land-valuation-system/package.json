@@ -1,0 +1,27 @@
+{
+  "name": "land-valuation-system",
+  "version": "1.0.0",
+  "description": "A web application for land valuation in Rwanda, providing accurate pricing based on official data.",
+  "main": "src/scripts/main.js",
+  "scripts": {
+    "start": "live-server src",
+    "build": "tsc",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "land",
+    "valuation",
+    "Rwanda",
+    "real-estate"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "tailwindcss": "^2.2.19"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.4",
+    "live-server": "^1.2.1"
+  }
+}

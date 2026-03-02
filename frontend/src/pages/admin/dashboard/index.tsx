@@ -124,13 +124,23 @@ const AdminDashboard: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
 
             {/* Page Header */}
-            <div className="mb-12">
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2">
-                Admin Dashboard
-              </h1>
-              <p className="text-lg text-gray-600">
-                Manage users, monitor revenue, and track KPIs
-              </p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-12">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2">
+                  Admin Dashboard
+                </h1>
+                <p className="text-lg text-gray-600">
+                  Manage users, monitor revenue, and track KPIs
+                </p>
+              </div>
+              
+              <Link
+                href="/analytics"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
+              >
+                <i className="fas fa-chart-line"></i>
+                View Analytics
+              </Link>
             </div>
 
             {/* KPI Cards Grid */}

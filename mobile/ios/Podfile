@@ -1,0 +1,46 @@
+platform :ios, '13.0'
+
+target 'LandValuation' do
+  pod 'React', :path => '../node_modules/react-native'
+  pod 'React-Core', :path => '../node_modules/react-native/React'
+  pod 'React-DevSupport', :path => '../node_modules/react-native/React'
+  pod 'React-JSImageLoader', :path => '../node_modules/react-native/Libraries/Image/React-JSImageLoader.podspec'
+  pod 'React-RCTActionSheet', :path => '../node_modules/react-native/Libraries/ActionSheetIOS/React-RCTActionSheet.podspec'
+  pod 'React-RCTAnimation', :path => '../node_modules/react-native/Libraries/NativeAnimation/React-RCTAnimation.podspec'
+  pod 'React-RCTBlob', :path => '../node_modules/react-native/Libraries/Blob/React-RCTBlob.podspec'
+  pod 'React-RCTImage', :path => '../node_modules/react-native/Libraries/Image/React-RCTImage.podspec'
+  pod 'React-RCTLinking', :path => '../node_modules/react-native/Libraries/LinkingIOS/React-RCTLinking.podspec'
+  pod 'React-RCTNetwork', :path => '../node_modules/react-native/Libraries/Network/React-RCTNetwork.podspec'
+  pod 'React-RCTSettings', :path => '../node_modules/react-native/Libraries/Settings/React-RCTSettings.podspec'
+  pod 'React-RCTText', :path => '../node_modules/react-native/Libraries/Text/Text/React-RCTText.podspec'
+  pod 'React-RCTVibration', :path => '../node_modules/react-native/Libraries/Vibration/React-RCTVibration.podspec'
+  pod 'React-RCTWebSocket', :path => '../node_modules/react-native/Libraries/WebSocket/React-RCTWebSocket.podspec'
+  pod 'React-cxxreact', :path => '../node_modules/react-native/ReactCommon/cxxreact'
+  pod 'React-jsi', :path => '../node_modules/react-native/ReactCommon/jsi'
+  pod 'React-jsiexecutor', :path => '../node_modules/react-native/ReactCommon/jsiexecutor'
+  pod 'React-perflogger', :path => '../node_modules/react-native/ReactCommon/perflogger'
+  pod 'React-runtimeexecutor', :path => '../node_modules/react-native/ReactCommon/runtimeexecutor'
+  pod 'ReactNativeKeyboardTrackingView', :modular_headers => true
+  pod 'RNCAsyncStorage', :path => '../node_modules/@react-native-async-storage/async-storage'
+  pod 'RNCGeolocation', :path => '../node_modules/@react-native-geolocation/geolocation'
+  pod 'react-native-maps', :path => '../node_modules/react-native-maps'
+  pod 'react-native-safe-area-context', :path => '../node_modules/react-native-safe-area-context'
+  pod 'React-RCTVideo', :path => '../node_modules/react-native-video/react-native-video.podspec'
+  pod 'RNGestureHandler', :path => '../node_modules/react-native-gesture-handler'
+  pod 'RNReanimated', :path => '../node_modules/react-native-reanimated'
+  pod 'RNScreens', :path => '../node_modules/react-native-screens'
+  pod 'RNSVG', :path => '../node_modules/react-native-svg'
+  pod 'stripe-react-native', :path => '../node_modules/@stripe/stripe-react-native'
+
+  post_install do |installer|
+    react_native_post_install(installer)
+  end
+end
+
+# Enables Flipper.
+#
+# Note that if you have use_frameworks! enabled, Flipper will not work and
+# you should disable these next few lines.
+post_install do |installer|
+  flipper_post_install(installer)
+end

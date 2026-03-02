@@ -1,0 +1,178 @@
+apply plugin: "com.android.application"
+apply plugin: "com.facebook.react"
+apply plugin: "org.jetbrains.kotlin.android"
+
+/**
+ * This is the configuration block to customize your React Native Android app.
+ * By default, the template uses the New Architecture with Hermes enabled.
+ */
+react {
+    /* Folders used to produce the offline bundle for every architecture */
+    bundleAssetName="index.android.bundle"
+    bundleInDebug=false
+    bundleInRelease=true
+    /* Folders used to produce the offline bundle for every architecture */
+    bundleInStaging=false
+    /* fall back to bundleInRelease: true if bundleInStaging is not set */
+    jsBundleDirRelease="$buildDir/intermediates/assets/release/jsbundle"
+
+    /* whether to bundle JS and assets in debug mode */
+    bundleInDebug=false
+
+    /* whether to bundle JS and assets in release mode */
+    bundleInRelease=true
+
+    /* the root of your project, i.e. where "package.json" lives */
+    root="$rootDir/.."
+
+    /* Variants of `debugJavaScriptEnabled` */
+    debugJavaScriptEnabled=false
+
+    /* Note: this experimental feature may not work perfectly */
+    enableHermesOnRelease=true
+    enableHermesOnDebug=false
+}
+
+/**
+ * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
+ */
+def enableProguardInReleaseBuilds = true
+
+android {
+    ndkVersion rootProject.ext.ndkVersion
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    namespace "com.landvaluation"
+    defaultConfig {
+        applicationId "com.landvaluation.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0.0"
+
+        buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", "true"
+        if (isNewArchitectureEnabled()) {
+            externalNativeBuild {
+                cmake {
+                    arguments "-DPROJECT_BUILD_DIR=$buildDir"
+                    arguments "-DREACT_ANDROID_DIR=$rootDir/../node_modules/react-native/ReactAndroid"
+                    arguments "-DREACT_ANDROID_BUILD_DIR=$rootDir/../node_modules/react-native/ReactAndroid/build"
+                    arguments "-DNODE_MODULES_DIR=$rootDir/../node_modules"
+                    arguments "-DANDROID_STL=c++_shared"
+                }
+            }
+            if (!isNewArchitectureEnabled()) {
+                externalNativeBuild {
+                    ndkBuild {
+                        path "Android.mk"
+                    }
+                }
+            }
+        }
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file("debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+        release {
+            if (project.hasProperty('MYAPP_RELEASE_STORE_FILE')) {
+                storeFile file(MYAPP_RELEASE_STORE_FILE)
+                storePassword MYAPP_RELEASE_STORE_PASSWORD
+                keyAlias MYAPP_RELEASE_KEY_ALIAS
+                keyPassword MYAPP_RELEASE_KEY_PASSWORD
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled enableProguardInReleaseBuilds
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+
+    flavorDimensions "appType"
+    productFlavors {
+        vanilla {
+            flavorDimension "appType"
+        }
+        hermes {
+            flavorDimension "appType"
+        }
+    }
+
+    packagingOptions {
+        pickFirst '**/armeabi-v7a/libc++_shared.so'
+        pickFirst '**/x86/libc++_shared.so'
+        pickFirst '**/arm64-v8a/libc++_shared.so'
+        pickFirst '**/x86_64/libc++_shared.so'
+        pickFirst '**/armeabi-v7a/libjsc.so'
+        pickFirst '**/x86/libjsc.so'
+        pickFirst '**/arm64-v8a/libjsc.so'
+        pickFirst '**/x86_64/libjsc.so'
+    }
+}
+
+dependencies {
+    // The version of react-native is set by the React Native Gradle Plugin
+    implementation "com.facebook.react:react-android"
+    implementation "com.facebook.react:hermes-android"
+
+    // Android X dependencies
+    implementation "androidx.appcompat:appcompat:1.6.1"
+    implementation "androidx.constraintlayout:constraintlayout:2.1.4"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
+    implementation "androidx.core:core-splashscreen:1.0.1"
+
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+
+    // Maps
+    implementation "com.google.android.gms:play-services-maps:18.2.0"
+    implementation "com.mapbox.mapboxsdk:mapbox-android-sdk:10.15.0"
+
+    // Navigation
+    implementation "androidx.navigation:navigation-fragment:2.7.5"
+    implementation "androidx.navigation:navigation-ui:2.7.5"
+
+    // HTTP Client
+    implementation "com.squareup.okhttp3:okhttp:4.11.0"
+    implementation "com.squareup.okhttp3:logging-interceptor:4.11.0"
+    implementation "com.squareup.retrofit2:retrofit:2.10.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.10.0"
+
+    // Image Loading
+    implementation "com.github.bumptech.glide:glide:4.15.1"
+    annotationProcessor "com.github.bumptech.glide:compiler:4.15.1"
+
+    // JSON
+    implementation "com.google.code.gson:gson:2.10.1"
+
+    // Payment Integration (Stripe)
+    implementation "com.stripe:stripe-android:20.29.0"
+
+    // Testing
+    testImplementation "junit:junit:4.13.2"
+    testImplementation "org.mockito:mockito-core:5.6.0"
+    testImplementation "androidx.test:core:1.5.0"
+    testImplementation "androidx.test.ext:junit:1.1.5"
+
+    androidTestImplementation "androidx.test:runner:1.5.2"
+    androidTestImplementation "androidx.test.espresso:espresso-core:3.5.1"
+}
+
+if (isNewArchitectureEnabled()) {
+    // Some libraries are only needed when the New Architecture is enabled
+    react {
+        jsEngineOverride = "hermes"
+    }
+}
