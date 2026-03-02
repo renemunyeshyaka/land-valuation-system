@@ -1,2 +1,2 @@
-import PaymentHistory from '../../src/pages/payments/index';
+import PaymentHistory from '../src/pages/payments/index';
 export default PaymentHistory;
