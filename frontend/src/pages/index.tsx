@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 
 declare global {
   interface Window {
@@ -105,9 +106,9 @@ const Home: React.FC = () => {
 
               {/* main menu (desktop) */}
               <div className="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
-                <a href="#" className="hover:text-emerald-700 transition">Home</a>
-                <a href="#" className="hover:text-emerald-700 transition">Valuation</a>
-                <a href="#" className="hover:text-emerald-700 transition">Marketplace</a>
+                <Link href="/" className="hover:text-emerald-700 transition">Home</Link>
+                <Link href="/search" className="hover:text-emerald-700 transition">Valuation</Link>
+                <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
                 <a href="#" className="hover:text-emerald-700 transition">How it works</a>
                 <a href="#" className="hover:text-emerald-700 transition">Contact</a>
               </div>
@@ -119,8 +120,8 @@ const Home: React.FC = () => {
                   <span className="font-medium">RW</span>
                   <i className="fas fa-chevron-down ml-1 text-gray-400 text-xs"></i>
                 </div>
-                <a href="#" className="text-sm font-medium text-emerald-800 hover:text-emerald-900 px-3 py-2">Log in</a>
-                <a href="#" className="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-sm transition">Sign up</a>
+                <Link href="/auth/login" className="text-sm font-medium text-emerald-800 hover:text-emerald-900 px-3 py-2">Log in</Link>
+                <Link href="/auth/register" className="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-sm transition">Sign up</Link>
               </div>
             </div>
           </div>
@@ -280,7 +281,7 @@ const Home: React.FC = () => {
                 <span className="text-emerald-600 font-semibold text-sm">Featured on marketplace</span>
                 <h2 className="text-3xl font-bold text-gray-900 mt-1">Properties ready for investors</h2>
               </div>
-              <a href="#" className="text-emerald-700 font-medium hover:underline">View all <i className="fas fa-arrow-right ml-1 text-sm"></i></a>
+              <Link href="/marketplace" className="text-emerald-700 font-medium hover:underline">View all <i className="fas fa-arrow-right ml-1 text-sm"></i></Link>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
@@ -484,8 +485,8 @@ const Home: React.FC = () => {
             <div>
               <h4 className="font-bold text-white">Legal</h4>
               <ul className="mt-3 space-y-2 text-sm">
-                <li>Privacy</li>
-                <li>Terms</li>
+                <li><Link href="/privacy" className="hover:text-white transition">Privacy</Link></li>
+                <li><Link href="/terms" className="hover:text-white transition">Terms</Link></li>
                 <li>Copyright RDB</li>
               </ul>
             </div>
