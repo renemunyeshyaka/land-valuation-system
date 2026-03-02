@@ -337,11 +337,11 @@ const Register: React.FC = () => {
                     />
                     <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
                       I agree to the{' '}
-                      <a href="#" className="text-emerald-700 hover:text-emerald-800 font-medium">
+                      <a href="/terms" className="text-emerald-700 hover:text-emerald-800 font-medium">
                         Terms of Service
                       </a>{' '}
                       and{' '}
-                      <a href="#" className="text-emerald-700 hover:text-emerald-800 font-medium">
+                      <a href="/privacy" className="text-emerald-700 hover:text-emerald-800 font-medium">
                         Privacy Policy
                       </a>
                     </label>
@@ -430,8 +430,8 @@ const Register: React.FC = () => {
               <div>
                 <h4 className="font-semibold text-white mb-4 text-sm">Legal</h4>
                 <ul className="space-y-2 text-sm">
-                  <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition">Privacy Policy</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition">Terms of Service</a></li>
+                  <li><a href="/privacy" className="text-gray-400 hover:text-emerald-400 transition">Privacy Policy</a></li>
+                  <li><a href="/terms" className="text-gray-400 hover:text-emerald-400 transition">Terms of Service</a></li>
                   <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition">Contact</a></li>
                 </ul>
               </div>
