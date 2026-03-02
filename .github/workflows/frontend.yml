@@ -1,0 +1,93 @@
+name: Frontend Build & Deploy
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'frontend/**'
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'frontend/package-lock.json'
+    
+    - name: Install dependencies
+      working-directory: frontend
+      run: npm ci
+    
+    - name: Run linter
+      working-directory: frontend
+      run: npm run lint --if-present
+    
+    - name: Build
+      working-directory: frontend
+      run: npm run build
+      env:
+        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+        NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+        NEXT_PUBLIC_STRIPE_KEY: ${{ secrets.STRIPE_PUBLIC_KEY }}
+    
+    - name: Run tests
+      working-directory: frontend
+      run: npm run test --if-present
+    
+    - name: Run E2E tests
+      working-directory: frontend
+      run: npm run cypress:run --if-present
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      if: always()
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend-build
+        path: frontend/.next
+
+  lighthouse:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run Lighthouse audit
+      uses: treosh/lighthouse-ci-action@v9
+      with:
+        temporaryPublicStorage: true
+        configPath: './frontend/lighthouserc.json'
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to Vercel
+      uses: vercel/github-action@v4
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        working-directory: frontend

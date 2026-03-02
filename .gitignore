@@ -1,0 +1,97 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+## Node
+node_modules/
+**/node_modules/
+
+## Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## Environment
+# Never commit env files with secrets; keep the example tracked
+.env
+.env.local
+.env.*.local
+.env.production
+backend/.env
+frontend/.env
+!.env.example
+
+## Shell scripts and deployment scripts
+*.sh
+
+## Build outputs
+dist/
+build/
+.next/
+out/
+frontend/.next/
+frontend/out/
+
+## Uploads and temporary files
+temp/
+tmp/
+uploads/
+
+## Databases and backups - SQL files
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.sql
+backup.sql
+backup*.sql
+backup*.dump
+database_export*.sql
+db_export*.sql
+
+## Sensitive database commands and queries
+*kcoduyxv*
+*.sql.query
+*db_query*
+*database_query*
+
+## IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+## PM2 / Process managers
+.pm2/
+ecosystem.config.js
+
+## Coverage / test artifacts
+coverage/
+.nyc_output/
+.pytest_cache/
+
+## Misc
+.cache/
+*.tmp
+*.bak
+Thumbs.db
+
+# Documentation and project notes (keep local only)
+*.md
+NEW_IMPLEMENTATION_ROADMAP.md
+docs/
+ENVIRONMENT_SETUP.md
+QUICK_START.md
+ADMIN_FEATURES.md
+CV_CREATION_GUIDE.md
+IMPLEMENTATION_SUMMARY.md
+NAMECHEAP_DEPLOYMENT.md
+PROFILE_MEDIA_IMPROVEMENTS.md
+UPDATE_SUMMARY.md
+backend/uploads/

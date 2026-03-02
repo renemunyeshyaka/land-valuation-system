@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #fafaf9;
+  margin: 0;
+  padding: 0;
+}
+
+.map-preview {
+  height: 280px;
+  width: 100%;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 12px 30px -10px rgba(0,40,20,0.2);
+}
+
+.hero-gradient {
+  background: linear-gradient(112deg, #0b3b2c 0%, #1f6e4a 100%);
+}
+
+.feature-card {
+  transition: all 0.15s ease;
+}
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 25px 35px -12px rgba(0,80,30,0.25);
+}
+
+.badge-diaspora {
+  background-color: #ffedd5;
+  color: #9a3412;
+}
+
+.footer-link {
+  transition: color 0.2s;
+}
+.footer-link:hover {
+  color: #10b981;
+}
+
+.stat-gradient {
+  background: linear-gradient(145deg, #ffffff 0%, #f3f9f3 100%);
+}
