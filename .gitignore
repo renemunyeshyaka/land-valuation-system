@@ -35,6 +35,7 @@ build/
 out/
 frontend/.next/
 frontend/out/
+*.tsbuildinfo
 
 ## Uploads and temporary files
 temp/
