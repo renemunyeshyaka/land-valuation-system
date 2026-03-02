@@ -1,0 +1,21 @@
+{
+  "name": "Land Valuation System",
+  "short_name": "LandVal",
+  "description": "Accurate land valuation powered by official Rwanda gazette data",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b5e42",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
