@@ -123,14 +123,49 @@ func setupSubscriptionRoutes(router *gin.Engine, db *gorm.DB) {
 }
 
 func setupPaymentRoutes(router *gin.Engine, db *gorm.DB) {
-	paymentService := services.NewPaymentService(db)
-	paymentHandler := handlers.NewPaymentHandler(paymentService)
+	// Initialize all payment services
+	mobilePaymentService := services.NewPaymentService(db)
+	bankPaymentService := services.NewBankPaymentService(db)
+	blockchainPaymentService := services.NewBlockchainPaymentService(db)
+
+	// Initialize handlers
+	paymentHandler := handlers.NewPaymentHandler(mobilePaymentService)
+	multiPaymentHandler := handlers.NewMultiPaymentHandler(
+		mobilePaymentService,
+		bankPaymentService,
+		blockchainPaymentService,
+	)
 
 	payments := router.Group("/api/v1/payments")
-	payments.Use(middleware.AuthRequired())
 	{
-		payments.POST("/mobile-money", paymentHandler.InitiateMobileMoneyPayment)
-		payments.GET("/:transaction_id/status", paymentHandler.CheckPaymentStatus)
+		// Public endpoint - no auth
+		payments.GET("/methods", multiPaymentHandler.GetAvailablePaymentMethods)
+
+		// Protected routes
+		protected := payments.Group("")
+		protected.Use(middleware.AuthRequired())
+		{
+			// Mobile Money (existing)
+			protected.POST("/mobile-money", paymentHandler.InitiateMobileMoneyPayment)
+			protected.GET("/:transaction_id/status", paymentHandler.CheckPaymentStatus)
+
+			// Bank Transfer
+			protected.POST("/bank/initiate", multiPaymentHandler.InitiateBankPayment)
+			protected.POST("/bank/submit-proof", multiPaymentHandler.SubmitBankPaymentProof)
+			protected.GET("/bank/status/:transaction_id", multiPaymentHandler.GetBankPaymentStatus)
+
+			// Blockchain/Crypto
+			protected.POST("/crypto/initiate", multiPaymentHandler.InitiateBlockchainPayment)
+			protected.POST("/crypto/submit-proof", multiPaymentHandler.SubmitBlockchainProof)
+			protected.GET("/crypto/status/:transaction_id", multiPaymentHandler.GetBlockchainPaymentStatus)
+		}
+
+		// Admin-only routes
+		admin := payments.Group("/admin")
+		admin.Use(middleware.AuthRequired(), middleware.AdminRequired())
+		{
+			admin.POST("/bank/verify", multiPaymentHandler.VerifyBankPayment)
+		}
 	}
 
 	// Webhook routes (no auth required)
