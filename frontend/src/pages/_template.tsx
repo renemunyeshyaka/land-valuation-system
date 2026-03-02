@@ -22,7 +22,7 @@ interface TemplateProps {
   // Add your page-specific props here
 }
 
-const [PAGE_NAME]: React.FC<TemplateProps> = () => {
+const TemplatePage: React.FC<TemplateProps> = () => {
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -318,7 +318,7 @@ const [PAGE_NAME]: React.FC<TemplateProps> = () => {
   );
 };
 
-export default [PAGE_NAME];
+export default TemplatePage;
 
 /* ========================================
    TEMPLATE USAGE NOTES:
