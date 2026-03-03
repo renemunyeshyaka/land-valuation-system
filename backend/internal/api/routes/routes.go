@@ -7,29 +7,31 @@ import (
 	"backend/internal/services"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
 // Setup is an alias for RegisterRoutes for compatibility
-func Setup(router *gin.Engine, db interface{}) {
+func Setup(router *gin.Engine, db interface{}, redisClient *redis.Client) {
 	// Type assert db to *gorm.DB if possible
 	var gormDB *gorm.DB
 	if db != nil {
 		gormDB, _ = db.(*gorm.DB)
 	}
-	RegisterRoutes(router, gormDB)
+	RegisterRoutes(router, gormDB, redisClient)
 }
 
 // RegisterRoutes registers all API routes
-func RegisterRoutes(router *gin.Engine, db *gorm.DB) {
+func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	// Initialize services and handlers
 	setupAuthRoutes(router, db)
 	setupUserRoutes(router, db)
 	setupPropertyRoutes(router, db)
 	setupSubscriptionRoutes(router, db)
-	setupPaymentRoutes(router, db)
+	setupPaymentRoutes(router, db, redisClient)
 	setupAnalyticsRoutes(router, db)
 	setupAdminRoutes(router, db)
+	setupExchangeRateRoutes(router, redisClient)
 	setupHealthRoutes(router)
 }
 
@@ -133,11 +135,11 @@ func setupSubscriptionRoutes(router *gin.Engine, db *gorm.DB) {
 	}
 }
 
-func setupPaymentRoutes(router *gin.Engine, db *gorm.DB) {
+func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	// Initialize all payment services
 	mobilePaymentService := services.NewPaymentService(db)
 	bankPaymentService := services.NewBankPaymentService(db)
-	blockchainPaymentService := services.NewBlockchainPaymentService(db)
+	blockchainPaymentService := services.NewBlockchainPaymentService(db, redisClient)
 
 	// Initialize handlers
 	paymentHandler := handlers.NewPaymentHandler(mobilePaymentService)
@@ -231,6 +233,24 @@ func setupAdminRoutes(router *gin.Engine, db *gorm.DB) {
 		admin.GET("/subscriptions", adminHandler.ManageSubscriptions)
 		admin.POST("/properties/:id/approve", adminHandler.ApproveProperty)
 		admin.POST("/properties/:id/reject", adminHandler.RejectProperty)
+	}
+}
+
+func setupExchangeRateRoutes(router *gin.Engine, redisClient *redis.Client) {
+	exchangeRateHandler := handlers.NewExchangeRateHandler(redisClient)
+
+	exchangeRate := router.Group("/api/v1/exchange-rate")
+	{
+		// Public endpoints - anyone can check rates
+		exchangeRate.GET("", exchangeRateHandler.GetCurrentRate)
+		exchangeRate.GET("/convert", exchangeRateHandler.ConvertCurrency)
+
+		// Admin only - refresh cache
+		admin := exchangeRate.Group("")
+		admin.Use(middleware.AuthRequired(), middleware.AdminRequired())
+		{
+			admin.POST("/refresh", exchangeRateHandler.RefreshRate)
+		}
 	}
 }
 

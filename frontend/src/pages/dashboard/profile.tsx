@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
+import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '../../utils/tokenRefresh';
 
 interface ProfileData {
   firstName: string;
@@ -34,12 +35,7 @@ const Profile: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const clearAuthAndRedirectToLogin = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
-      // DO NOT clear admin_experience_mode - it's unrelated to auth failure
-    }
+    clearAuth();
     router.replace('/auth/login');  // Use replace instead of push for one-way navigation
   };
 
@@ -205,7 +201,7 @@ const Profile: React.FC = () => {
 
   const loadUserProfile = async (accessToken: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
+      const response = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -217,6 +213,7 @@ const Profile: React.FC = () => {
         
         if (userData) {
           setIsAdmin(userData.user_type === 'admin');
+          setTokenExpired(false); // Clear token expired flag on success
           setFormData({
             firstName: userData.first_name || '',
             lastName: userData.last_name || '',
@@ -233,34 +230,10 @@ const Profile: React.FC = () => {
         }
         setUserLoading(false);
       } else if (response.status === 401) {
-        // Token expired - mark it so we stop retrying
-        setTokenExpired(true);
-        // but DON'T logout immediately
-        // Admin sessions should persist with cached data
-        console.debug('Profile fetch returned 401, but keeping session alive');
-        
-        // Try to use any cached data we might have
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          try {
-            const cachedData = JSON.parse(storedUser);
-            setIsAdmin(cachedData.user_type === 'admin');
-            setFormData({
-              firstName: cachedData.first_name || '',
-              lastName: cachedData.last_name || '',
-              email: cachedData.email || '',
-              phone: cachedData.phone || '',
-              address: cachedData.address || '',
-              profilePicture: cachedData.profile_picture || '',
-            });
-          } catch (e) {
-            // Cached data is invalid
-            console.error('Failed to use cached profile data:', e);
-          }
-        }
-        
+        // Token could not be refreshed - user needs to login again
+        console.debug('Unauthorized: Token could not be refreshed');
+        clearAuthAndRedirectToLogin();
         setUserLoading(false);
-        toast.error('Profile data may be out of date (token expired). Please reload the page to get a fresh token.');
       } else {
         console.error('Failed to load profile:', response.status);
         setUserLoading(false);

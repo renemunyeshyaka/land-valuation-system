@@ -22,7 +22,7 @@ type User struct {
 	NationalID string `gorm:"size:16;index" json:"national_id"`
 
 	// Account Type
-	UserType   string `gorm:"size:50;default:individual" json:"user_type"` // individual, agent, corporate, government
+	UserType   string `gorm:"size:50;default:individual" json:"user_type"` // individual, agent, corporate, government, admin
 	IsVerified bool   `gorm:"default:false" json:"is_verified"`
 	IsDiaspora bool   `gorm:"default:false" json:"is_diaspora"`
 

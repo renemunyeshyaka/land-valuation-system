@@ -13,7 +13,9 @@ import (
 
 	"backend/internal/models"
 	"backend/internal/repository"
+	"backend/pkg/currency"
 
+	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
@@ -21,6 +23,7 @@ import (
 type BlockchainPaymentService struct {
 	db              *gorm.DB
 	transactionRepo *repository.TransactionRepository
+	exchangeRate    *currency.ExchangeRateService
 	// Blockchain configuration
 	walletAddress  string // Your OKX BNB Smart Chain wallet
 	chainName      string // BNB Smart Chain
@@ -29,10 +32,11 @@ type BlockchainPaymentService struct {
 	httpClient     *http.Client
 }
 
-func NewBlockchainPaymentService(db *gorm.DB) *BlockchainPaymentService {
+func NewBlockchainPaymentService(db *gorm.DB, redisClient *redis.Client) *BlockchainPaymentService {
 	return &BlockchainPaymentService{
 		db:              db,
 		transactionRepo: repository.NewTransactionRepository(db),
+		exchangeRate:    currency.NewExchangeRateService(redisClient),
 		walletAddress:   os.Getenv("BLOCKCHAIN_WALLET_ADDRESS"), // 0x2f22a13cce6041c8bf3f0d569bb32a1ce729d599
 		chainName:       "BNB Smart Chain (BEP20)",
 		acceptedTokens:  []string{"USDT", "USDC", "BNB"},
@@ -289,11 +293,13 @@ func (s *BlockchainPaymentService) calculateCryptoAmount(ctx context.Context, fi
 		usdAmount = fiatAmount
 		exchangeRate = 1.0
 	} else if fiatCurrency == "RWF" {
-		// Current rate: 1 USD ≈ 1,300 RWF (use live API in production)
-		// TODO: Integrate with forex API (e.g., https://currencyapi.com)
-		rwfToUsd := 0.00077 // 1 RWF = 0.00077 USD (1/1300)
-		usdAmount = fiatAmount * rwfToUsd
-		exchangeRate = rwfToUsd
+		// Get live exchange rate from currency service (xe.com compliant)
+		// Current rate: 1 USD ≈ 1,466 RWF (March 2026)
+		var err error
+		usdAmount, exchangeRate, err = s.exchangeRate.ConvertRWFToUSD(ctx, fiatAmount)
+		if err != nil {
+			return 0, 0, fmt.Errorf("failed to get exchange rate: %w", err)
+		}
 	} else {
 		return 0, 0, errors.New("unsupported currency")
 	}

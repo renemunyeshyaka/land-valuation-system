@@ -1,0 +1,660 @@
+import React, { useState, useRef } from 'react';
+import { useRouter } from 'next/router';
+
+interface PropertyFormData {
+  title: string;
+  description: string;
+  propertyType: string;
+  district: string;
+  sector: string;
+  cell: string;
+  village: string;
+  address: string;
+  latitude: string;
+  longitude: string;
+  landSize: string;
+  sizeUnit: string;
+  price: string;
+  parcelId: string;
+  gazetteReference: string;
+  features: string[];
+}
+
+interface AddPropertyFormProps {
+  onSubmit?: (data: PropertyFormData, images: File[], documents: File[]) => Promise<void>;
+  isAdmin?: boolean;
+}
+
+export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddPropertyFormProps) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [currentStep, setCurrentStep] = useState(1);
+
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
+
+  const [formData, setFormData] = useState<PropertyFormData>({
+    title: '',
+    description: '',
+    propertyType: 'residential',
+    district: '',
+    sector: '',
+    cell: '',
+    village: '',
+    address: '',
+    latitude: '',
+    longitude: '',
+    landSize: '',
+    sizeUnit: 'sqm',
+    price: '',
+    parcelId: '',
+    gazetteReference: '',
+    features: []
+  });
+
+  const [images, setImages] = useState<File[]>([]);
+  const [documents, setDocuments] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
+  const districts = [
+    'Kigali City',
+    'Musanze',
+    'Rubavu',
+    'Huye',
+    'Nyagatare',
+    'Rusizi',
+    'Muhanga',
+    'Karongi'
+  ];
+
+  const propertyTypes = [
+    { value: 'residential', label: 'Residential Land' },
+    { value: 'commercial', label: 'Commercial Land' },
+    { value: 'agricultural', label: 'Agricultural Land' },
+    { value: 'industrial', label: 'Industrial Land' },
+    { value: 'mixed', label: 'Mixed Use' }
+  ];
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setImages(prev => [...prev, ...files]);
+
+      // Create previews
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setDocuments(prev => [...prev, ...files]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeDocument = (index: number) => {
+    setDocuments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      if (onSubmit) {
+        await onSubmit(formData, images, documents);
+        setSuccess('Property added successfully!');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
+      } else {
+        // Default API call
+        const accessToken = localStorage.getItem('access_token');
+        
+        const formDataToSend = new FormData();
+        Object.entries(formData).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            formDataToSend.append(key, JSON.stringify(value));
+          } else {
+            formDataToSend.append(key, value);
+          }
+        });
+
+        images.forEach((image, index) => {
+          formDataToSend.append(`images`, image);
+        });
+
+        documents.forEach((doc, index) => {
+          formDataToSend.append(`documents`, doc);
+        });
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/properties`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: formDataToSend,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to add property');
+        }
+
+        setSuccess('Property added successfully!');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to add property');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setFormData(prev => ({
+            ...prev,
+            latitude: position.coords.latitude.toString(),
+            longitude: position.coords.longitude.toString()
+          }));
+        },
+        (error) => {
+          setError('Failed to get location. Please enter coordinates manually.');
+        }
+      );
+    } else {
+      setError('Geolocation is not supported by your browser.');
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+      <h2 className="text-3xl font-bold text-gray-900 mb-6">
+        {isAdmin ? 'Add Property (Admin)' : 'Add Your Property'}
+      </h2>
+
+      {/* Progress Indicator */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-2">
+          <span className={`text-sm font-medium ${currentStep >= 1 ? 'text-blue-600' : 'text-gray-500'}`}>
+            Basic Info
+          </span>
+          <span className={`text-sm font-medium ${currentStep >= 2 ? 'text-blue-600' : 'text-gray-500'}`}>
+            Location
+          </span>
+          <span className={`text-sm font-medium ${currentStep >= 3 ? 'text-blue-600' : 'text-gray-500'}`}>
+            Documents
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${(currentStep / 3) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+          {success}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Step 1: Basic Information */}
+        {currentStep === 1 && (
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Step 1: Basic Information</h3>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Parcel ID / UPI Number *
+              </label>
+              <input
+                type="text"
+                name="parcelId"
+                value={formData.parcelId}
+                onChange={handleInputChange}
+                placeholder="Enter your UPI or Parcel ID"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Find this on your land title document
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Property Title *
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                placeholder="e.g., Prime residential land in Kigali"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Property Type *
+              </label>
+              <select
+                name="propertyType"
+                value={formData.propertyType}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                {propertyTypes.map(type => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Description *
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows={4}
+                placeholder="Describe your property, its features, and any important details..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Land Size *
+                </label>
+                <input
+                  type="number"
+                  name="landSize"
+                  value={formData.landSize}
+                  onChange={handleInputChange}
+                  placeholder="e.g., 500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Unit *
+                </label>
+                <select
+                  name="sizeUnit"
+                  value={formData.sizeUnit}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="sqm">Square Meters (m²)</option>
+                  <option value="hectares">Hectares</option>
+                  <option value="acres">Acres</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Asking Price (RWF) *
+              </label>
+              <input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleInputChange}
+                placeholder="e.g., 50000000"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Gazette Reference (Optional)
+              </label>
+              <input
+                type="text"
+                name="gazetteReference"
+                value={formData.gazetteReference}
+                onChange={handleInputChange}
+                placeholder="e.g., RWA/Gaz/2024/001"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setCurrentStep(2)}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Next: Location Details →
+            </button>
+          </div>
+        )}
+
+        {/* Step 2: Location & Coordinates */}
+        {currentStep === 2 && (
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Step 2: Location & Coordinates</h3>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  District *
+                </label>
+                <select
+                  name="district"
+                  value={formData.district}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Select District</option>
+                  {districts.map(district => (
+                    <option key={district} value={district}>
+                      {district}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sector *
+                </label>
+                <input
+                  type="text"
+                  name="sector"
+                  value={formData.sector}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Nyarugenge"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Cell
+                </label>
+                <input
+                  type="text"
+                  name="cell"
+                  value={formData.cell}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Muhima"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Village
+                </label>
+                <input
+                  type="text"
+                  name="village"
+                  value={formData.village}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Akagera"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Street Address
+              </label>
+              <input
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                placeholder="e.g., KN 5 Rd, Kigali"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="border-t border-gray-200 pt-4">
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  GPS Coordinates *
+                </label>
+                <button
+                  type="button"
+                  onClick={getCurrentLocation}
+                  className="text-sm bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 transition-colors"
+                >
+                  📍 Get Current Location
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    Latitude
+                  </label>
+                  <input
+                    type="text"
+                    name="latitude"
+                    value={formData.latitude}
+                    onChange={handleInputChange}
+                    placeholder="e.g., -1.9441"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    Longitude
+                  </label>
+                  <input
+                    type="text"
+                    name="longitude"
+                    value={formData.longitude}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 30.0619"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+              </div>
+              <p className="mt-2 text-sm text-gray-500">
+                💡 Tip: You can use Google Maps to find coordinates. Right-click on your property location and copy the coordinates.
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+              >
+                ← Back
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(3)}
+                className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Next: Upload Documents →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Documents & Images */}
+        {currentStep === 3 && (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Step 3: Upload Documents & Images</h3>
+
+            {/* Image Upload */}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+              <div className="text-center">
+                <div className="text-4xl mb-4">📷</div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                  Property Images
+                </h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Upload photos of your property (Maximum 10 images)
+                </p>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Choose Images
+                </button>
+              </div>
+
+              {imagePreviews.length > 0 && (
+                <div className="mt-6 grid grid-cols-3 gap-4">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Document Upload */}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+              <div className="text-center">
+                <div className="text-4xl mb-4">📄</div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                  Title Documents & Certificates
+                </h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Upload land title, ownership certificate, or other legal documents
+                </p>
+                <input
+                  ref={documentInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  multiple
+                  onChange={handleDocumentUpload}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => documentInputRef.current?.click()}
+                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Choose Documents
+                </button>
+              </div>
+
+              {documents.length > 0 && (
+                <div className="mt-6 space-y-2">
+                  {documents.map((doc, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-3">📎</span>
+                        <span className="text-sm text-gray-700">{doc.name}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeDocument(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>📌 Required Documents:</strong> Land title or ownership certificate.
+                <br />
+                <strong>📌 Optional:</strong> Survey maps, property tax receipts, gazette references.
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+              >
+                ← Back
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:bg-gray-400"
+              >
+                {loading ? 'Submitting...' : '✓ Submit Property'}
+              </button>
+            </div>
+          </div>
+        )}
+      </form>
+    </div>
+  );
+}

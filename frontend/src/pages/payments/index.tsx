@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
+import ExchangeRateDisplay from '../../components/ExchangeRateDisplay';
 
 /**
  * PAYMENT HISTORY PAGE · Land Valuation System
@@ -29,7 +30,7 @@ const PaymentHistory: React.FC = () => {
       id: 'TXN-202603-001',
       date: '2026-03-01',
       description: 'Professional Plan - Monthly Renewal',
-      amount: 29999,
+      amount: 79000,
       status: 'completed',
       method: 'MTN Mobile Money',
       invoiceId: 'INV-202603-001'
@@ -38,7 +39,7 @@ const PaymentHistory: React.FC = () => {
       id: 'TXN-202602-005',
       date: '2026-02-28',
       description: 'Professional Plan - Monthly Renewal',
-      amount: 29999,
+      amount: 79000,
       status: 'completed',
       method: 'Airtel Money',
       invoiceId: 'INV-202602-005'
@@ -47,7 +48,7 @@ const PaymentHistory: React.FC = () => {
       id: 'TXN-202602-001',
       date: '2026-02-15',
       description: 'Upgrade from Basic to Professional',
-      amount: 19999,
+      amount: 50000,
       status: 'completed',
       method: 'Payment Gateway',
       invoiceId: 'INV-202602-001'
@@ -56,7 +57,7 @@ const PaymentHistory: React.FC = () => {
       id: 'TXN-202601-008',
       date: '2026-01-28',
       description: 'Basic Plan - Monthly Renewal',
-      amount: 9999,
+      amount: 29000,
       status: 'completed',
       method: 'MTN Mobile Money',
       invoiceId: 'INV-202601-008'
@@ -65,7 +66,7 @@ const PaymentHistory: React.FC = () => {
       id: 'TXN-202601-001',
       date: '2026-01-15',
       description: 'Professional Plan - Monthly Renewal',
-      amount: 29999,
+      amount: 79000,
       status: 'completed',
       method: 'Payment Gateway',
       invoiceId: 'INV-202601-001'
@@ -74,7 +75,7 @@ const PaymentHistory: React.FC = () => {
       id: 'TXN-202512-010',
       date: '2025-12-28',
       description: 'Basic Plan - Monthly Renewal',
-      amount: 9999,
+      amount: 29000,
       status: 'failed',
       method: 'Airtel Money',
       invoiceId: 'INV-202512-010'
@@ -83,7 +84,7 @@ const PaymentHistory: React.FC = () => {
       id: 'TXN-202512-001',
       date: '2025-12-15',
       description: 'Initial Subscription - Basic Plan',
-      amount: 9999,
+      amount: 29000,
       status: 'completed',
       method: 'Payment Gateway',
       invoiceId: 'INV-202512-001'
@@ -182,7 +183,7 @@ const PaymentHistory: React.FC = () => {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-12">
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                 <p className="text-sm font-medium text-gray-600 mb-2">Total Spent</p>
                 <p className="text-3xl font-bold text-emerald-700">FRW {(totalSpent / 1000).toFixed(0)}k</p>
@@ -198,6 +199,9 @@ const PaymentHistory: React.FC = () => {
                 <p className="text-3xl font-bold text-red-600">{failedCount}</p>
                 <p className="text-xs text-gray-500 mt-2">Requires attention</p>
               </div>
+              
+              {/* Exchange Rate Display */}
+              <ExchangeRateDisplay showConverter={false} />
             </div>
 
             {/* Filters & Transactions */}
@@ -332,7 +336,7 @@ const PaymentHistory: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between border-b border-gray-200 pb-4">
                     <span className="text-gray-600">Monthly Cost</span>
-                    <span className="font-semibold text-emerald-700">FRW 29,999</span>
+                    <span className="font-semibold text-emerald-700">Rwf 79k/mo</span>
                   </div>
                   <div className="flex items-center justify-between border-b border-gray-200 pb-4">
                     <span className="text-gray-600">Billing Cycle</span>

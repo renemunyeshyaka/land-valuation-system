@@ -66,6 +66,8 @@ func main() {
 	migrationFiles := []string{
 		"001_init_schema.sql",
 		"002_seed_data.sql",
+		"003_add_mfa_fields.sql",
+		"004_setup_admin_users.sql",
 	}
 
 	for _, file := range migrationFiles {

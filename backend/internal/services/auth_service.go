@@ -25,7 +25,7 @@ type AuthService struct {
 func NewAuthService(db *gorm.DB) *AuthService {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "default-secret-change-in-production"
+		secret = "your-secret-key" // Match middleware default
 	}
 
 	return &AuthService{
@@ -404,7 +404,7 @@ func (s *AuthService) Verify2FA(ctx context.Context, userID, code string) error 
 // Helper functions
 func (s *AuthService) generateAccessToken(user *models.User) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id":   user.ID,
+		"user_id":   fmt.Sprintf("%d", user.ID),
 		"email":     user.Email,
 		"user_type": user.UserType,
 		"exp":       time.Now().Add(24 * time.Hour).Unix(),
@@ -417,7 +417,7 @@ func (s *AuthService) generateAccessToken(user *models.User) (string, error) {
 
 func (s *AuthService) generateRefreshToken(user *models.User) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id": user.ID,
+		"user_id": fmt.Sprintf("%d", user.ID),
 		"exp":     time.Now().Add(30 * 24 * time.Hour).Unix(),
 		"iat":     time.Now().Unix(),
 	}

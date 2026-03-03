@@ -65,6 +65,11 @@ func main() {
 		log.Fatal("Failed to run migrations:", err)
 	}
 
+	// Run SQL migrations (seed data, schema updates, etc.)
+	if err := database.RunSQLMigrations(db); err != nil {
+		log.Fatal("Failed to run SQL migrations:", err)
+	}
+
 	// Initialize Redis cache
 	redisCache, err := cache.NewRedisCache(cfg)
 	if err != nil {
@@ -84,7 +89,7 @@ func main() {
 	router.Use(middleware.RateLimiter(redisCache))
 
 	// Setup routes
-	routes.Setup(router, db)
+	routes.Setup(router, db, redisCache)
 
 	// Create server
 	srv := &http.Server{

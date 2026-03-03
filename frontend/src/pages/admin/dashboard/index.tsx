@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
 import toast from 'react-hot-toast';
+import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '@/utils/tokenRefresh';
+import FourStepProcess from '../../../components/FourStepProcess';
+import SubscriptionSelector from '../../../components/SubscriptionSelector';
 
 /**
  * ADMIN DASHBOARD PAGE · Land Valuation System
@@ -26,11 +29,11 @@ const AdminDashboard: React.FC = () => {
   const [adminExperienceMode, setAdminExperienceMode] = useState<'off' | 'user' | 'ultimate'>('off');
   const [tokenExpired, setTokenExpired] = useState(false); // Track if token is already known to be expired
   const [users, setUsers] = useState([
-    { id: 1, name: 'Jean Munyeshyaka', email: 'jean@example.com', phone: '+250788620201', tier: 'Professional', status: 'active', joinDate: '2026-01-15' },
-    { id: 2, name: 'Marie Uwayo', email: 'marie@example.com', phone: '+250787654321', tier: 'Basic', status: 'active', joinDate: '2026-02-01' },
+    { id: 1, name: 'Jean Munyeshyaka', email: 'jean@example.com', phone: '+250788620201', tier: 'Basic', status: 'active', joinDate: '2026-01-15' },
+    { id: 2, name: 'Marie Uwayo', email: 'marie@example.com', phone: '+250787654321', tier: 'Professional', status: 'active', joinDate: '2026-02-01' },
     { id: 3, name: 'Pierre Habimana', email: 'pierre@example.com', phone: '+250789123456', tier: 'Free', status: 'inactive', joinDate: '2025-12-10' },
     { id: 4, name: 'Alice Kagaba', email: 'alice@example.com', phone: '+250788999888', tier: 'Ultimate', status: 'active', joinDate: '2026-01-20' },
-    { id: 5, name: 'David Nkusi', email: 'david@example.com', phone: '+250787777666', tier: 'Professional', status: 'active', joinDate: '2026-02-05' },
+    { id: 5, name: 'David Nkusi', email: 'david@example.com', phone: '+250787777666', tier: 'Basic', status: 'active', joinDate: '2026-02-05' },
   ]);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
@@ -38,12 +41,7 @@ const AdminDashboard: React.FC = () => {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', tier: 'Free', status: 'active' });
 
   const clearAuthAndRedirectToLogin = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
-      // DO NOT clear admin_experience_mode - it's unrelated to auth failure
-    }
+    clearAuth();
     router.replace('/auth/login');  // Use replace instead of push for one-way navigation
   };
 
@@ -135,7 +133,7 @@ const AdminDashboard: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
+      const response = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -148,10 +146,9 @@ const AdminDashboard: React.FC = () => {
           localStorage.setItem('user', JSON.stringify(payload.data));
         }
       } else if (response.status === 401) {
-        // Token is expired - DON'T logout here
-        // Only the main loader should handle logout on 401
-        // This background refresh should fail silently
+        // Token could not be refreshed - logout required
         console.debug('Admin token refresh failed: 401 Unauthorized');
+        clearAuthAndRedirectToLogin();
       }
     } catch (error) {
       // Network error - don't logout, just skip refresh
@@ -191,18 +188,18 @@ const AdminDashboard: React.FC = () => {
 
   // Mock revenue data
   const revenueByTier = [
-    { tier: 'Free', users: 1200, revenue: 0, percentage: 0 },
-    { tier: 'Basic', users: 892, revenue: 8920000, percentage: 10.6 },
-    { tier: 'Professional', users: 635, revenue: 28665000, percentage: 34.0 },
-    { tier: 'Ultimate', users: 120, revenue: 11880000, percentage: 14.1 },
+    { tier: 'Free', users: 1200, revenue: 0, percentage: 0.0 },
+    { tier: 'Basic', users: 980, revenue: 28420000, percentage: 33.8 },
+    { tier: 'Professional', users: 420, revenue: 33180000, percentage: 39.4 },
+    { tier: 'Ultimate', users: 115, revenue: 22885000, percentage: 26.8 },
   ];
 
   // Mock recent transactions
   const recentTransactions = [
-    { id: 1, user: 'Jean Munyeshyaka', type: 'Upgrade', tier: 'Professional', amount: 'FRW 29,999', date: '2026-03-01', status: 'completed' },
-    { id: 2, user: 'Marie Uwayo', type: 'Renewal', tier: 'Basic', amount: 'FRW 9,999', date: '2026-02-28', status: 'completed' },
-    { id: 3, user: 'Alice Kagaba', type: 'Upgrade', tier: 'Ultimate', amount: 'FRW 99,999', date: '2026-02-27', status: 'completed' },
-    { id: 4, user: 'David Nkusi', type: 'Renewal', tier: 'Professional', amount: 'FRW 29,999', date: '2026-02-26', status: 'failed' },
+    { id: 1, user: 'Jean Munyeshyaka', type: 'Upgrade', tier: 'Basic', amount: 'Rwf 29k/mo', date: '2026-03-01', status: 'completed' },
+    { id: 2, user: 'Marie Uwayo', type: 'Upgrade', tier: 'Professional', amount: 'Rwf 79k/mo', date: '2026-02-28', status: 'completed' },
+    { id: 3, user: 'Alice Kagaba', type: 'Upgrade', tier: 'Ultimate', amount: 'Rwf 199k/mo', date: '2026-02-27', status: 'completed' },
+    { id: 4, user: 'David Nkusi', type: 'Renewal', tier: 'Basic', amount: 'Rwf 29k/mo', date: '2026-02-26', status: 'failed' },
   ];
 
   // Redirect to login if not authenticated or not admin
@@ -331,9 +328,7 @@ const AdminDashboard: React.FC = () => {
 
     // Handle logout
     const handleLogout = async () => {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
+      clearAuth();
       localStorage.removeItem('admin_experience_mode');
       await signOut({ redirect: false });
       router.push('/auth/login');
@@ -447,18 +442,14 @@ const AdminDashboard: React.FC = () => {
                 </Link>
                 <span
                   className={`px-3 py-2 text-xs font-semibold rounded-lg border ${
-                    adminExperienceMode === 'user'
-                      ? 'bg-blue-50 text-blue-700 border-blue-200'
-                      : adminExperienceMode === 'ultimate'
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'bg-red-50 text-red-700 border-red-200'
+                    adminExperienceMode === 'ultimate'
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-red-50 text-red-700 border-red-200'
                   }`}
                 >
-                  {adminExperienceMode === 'user'
-                    ? 'Mode: User View'
-                    : adminExperienceMode === 'ultimate'
-                      ? 'Mode: Ultimate No Expiry'
-                      : 'Mode: Admin'}
+                  {adminExperienceMode === 'ultimate'
+                    ? 'Mode: Ultimate No Expiry'
+                    : 'Mode: Admin'}
                 </span>
                 <select
                   defaultValue=""
@@ -471,7 +462,6 @@ const AdminDashboard: React.FC = () => {
                   <option value="" disabled>
                     Admin Access
                   </option>
-                  <option value="user">View as Normal User</option>
                   <option value="ultimate">View as Ultimate (No Expiry)</option>
                   <option value="off">Restore Admin Mode</option>
                 </select>
@@ -498,7 +488,7 @@ const AdminDashboard: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
 
             {/* Page Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-12">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2">
                   Admin Dashboard
@@ -508,13 +498,27 @@ const AdminDashboard: React.FC = () => {
                 </p>
               </div>
               
-              <Link
-                href="/analytics"
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
-              >
-                <i className="fas fa-chart-line"></i>
-                View Analytics
-              </Link>
+              <div className="flex gap-3">
+                <Link
+                  href="/properties/add"
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
+                >
+                  <i className="fas fa-plus-circle"></i>
+                  Add Property
+                </Link>
+                <Link
+                  href="/analytics"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
+                >
+                  <i className="fas fa-chart-line"></i>
+                  View Analytics
+                </Link>
+              </div>
+            </div>
+
+            {/* Four Steps Process */}
+            <div className="mb-8">
+              <FourStepProcess />
             </div>
 
             {/* KPI Cards Grid */}
@@ -586,7 +590,6 @@ const AdminDashboard: React.FC = () => {
                           <td className="py-3 px-4">
                             <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
                               user.tier === 'Free' ? 'bg-gray-100 text-gray-700' :
-                              user.tier === 'Basic' ? 'bg-blue-100 text-blue-700' :
                               user.tier === 'Professional' ? 'bg-emerald-100 text-emerald-700' :
                               'bg-purple-100 text-purple-700'
                             }`}>
@@ -700,6 +703,12 @@ const AdminDashboard: React.FC = () => {
             </div>
 
           </div>
+
+          {/* Subscription Plans Selector */}
+          <div className="mt-16 mb-12">
+            <SubscriptionSelector currentPlan="ultimate" />
+          </div>
+
         </main>
 
         {/* ADD USER MODAL */}

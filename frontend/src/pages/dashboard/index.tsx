@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
 import toast from 'react-hot-toast';
+import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '../../utils/tokenRefresh';
+import FourStepProcess from '../../components/FourStepProcess';
+import SubscriptionSelector from '../../components/SubscriptionSelector';
 
 /**
  * USER DASHBOARD · Land Valuation System
@@ -57,12 +60,7 @@ const Dashboard: React.FC = () => {
     setAuthRedirecting(true);
     setLoading(false);
 
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
-      // DO NOT clear admin_experience_mode - it's unrelated to auth failure
-    }
+    clearAuth();
 
     toast.error('Session expired. Please sign in again.');
     router.replace('/auth/login');
@@ -122,7 +120,7 @@ const Dashboard: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
+      const response = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -135,10 +133,9 @@ const Dashboard: React.FC = () => {
           localStorage.setItem('user', JSON.stringify(payload.data));
         }
       } else if (response.status === 401) {
-        // Token is expired - DON'T logout here
-        // Only the main loader should handle logout on 401
-        // This background refresh should fail silently
+        // Token could not be refreshed - logout required
         console.debug('Admin token refresh failed: 401 Unauthorized');
+        clearAuthAndRedirectToLogin();
       }
     } catch (error) {
       // Network error - don't logout, just skip refresh
@@ -163,13 +160,14 @@ const Dashboard: React.FC = () => {
         if (storedUser) {
           try {
             userData = JSON.parse(storedUser);
+            console.log('Loaded user from localStorage:', userData);
           } catch (e) {
             console.error('Failed to parse stored user data:', e);
           }
         }
 
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
+          const response = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },
@@ -177,23 +175,17 @@ const Dashboard: React.FC = () => {
 
           if (response.ok) {
             const payload = await response.json();
+            console.log('Profile endpoint response:', payload);
             if (payload?.data) {
               userData = payload.data;
+              console.log('Updated userData from profile endpoint:', userData);
               localStorage.setItem('user', JSON.stringify(userData));
             }
           } else if (response.status === 401) {
-            // Token expired - mark it so we stop retrying
-            setTokenExpired(true);
-            // but if we have cached user data, keep using it
-            // The user can continue working with stale data
-            if (userData) {
-              console.debug('Token expired but using cached user data');
-              // Don't logout - continue with cached data
-            } else {
-              // No cached data and token is invalid - must logout
-              clearAuthAndRedirectToLogin();
-              return;
-            }
+            // Token refresh failed - user must login again
+            console.debug('Token refresh failed: 401 Unauthorized');
+            clearAuthAndRedirectToLogin();
+            return;
           } else {
             // Other server error - but if we have cached data, continue
             if (!userData) {
@@ -218,8 +210,14 @@ const Dashboard: React.FC = () => {
         }
 
         const adminExperienceMode = getAdminExperienceMode();
+        console.log('Admin redirect check:', {
+          user_type: userData?.user_type,
+          adminExperienceMode,
+          shouldRedirect: userData?.user_type === 'admin' && adminExperienceMode === 'off'
+        });
 
         if (userData.user_type === 'admin' && adminExperienceMode === 'off') {
+          console.log('Redirecting to /admin/dashboard');
           router.push('/admin/dashboard');
           return;
         }
@@ -367,8 +365,8 @@ const Dashboard: React.FC = () => {
   // Get subscription tier info
   const getTierInfo = (tier: string) => {
     const tiers: { [key: string]: { color: string; name: string; valuations: number } } = {
-      free: { color: 'emerald', name: 'Free', valuations: 5 },
-      basic: { color: 'blue', name: 'Basic', valuations: 10 },
+      free: { color: 'emerald', name: 'Free', valuations: 3 },
+      basic: { color: 'blue', name: 'Basic', valuations: 15 },
       professional: { color: 'purple', name: 'Professional', valuations: -1 },
       ultimate: { color: 'yellow', name: 'Ultimate', valuations: -1 },
     };
@@ -377,7 +375,7 @@ const Dashboard: React.FC = () => {
 
   const tierInfo = user ? getTierInfo(user.subscriptionTier) : null;
   const usedValuations = user?.recentValuations.length || 0;
-  const maxValuations = tierInfo?.valuations || 5;
+  const maxValuations = tierInfo?.valuations || 3;
   const hasValidExpiry = Boolean(
     user?.subscriptionExpiresAt && !Number.isNaN(new Date(user.subscriptionExpiresAt).getTime())
   );
@@ -479,8 +477,21 @@ const Dashboard: React.FC = () => {
               </p>
             </div>
 
+            {/* Four Steps Process */}
+            <FourStepProcess />
+
             {/* Quick Navigation */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+              <Link
+                href="/properties/add"
+                className="flex flex-col items-center gap-3 p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 border border-emerald-600 rounded-lg hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all group"
+              >
+                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <i className="fas fa-plus-circle text-emerald-700 text-xl"></i>
+                </div>
+                <span className="text-sm font-semibold text-white">Add Property</span>
+              </Link>
+
               <Link
                 href="/search"
                 className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
@@ -696,7 +707,7 @@ const Dashboard: React.FC = () => {
                         className="block w-full px-4 py-2.5 text-center text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
                       >
                         <i className="fas fa-star mr-2"></i>
-                        Upgrade to Premium
+                        Choose Basic
                       </Link>
                     )}
                   </div>
@@ -739,6 +750,11 @@ const Dashboard: React.FC = () => {
 
               </div>
 
+            </div>
+
+            {/* Subscription Plans Selector */}
+            <div className="mt-16 mb-12">
+              <SubscriptionSelector currentPlan={user.subscriptionTier} />
             </div>
 
           </div>
