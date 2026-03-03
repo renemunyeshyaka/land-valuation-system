@@ -100,7 +100,7 @@ Land Valuation System (LVS) is a comprehensive platform for accurate land pricin
    ```
 
 2. **Run Tests**
-   - Backend: `cd backend && go test ./... -v`
+   - Backend: `cd backend && go test ./... -v` | go run ./cmd/api/main.go
    - Frontend: `cd frontend && npm run test`
    - Mobile: `cd mobile && npm run test`
 

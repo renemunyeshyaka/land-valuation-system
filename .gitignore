@@ -24,6 +24,7 @@ yarn-error.log*
 backend/.env
 frontend/.env
 !.env.example
+.env.production.example
 
 ## Shell scripts and deployment scripts
 *.sh

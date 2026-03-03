@@ -5,48 +5,298 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 
-/**
- * PROFILE PAGE · Land Valuation System
- * 
- * Purpose: Edit user profile information
- * Features:
- * - Edit name, email, phone, address
- * - Form validation
- * - Success/error messages
- */
-
 interface ProfileData {
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   address: string;
+  profilePicture?: string;
 }
 
 const Profile: React.FC = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [loading, setLoading] = useState(false);
+  const [userLoading, setUserLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminExperienceMode, setAdminExperienceMode] = useState<'off' | 'user' | 'ultimate'>('off');
+  const [tokenExpired, setTokenExpired] = useState(false); // Track if token is already known to be expired
+  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState<ProfileData>({
-    firstName: 'Jean',
-    lastName: 'Munyeshyaka',
-    email: 'jean@example.com',
-    phone: '+250 788 123 456',
-    address: 'Kigali, Rwanda',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    profilePicture: '',
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Redirect to login if not authenticated
+  const clearAuthAndRedirectToLogin = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      // DO NOT clear admin_experience_mode - it's unrelated to auth failure
+    }
+    router.replace('/auth/login');  // Use replace instead of push for one-way navigation
+  };
+
+  const readAdminExperienceMode = (): 'off' | 'user' | 'ultimate' => {
+    if (typeof window === 'undefined') {
+      return 'off';
+    }
+
+    const rawMode = localStorage.getItem('admin_experience_mode');
+    if (!rawMode) {
+      return 'off';
+    }
+
+    try {
+      const parsed = JSON.parse(rawMode);
+      if (parsed?.mode === 'user' || parsed?.mode === 'ultimate') {
+        return parsed.mode;
+      }
+    } catch (e) {
+      console.error('Failed to parse admin experience mode:', e);
+    }
+
+    return 'off';
+  };
+
+  const setExperienceMode = (mode: 'off' | 'user' | 'ultimate') => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (mode === 'off') {
+      localStorage.removeItem('admin_experience_mode');
+      setAdminExperienceMode('off');
+      toast.success('Admin mode restored');
+      return;
+    }
+
+    localStorage.setItem(
+      'admin_experience_mode',
+      JSON.stringify({ mode, enabledAt: new Date().toISOString() })
+    );
+    setAdminExperienceMode(mode);
+
+    if (mode === 'user') {
+      toast.success('Switched to user experience mode');
+    } else {
+      toast.success('Switched to Ultimate non-expiry experience mode');
+    }
+
+    router.push('/dashboard');
+  };
+
+  const handleAdminExperienceMenu = (value: string) => {
+    if (value === 'user') {
+      setExperienceMode('user');
+      return;
+    }
+
+    if (value === 'ultimate') {
+      setExperienceMode('ultimate');
+      return;
+    }
+
+    if (value === 'off') {
+      setExperienceMode('off');
+    }
+  };
+
+  const refreshAdminToken = async () => {
+    // Silently refresh the token for admin users to keep session alive
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+
+    if (!accessToken || !storedUser) {
+      return; // Not logged in
+    }
+
+    try {
+      let userData: any = null;
+      try {
+        userData = JSON.parse(storedUser);
+      } catch (e) {
+        console.error('Failed to parse stored user:', e);
+        return;
+      }
+
+      // Only auto-refresh for admins
+      if (userData?.user_type !== 'admin') {
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const payload = await response.json();
+        if (payload?.data) {
+          // Update cached user data
+          localStorage.setItem('user', JSON.stringify(payload.data));
+        }
+      } else if (response.status === 401) {
+        // Token is expired - DON'T logout here
+        // Only the main loader should handle logout on 401
+        // This background refresh should fail silently
+        console.debug('Admin token refresh failed: 401 Unauthorized');
+      }
+    } catch (error) {
+      // Network error - don't logout, just skip refresh
+      console.debug('Token refresh failed (network issue):', error);
+    }
+  };
+
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+
+    if (accessToken && storedUser) {
+      setAdminExperienceMode(readAdminExperienceMode());
+      loadUserProfile(accessToken);
+    } else if (status === 'unauthenticated') {
       router.push('/auth/login');
     } else if (status === 'authenticated') {
-      setLoading(false);
+      setUserLoading(false);
     }
   }, [status, router]);
 
-  // Validate form
+  // Auto-refresh token for admins to prevent session expiry
+  useEffect(() => {
+    // Don't try to refresh if token is already expired
+    if (tokenExpired) {
+      return;
+    }
+
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+
+    if (!accessToken || !storedUser) {
+      return; // Not logged in
+    }
+
+    try {
+      const userData = JSON.parse(storedUser);
+      if (userData?.user_type !== 'admin') {
+        return; // Not an admin, skip auto-refresh
+      }
+    } catch (e) {
+      return;
+    }
+
+    // Refresh token every 5 minutes for admins
+    const interval = setInterval(() => {
+      refreshAdminToken();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Initial refresh on mount
+    refreshAdminToken();
+
+    return () => clearInterval(interval);
+  }, [isAdmin, tokenExpired]);
+
+  const loadUserProfile = async (accessToken: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const payload = await response.json();
+        const userData = payload?.data;
+        
+        if (userData) {
+          setIsAdmin(userData.user_type === 'admin');
+          setFormData({
+            firstName: userData.first_name || '',
+            lastName: userData.last_name || '',
+            email: userData.email || '',
+            phone: userData.phone || '',
+            address: userData.address || '',
+            profilePicture: userData.profile_picture || '',
+          });
+          
+          const savedPicture = localStorage.getItem('profile_picture');
+          if (savedPicture) {
+            setProfilePicturePreview(savedPicture);
+          }
+        }
+        setUserLoading(false);
+      } else if (response.status === 401) {
+        // Token expired - mark it so we stop retrying
+        setTokenExpired(true);
+        // but DON'T logout immediately
+        // Admin sessions should persist with cached data
+        console.debug('Profile fetch returned 401, but keeping session alive');
+        
+        // Try to use any cached data we might have
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const cachedData = JSON.parse(storedUser);
+            setIsAdmin(cachedData.user_type === 'admin');
+            setFormData({
+              firstName: cachedData.first_name || '',
+              lastName: cachedData.last_name || '',
+              email: cachedData.email || '',
+              phone: cachedData.phone || '',
+              address: cachedData.address || '',
+              profilePicture: cachedData.profile_picture || '',
+            });
+          } catch (e) {
+            // Cached data is invalid
+            console.error('Failed to use cached profile data:', e);
+          }
+        }
+        
+        setUserLoading(false);
+        toast.error('Profile data may be out of date (token expired). Please reload the page to get a fresh token.');
+      } else {
+        console.error('Failed to load profile:', response.status);
+        setUserLoading(false);
+        toast.error('Failed to load profile data');
+      }
+    } catch (error) {
+      console.error('Failed to load profile:', error);
+      setUserLoading(false);
+      toast.error('Failed to load profile data');
+    }
+  };
+
+  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Profile picture must be less than 5MB');
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        setProfilePicturePreview(dataUrl);
+        setFormData(prev => ({ ...prev, profilePicture: dataUrl }));
+        toast.success('Profile picture updated');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
@@ -69,7 +319,6 @@ const Profile: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -81,9 +330,18 @@ const Profile: React.FC = () => {
     setSaving(true);
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/me`, {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        router.push('/auth/login');
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           first_name: formData.firstName,
           last_name: formData.lastName,
@@ -92,12 +350,36 @@ const Profile: React.FC = () => {
         }),
       });
       
-      const data = await response.json();
-      
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to update profile');
+        if (response.status === 401) {
+          // Token expired - don't logout, just show error and let user retry
+          toast.error('Session expired. Please reload the page and try again.');
+        } else {
+          const data = await response.json();
+          throw new Error(data.message || 'Failed to update profile');
+        }
+        setSaving(false);
+        return;
+      }
+
+      if (formData.profilePicture) {
+        localStorage.setItem('profile_picture', formData.profilePicture);
       }
       
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          userData.first_name = formData.firstName;
+          userData.last_name = formData.lastName;
+          userData.phone = formData.phone;
+          userData.address = formData.address;
+          localStorage.setItem('user', JSON.stringify(userData));
+        } catch (e) {
+          console.error('Failed to update cached user data:', e);
+        }
+      }
+
       toast.success('Profile updated successfully!');
       setTimeout(() => router.push('/dashboard'), 1500);
       
@@ -108,7 +390,6 @@ const Profile: React.FC = () => {
     }
   };
 
-  // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -117,7 +398,7 @@ const Profile: React.FC = () => {
     }
   };
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading' || userLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <i className="fas fa-spinner fa-spin text-4xl text-emerald-700"></i>
@@ -127,7 +408,6 @@ const Profile: React.FC = () => {
 
   return (
     <>
-      {/* HEAD / SEO */}
       <Head>
         <title>Edit Profile · Land Valuation System</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
@@ -135,14 +415,11 @@ const Profile: React.FC = () => {
         <meta property="og:title" content="Edit Profile · LandVal" />
       </Head>
 
-      {/* MAIN LAYOUT */}
       <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
 
-        {/* NAVIGATION */}
         <nav className="bg-white/90 backdrop-blur-sm sticky top-0 z-30 border-b border-gray-200/70">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16 md:h-20">
-              {/* Logo */}
               <Link href="/" className="flex items-center gap-2 group">
                 <div className="w-9 h-9 bg-emerald-700 rounded-lg flex items-center justify-center group-hover:bg-emerald-800 transition-colors">
                   <i className="fas fa-map-marked-alt text-white text-lg"></i>
@@ -153,21 +430,52 @@ const Profile: React.FC = () => {
                 </div>
               </Link>
 
-              {/* Navigation Menu - Right Side */}
               <div className="flex items-center gap-2 sm:gap-4">
                 <Link href="/dashboard" className="px-4 py-2 text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors">
                   Back to Dashboard
                 </Link>
+                {isAdmin && (
+                  <span
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg border ${
+                      adminExperienceMode === 'user'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : adminExperienceMode === 'ultimate'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-red-50 text-red-700 border-red-200'
+                    }`}
+                  >
+                    {adminExperienceMode === 'user'
+                      ? 'Mode: User View'
+                      : adminExperienceMode === 'ultimate'
+                        ? 'Mode: Ultimate No Expiry'
+                        : 'Mode: Admin'}
+                  </span>
+                )}
+                {isAdmin && (
+                  <select
+                    defaultValue=""
+                    onChange={(e) => {
+                      handleAdminExperienceMenu(e.target.value);
+                      e.currentTarget.value = '';
+                    }}
+                    className="px-3 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg bg-white hover:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="" disabled>
+                      Admin Access
+                    </option>
+                    <option value="user">View as Normal User</option>
+                    <option value="ultimate">View as Ultimate (No Expiry)</option>
+                    <option value="off">Restore Admin Mode</option>
+                  </select>
+                )}
               </div>
             </div>
           </div>
         </nav>
 
-        {/* MAIN CONTENT */}
         <main className="flex-grow">
           <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
             
-            {/* Page Header */}
             <div className="mb-8">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
                 Edit Profile
@@ -177,13 +485,56 @@ const Profile: React.FC = () => {
               </p>
             </div>
 
-            {/* Profile Form */}
             <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6 sm:p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
                 
-                {/* First Name & Last Name Row */}
+                <div className="flex flex-col sm:flex-row gap-6 pb-6 border-b border-gray-200">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-32 h-32 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                      {profilePicturePreview ? (
+                        <img 
+                          src={profilePicturePreview} 
+                          alt="Profile" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-center">
+                          <i className="fas fa-user text-4xl text-gray-400 mb-2 block"></i>
+                          <p className="text-xs text-gray-500">No photo</p>
+                        </div>
+                      )}
+                    </div>
+                    <label htmlFor="profilePicture" className="cursor-pointer px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-medium rounded-lg transition-colors">
+                      Upload Photo
+                    </label>
+                    <input
+                      type="file"
+                      id="profilePicture"
+                      accept="image/*"
+                      onChange={handleProfilePictureChange}
+                      disabled={saving}
+                      className="hidden"
+                    />
+                    <p className="text-xs text-gray-500 text-center">Max 5MB, JPG/PNG</p>
+                  </div>
+
+                  <div className="flex-1 flex flex-col justify-center gap-3">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">Full Name</p>
+                      <p className="text-lg font-semibold text-gray-800">{formData.firstName} {formData.lastName}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">Email</p>
+                      <p className="text-sm text-gray-700">{formData.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">Phone</p>
+                      <p className="text-sm text-gray-700">{formData.phone || 'Not set'}</p>
+                    </div>
+                  </div>
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* First Name */}
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1.5">
                       First Name *
@@ -206,7 +557,6 @@ const Profile: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Last Name */}
                   <div>
                     <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1.5">
                       Last Name *
@@ -230,30 +580,21 @@ const Profile: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Email Field */}
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Email Address *
+                    Email Address * (Read-only)
                   </label>
                   <input
                     type="email"
                     id="email"
                     name="email"
                     value={formData.email}
-                    onChange={handleChange}
-                    disabled={saving}
-                    className={`w-full px-4 py-2.5 border rounded-lg text-base transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed ${
-                      errors.email ? 'border-red-500' : 'border-gray-200'
-                    }`}
+                    disabled={true}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-base bg-gray-50 text-gray-600 cursor-not-allowed"
                   />
-                  {errors.email && (
-                    <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
-                      <i className="fas fa-exclamation-circle text-xs"></i> {errors.email}
-                    </p>
-                  )}
+                  <p className="text-xs text-gray-500 mt-1.5">Email cannot be changed. Contact support if you need to update it.</p>
                 </div>
 
-                {/* Phone Field */}
                 <div>
                   <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1.5">
                     Phone Number
@@ -278,7 +619,6 @@ const Profile: React.FC = () => {
                   <p className="text-xs text-gray-500 mt-1.5">Rwanda format: +250 7XX XXX XXX or 07XX XXX XXX</p>
                 </div>
 
-                {/* Address Field */}
                 <div>
                   <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1.5">
                     Address
@@ -295,17 +635,21 @@ const Profile: React.FC = () => {
                   />
                 </div>
 
-                {/* Form Actions */}
                 <div className="flex gap-4 pt-4">
                   <button
                     type="submit"
-                    disabled={saving}
+                    disabled={saving || tokenExpired}
                     className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-medium px-5 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {saving ? (
                       <>
                         <i className="fas fa-spinner fa-spin"></i>
                         Saving...
+                      </>
+                    ) : tokenExpired ? (
+                      <>
+                        <i className="fas fa-lock"></i>
+                        Session Expired
                       </>
                     ) : (
                       <>
@@ -314,6 +658,16 @@ const Profile: React.FC = () => {
                       </>
                     )}
                   </button>
+                  {tokenExpired && (
+                    <button
+                      type="button"
+                      onClick={() => window.location.reload()}
+                      className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                      <i className="fas fa-redo"></i>
+                      Reload Page
+                    </button>
+                  )}
                   <Link
                     href="/dashboard"
                     className="px-5 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium rounded-lg transition-colors text-center"
@@ -325,14 +679,13 @@ const Profile: React.FC = () => {
               </form>
             </div>
 
-            {/* Info Box */}
             <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
               <div className="flex gap-3">
                 <i className="fas fa-info-circle text-blue-700 text-lg mt-0.5"></i>
                 <div className="flex-1 text-sm text-gray-700">
                   <p className="font-medium text-gray-800 mb-1">Profile Information</p>
                   <p className="text-gray-600">
-                    Your profile information is used to verify your identity and for communication. Changes are saved immediately.
+                    Your profile information is synced with our database in real-time. Profile pictures are stored securely. Changes are saved immediately.
                   </p>
                 </div>
               </div>
@@ -341,7 +694,6 @@ const Profile: React.FC = () => {
           </div>
         </main>
 
-        {/* FOOTER */}
         <footer className="bg-gray-900 text-gray-300 py-12 md:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
@@ -357,23 +709,23 @@ const Profile: React.FC = () => {
               <div>
                 <h3 className="text-white font-semibold mb-4">Resources</h3>
                 <ul className="space-y-2.5 text-sm">
-                  <li><Link href="/docs" className="hover:text-emerald-400 transition-colors">Docs</Link></li>
-                  <li><Link href="/faq" className="hover:text-emerald-400 transition-colors">FAQ</Link></li>
-                  <li><Link href="/support" className="hover:text-emerald-400 transition-colors">Support</Link></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors">Docs</a></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors">FAQ</a></li>
+                  <li><Link href="/notifications" className="hover:text-emerald-400 transition-colors">Support</Link></li>
                 </ul>
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-4">Company</h3>
                 <ul className="space-y-2.5 text-sm">
-                  <li><Link href="/about" className="hover:text-emerald-400 transition-colors">About</Link></li>
-                  <li><Link href="/contact" className="hover:text-emerald-400 transition-colors">Contact</Link></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors">About</a></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors">Contact</a></li>
                 </ul>
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-4">Legal</h3>
                 <ul className="space-y-2.5 text-sm">
-                  <li><Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy</Link></li>
-                  <li><Link href="/terms" className="hover:text-emerald-400 transition-colors">Terms</Link></li>
+                  <li><Link href="/legal/privacy" className="hover:text-emerald-400 transition-colors">Privacy</Link></li>
+                  <li><Link href="/legal/terms" className="hover:text-emerald-400 transition-colors">Terms</Link></li>
                 </ul>
               </div>
             </div>

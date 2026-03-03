@@ -48,6 +48,16 @@ type User struct {
 	TwoFactorSecret  string     `json:"-"`
 	TwoFASecret      string     `gorm:"column:two_fa_secret" json:"two_fa_secret"`
 
+	// Email Verification & MFA
+	EmailVerified              bool       `gorm:"default:false" json:"email_verified"`
+	EmailVerificationCode      string     `gorm:"size:6" json:"-"`
+	EmailVerificationExpiresAt *time.Time `json:"-"`
+	OTPCode                    string     `gorm:"size:6" json:"-"`
+	OTPExpiresAt               *time.Time `json:"-"`
+	OTPAttempts                int        `gorm:"default:0" json:"-"`
+	OTPLockedUntil             *time.Time `json:"-"`
+	LastOTPSentAt              *time.Time `json:"-"`
+
 	// Relationships
 	Properties      []Property `gorm:"foreignKey:OwnerID;references:ID" json:"properties,omitempty"`
 	SavedProperties []Property `gorm:"many2many:user_saved_properties;" json:"saved_properties,omitempty"`

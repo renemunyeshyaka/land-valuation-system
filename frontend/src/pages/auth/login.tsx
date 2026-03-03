@@ -73,14 +73,12 @@ const Login: React.FC = () => {
         throw new Error(data.message || 'Login failed');
       }
       
-      // Store authentication tokens
-      const storageType = formData.rememberMe ? localStorage : sessionStorage;
-      storageType.setItem('access_token', data.data.access_token);
-      storageType.setItem('refresh_token', data.data.refresh_token);
-      storageType.setItem('user', JSON.stringify(data.data.user));
+      toast.success('OTP sent to your email! Redirecting...');
       
-      toast.success('Login successful! Redirecting...');
-      setTimeout(() => router.push('/dashboard'), 1500);
+      // Redirect to OTP verification page
+      setTimeout(() => {
+        router.push(`/auth/verify-otp?email=${encodeURIComponent(formData.email)}`);
+      }, 1500);
       
     } catch (error: any) {
       toast.error(error.message || 'Login failed. Please check your credentials.');

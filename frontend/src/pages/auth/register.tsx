@@ -19,6 +19,7 @@ const Register: React.FC = () => {
     firstName: '',
     lastName: '',
     phone: '',
+    userType: 'buyer', // Default to buyer
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -88,7 +89,7 @@ const Register: React.FC = () => {
           password: formData.password,
           first_name: formData.firstName,
           last_name: formData.lastName,
-          phone: formData.phone.replace(/\s/g, ''),
+          user_type: formData.userType,
         }),
       });
 
@@ -98,12 +99,12 @@ const Register: React.FC = () => {
         throw new Error(data.message || 'Registration failed');
       }
 
-      toast.success('Account created! Please check your email to verify.');
+      toast.success('Account created! Redirecting to email verification...');
       
-      // Redirect to login after 2 seconds
+      // Redirect to email verification page with email
       setTimeout(() => {
-        router.push('/auth/login');
-      }, 2000);
+        router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`);
+      }, 1500);
 
     } catch (error: any) {
       toast.error(error.message || 'Registration failed. Please try again.');
@@ -113,8 +114,8 @@ const Register: React.FC = () => {
     }
   };
 
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle input/select changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     // Clear error for this field
@@ -288,6 +289,26 @@ const Register: React.FC = () => {
                       <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
                     )}
                     <p className="mt-1 text-xs text-gray-500">Format: +250 7XX XXX XXX or 07XX XXX XXX</p>
+                  </div>
+
+                  {/* User Type Selector */}
+                  <div>
+                    <label htmlFor="userType" className="block text-sm font-medium text-gray-700 mb-2">
+                      Account Type <span className="text-red-600">*</span>
+                    </label>
+                    <select
+                      id="userType"
+                      name="userType"
+                      value={formData.userType}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-gray-800 bg-white"
+                      disabled={loading}
+                    >
+                      <option value="buyer">Buyer / Investor</option>
+                      <option value="seller">Seller / Property Owner</option>
+                      <option value="agent">Real Estate Agent</option>
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">Choose your account type to get relevant features</p>
                   </div>
 
                   {/* Password */}

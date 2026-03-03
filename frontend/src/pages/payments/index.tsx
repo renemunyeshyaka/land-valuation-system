@@ -92,7 +92,12 @@ const PaymentHistory: React.FC = () => {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+
+    if (accessToken && storedUser) {
+      setLoading(false);
+    } else if (status === 'unauthenticated') {
       router.push('/auth/login');
     } else if (status === 'authenticated') {
       setLoading(false);
@@ -180,7 +185,7 @@ const PaymentHistory: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                 <p className="text-sm font-medium text-gray-600 mb-2">Total Spent</p>
-                <p className="text-3xl font-bold text-emerald-700">₨{(totalSpent / 1000).toFixed(0)}k</p>
+                <p className="text-3xl font-bold text-emerald-700">FRW {(totalSpent / 1000).toFixed(0)}k</p>
                 <p className="text-xs text-gray-500 mt-2">All completed transactions</p>
               </div>
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
@@ -255,7 +260,7 @@ const PaymentHistory: React.FC = () => {
                       <tr key={txn.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                         <td className="py-4 px-4 text-gray-800 font-medium">{txn.date}</td>
                         <td className="py-4 px-4 text-gray-600">{txn.description}</td>
-                        <td className="py-4 px-4 text-gray-800 font-semibold">₨{txn.amount.toLocaleString()}</td>
+                        <td className="py-4 px-4 text-gray-800 font-semibold">FRW {txn.amount.toLocaleString()}</td>
                         <td className="py-4 px-4 text-gray-600">{txn.method}</td>
                         <td className="py-4 px-4">
                           <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
@@ -327,7 +332,7 @@ const PaymentHistory: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between border-b border-gray-200 pb-4">
                     <span className="text-gray-600">Monthly Cost</span>
-                    <span className="font-semibold text-emerald-700">₨29,999</span>
+                    <span className="font-semibold text-emerald-700">FRW 29,999</span>
                   </div>
                   <div className="flex items-center justify-between border-b border-gray-200 pb-4">
                     <span className="text-gray-600">Billing Cycle</span>

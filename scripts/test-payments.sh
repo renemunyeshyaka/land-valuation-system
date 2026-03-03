@@ -7,7 +7,8 @@
 
 set -e
 
-BASE_URL="http://localhost:5000"
+# Use environment variable or default to localhost
+BASE_URL="${API_BASE_URL:-http://localhost:5000}"
 API_URL="$BASE_URL/api/v1"
 
 # Colors for output

@@ -40,11 +40,11 @@ const Analytics: React.FC = () => {
 
   // Mock top locations
   const topLocations = [
-    { location: 'Kigali Central', valuations: 487, avgPrice: '₨85.2M', trend: '+18%' },
-    { location: 'Nyarutarama', valuations: 342, avgPrice: '₨52.6M', trend: '+12%' },
-    { location: 'Kimironko', valuations: 298, avgPrice: '₨45.3M', trend: '+8%' },
-    { location: 'Rebero', valuations: 214, avgPrice: '₨38.9M', trend: '+5%' },
-    { location: 'Gisozi', valuations: 187, avgPrice: '₨32.1M', trend: '+3%' },
+    { location: 'Kigali Central', valuations: 487, avgPrice: 'FRW 85.2M', trend: '+18%' },
+    { location: 'Nyarutarama', valuations: 342, avgPrice: 'FRW 52.6M', trend: '+12%' },
+    { location: 'Kimironko', valuations: 298, avgPrice: 'FRW 45.3M', trend: '+8%' },
+    { location: 'Rebero', valuations: 214, avgPrice: 'FRW 38.9M', trend: '+5%' },
+    { location: 'Gisozi', valuations: 187, avgPrice: 'FRW 32.1M', trend: '+3%' },
   ];
 
   // Mock property types
@@ -65,7 +65,13 @@ const Analytics: React.FC = () => {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    // Check for localStorage tokens (MFA flow) first
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+
+    if (accessToken && storedUser) {
+      setLoading(false);
+    } else if (status === 'unauthenticated') {
       router.push('/auth/login');
     } else if (status === 'authenticated') {
       setLoading(false);
@@ -218,7 +224,7 @@ const Analytics: React.FC = () => {
                     <div key={idx}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-gray-700">{item.month}</span>
-                        <span className="text-sm font-semibold text-emerald-700">₨{(item.revenue / 100).toFixed(0)}k</span>
+                        <span className="text-sm font-semibold text-emerald-700">FRW {(item.revenue / 100).toFixed(0)}k</span>
                       </div>
                       <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
                         <div
@@ -226,14 +232,14 @@ const Analytics: React.FC = () => {
                           style={{ width: `${(item.revenue / 4000) * 100}%` }}
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Profit: ₨{(item.revenue - item.costs)}k</p>
+                      <p className="text-xs text-gray-500 mt-1">Profit: FRW {(item.revenue - item.costs)}k</p>
                     </div>
                   ))}
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <p className="text-sm text-gray-600">Total Revenue (3M)</p>
-                  <p className="text-3xl font-bold text-emerald-700 mt-1">₨9.3M</p>
+                  <p className="text-3xl font-bold text-emerald-700 mt-1">FRW 9.3M</p>
                   <p className="text-xs text-green-600 mt-2">
                     <i className="fas fa-arrow-up mr-1"></i>
                     +58.3% from previous quarter

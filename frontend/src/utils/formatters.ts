@@ -1,6 +1,6 @@
 export const formatPrice = (value: number): string => {
   if (!Number.isFinite(value)) {
-    return '₨0';
+    return 'FRW 0';
   }
 
   return new Intl.NumberFormat('en-RW', {

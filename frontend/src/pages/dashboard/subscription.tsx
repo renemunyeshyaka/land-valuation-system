@@ -27,7 +27,12 @@ const Subscription: React.FC = () => {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+
+    if (accessToken && storedUser) {
+      setLoading(false);
+    } else if (status === 'unauthenticated') {
       router.push('/auth/login');
     } else if (status === 'authenticated') {
       setLoading(false);
@@ -54,7 +59,7 @@ const Subscription: React.FC = () => {
     {
       id: 'basic',
       name: 'Basic',
-      price: '₨9,999',
+      price: 'FRW 9,999',
       period: '/month',
       description: 'For regular valuations',
       features: [
@@ -71,7 +76,7 @@ const Subscription: React.FC = () => {
     {
       id: 'professional',
       name: 'Professional',
-      price: '₨29,999',
+      price: 'FRW 29,999',
       period: '/month',
       description: 'For professionals & agencies',
       popular: true,
@@ -89,7 +94,7 @@ const Subscription: React.FC = () => {
     {
       id: 'ultimate',
       name: 'Ultimate',
-      price: '₨99,999',
+      price: 'FRW 99,999',
       period: '/month',
       description: 'White-label & enterprise',
       features: [

@@ -43,9 +43,20 @@ func setupAuthRoutes(router *gin.Engine, db *gorm.DB) {
 		auth.POST("/login", authHandler.Login)
 		auth.POST("/logout", middleware.AuthRequired(), authHandler.Logout)
 		auth.POST("/refresh", authHandler.RefreshToken)
+
+		// Email verification endpoints
 		auth.POST("/verify-email", authHandler.VerifyEmail)
+		auth.POST("/resend-activation", authHandler.ResendActivationCode)
+
+		// OTP verification endpoints
+		auth.POST("/verify-otp", authHandler.VerifyOTP)
+		auth.POST("/resend-otp", authHandler.ResendOTP)
+
+		// Password reset endpoints
 		auth.POST("/forgot-password", authHandler.RequestPasswordReset)
 		auth.POST("/reset-password", authHandler.ResetPassword)
+
+		// 2FA endpoints (for TOTP authenticator apps)
 		auth.POST("/2fa/enable", middleware.AuthRequired(), authHandler.Enable2FA)
 		auth.POST("/2fa/verify", middleware.AuthRequired(), authHandler.Verify2FA)
 	}

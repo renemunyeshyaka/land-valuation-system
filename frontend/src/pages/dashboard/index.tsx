@@ -26,6 +26,7 @@ interface UserData {
   email: string;
   firstName: string;
   lastName: string;
+  userType?: string;
   phone?: string;
   subscriptionTier: 'free' | 'basic' | 'professional' | 'ultimate';
   subscriptionExpiresAt?: string;
@@ -45,18 +46,248 @@ const Dashboard: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [authRedirecting, setAuthRedirecting] = useState(false);
+  const [tokenExpired, setTokenExpired] = useState(false); // Track if token is already known to be expired
+
+  const clearAuthAndRedirectToLogin = () => {
+    if (authRedirecting) {
+      return;
+    }
+
+    setAuthRedirecting(true);
+    setLoading(false);
+
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      // DO NOT clear admin_experience_mode - it's unrelated to auth failure
+    }
+
+    toast.error('Session expired. Please sign in again.');
+    router.replace('/auth/login');
+  };
+
+  const handleProfileFetchError = (error: any) => {
+    // Profile fetch errors should NOT immediately logout
+    // Only logout if the response explicitly says unauthorized (401)
+    console.error('Profile fetch failed:', error);
+    setLoading(false);
+    // Don't redirect - show a useful error instead
+    toast.error('Unable to load profile. Please refresh the page or try again.');
+  };
+
+  const getAdminExperienceMode = (): 'off' | 'user' | 'ultimate' => {
+    if (typeof window === 'undefined') {
+      return 'off';
+    }
+
+    const rawMode = localStorage.getItem('admin_experience_mode');
+    if (!rawMode) {
+      return 'off';
+    }
+
+    try {
+      const parsed = JSON.parse(rawMode);
+      if (parsed?.mode === 'user' || parsed?.mode === 'ultimate') {
+        return parsed.mode;
+      }
+    } catch (e) {
+      console.error('Failed to parse admin experience mode:', e);
+    }
+
+    return 'off';
+  };
+
+  const refreshAdminToken = async () => {
+    // Silently refresh the token for admin users to keep session alive
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+
+    if (!accessToken || !storedUser) {
+      return; // Not logged in
+    }
+
+    try {
+      let userData: any = null;
+      try {
+        userData = JSON.parse(storedUser);
+      } catch (e) {
+        console.error('Failed to parse stored user:', e);
+        return;
+      }
+
+      // Only auto-refresh for admins
+      if (userData?.user_type !== 'admin') {
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const payload = await response.json();
+        if (payload?.data) {
+          // Update cached user data
+          localStorage.setItem('user', JSON.stringify(payload.data));
+        }
+      } else if (response.status === 401) {
+        // Token is expired - DON'T logout here
+        // Only the main loader should handle logout on 401
+        // This background refresh should fail silently
+        console.debug('Admin token refresh failed: 401 Unauthorized');
+      }
+    } catch (error) {
+      // Network error - don't logout, just skip refresh
+      console.debug('Token refresh failed (network issue):', error);
+    }
+  };
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (authRedirecting) {
+      return;
+    }
+
+    // Check for localStorage tokens (MFA flow) first
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+
+    if (accessToken) {
+      const loadUserProfile = async () => {
+        let userData: any = null;
+
+        if (storedUser) {
+          try {
+            userData = JSON.parse(storedUser);
+          } catch (e) {
+            console.error('Failed to parse stored user data:', e);
+          }
+        }
+
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+
+          if (response.ok) {
+            const payload = await response.json();
+            if (payload?.data) {
+              userData = payload.data;
+              localStorage.setItem('user', JSON.stringify(userData));
+            }
+          } else if (response.status === 401) {
+            // Token expired - mark it so we stop retrying
+            setTokenExpired(true);
+            // but if we have cached user data, keep using it
+            // The user can continue working with stale data
+            if (userData) {
+              console.debug('Token expired but using cached user data');
+              // Don't logout - continue with cached data
+            } else {
+              // No cached data and token is invalid - must logout
+              clearAuthAndRedirectToLogin();
+              return;
+            }
+          } else {
+            // Other server error - but if we have cached data, continue
+            if (!userData) {
+              handleProfileFetchError(`Profile endpoint error: ${response.status}`);
+              return;
+            }
+            console.debug(`Profile endpoint returned ${response.status}, using cached data`);
+          }
+        } catch (error) {
+          // Network error - but if we have cached data, continue with it
+          if (!userData) {
+            handleProfileFetchError(error);
+            return;
+          }
+          console.debug('Network error fetching profile, using cached data:', error);
+        }
+
+        if (!userData) {
+          router.push('/auth/login');
+          setLoading(false);
+          return;
+        }
+
+        const adminExperienceMode = getAdminExperienceMode();
+
+        if (userData.user_type === 'admin' && adminExperienceMode === 'off') {
+          router.push('/admin/dashboard');
+          return;
+        }
+
+        const isAdminExperiencingUserMode =
+          userData.user_type === 'admin' && adminExperienceMode !== 'off';
+
+        const effectiveSubscriptionTier = isAdminExperiencingUserMode
+          ? (adminExperienceMode === 'ultimate' ? 'ultimate' : 'free')
+          : (userData.subscription_tier || 'free');
+
+        const effectiveSubscriptionExpiry = isAdminExperiencingUserMode
+          ? null
+          : userData.subscription_expiry;
+
+        const effectiveUserType = isAdminExperiencingUserMode
+          ? 'individual'
+          : userData.user_type;
+
+        setUser({
+          id: userData.id || '1',
+          email: userData.email || 'user@example.com',
+          firstName: userData.first_name || 'User',
+          lastName: userData.last_name || 'Account',
+          userType: effectiveUserType,
+          phone: userData.phone,
+          subscriptionTier: effectiveSubscriptionTier,
+          subscriptionExpiresAt: effectiveSubscriptionExpiry,
+          referralCode: `LV-${userData.email?.split('@')[0]?.toUpperCase()}-2026`,
+          recentValuations: [
+            {
+              id: '1',
+              location: 'Kigali, Rwanda',
+              area: 250,
+              valuationPrice: 150000000,
+              createdAt: '2026-03-01',
+            },
+            {
+              id: '2',
+              location: 'Nyanza, Rwanda',
+              area: 150,
+              valuationPrice: 89000000,
+              createdAt: '2026-02-28',
+            },
+            {
+              id: '3',
+              location: 'Muhanga, Rwanda',
+              area: 300,
+              valuationPrice: 180000000,
+              createdAt: '2026-02-25',
+            },
+          ],
+        });
+
+        setLoading(false);
+      };
+
+      loadUserProfile();
+    } else if (status === 'unauthenticated') {
       router.push('/auth/login');
     } else if (status === 'authenticated') {
-      // Load user data (mock for now)
+      // Load user data from NextAuth session
       setUser({
         id: '1',
         email: session?.user?.email || 'user@example.com',
         firstName: 'Jean',
         lastName: 'Munyeshyaka',
+        userType: 'individual',
         phone: '+250 788 123 456',
         subscriptionTier: 'free',
         subscriptionExpiresAt: '2026-04-02',
@@ -87,7 +318,41 @@ const Dashboard: React.FC = () => {
       });
       setLoading(false);
     }
-  }, [status, session, router]);
+  }, [authRedirecting, status, session, router]);
+
+  // Auto-refresh token for admins to prevent session expiry
+  useEffect(() => {
+    // Don't try to refresh if token is already expired
+    if (tokenExpired) {
+      return;
+    }
+
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+
+    if (!accessToken || !storedUser) {
+      return; // Not logged in
+    }
+
+    try {
+      const userData = JSON.parse(storedUser);
+      if (userData?.user_type !== 'admin') {
+        return; // Not an admin, skip auto-refresh
+      }
+    } catch (e) {
+      return;
+    }
+
+    // Refresh token every 5 minutes for admins
+    const interval = setInterval(() => {
+      refreshAdminToken();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Initial refresh on mount
+    refreshAdminToken();
+
+    return () => clearInterval(interval);
+  }, [user?.userType, tokenExpired]);
 
   // Copy referral code to clipboard
   const copyReferralCode = () => {
@@ -113,6 +378,12 @@ const Dashboard: React.FC = () => {
   const tierInfo = user ? getTierInfo(user.subscriptionTier) : null;
   const usedValuations = user?.recentValuations.length || 0;
   const maxValuations = tierInfo?.valuations || 5;
+  const hasValidExpiry = Boolean(
+    user?.subscriptionExpiresAt && !Number.isNaN(new Date(user.subscriptionExpiresAt).getTime())
+  );
+  const subscriptionExpiryText = hasValidExpiry
+    ? new Date(user?.subscriptionExpiresAt as string).toLocaleDateString('en-US')
+    : 'Never';
 
   if (status === 'loading' || loading) {
     return (
@@ -172,7 +443,12 @@ const Dashboard: React.FC = () => {
 
                 {/* Sign Out Button */}
                 <button
-                  onClick={() => signOut({ redirect: true, callbackUrl: '/' })}
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      localStorage.removeItem('admin_experience_mode');
+                    }
+                    signOut({ redirect: true, callbackUrl: '/' });
+                  }}
                   className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
                 >
                   Sign Out
@@ -188,9 +464,16 @@ const Dashboard: React.FC = () => {
             
             {/* Page Header */}
             <div className="mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
-                Welcome back, {user.firstName}! 👋
-              </h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
+                  Welcome back, {user.firstName}! 👋
+                </h1>
+                {user.userType === 'admin' && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
+                    ADMIN
+                  </span>
+                )}
+              </div>
               <p className="text-base text-gray-600">
                 Manage your profile, subscription, and track your valuations
               </p>
@@ -312,7 +595,7 @@ const Dashboard: React.FC = () => {
                       <h3 className="text-sm font-medium text-gray-600">Avg Value</h3>
                       <i className="fas fa-coins text-yellow-600 text-lg"></i>
                     </div>
-                    <p className="text-3xl font-bold text-gray-800">₨140M</p>
+                    <p className="text-3xl font-bold text-gray-800">FRW 140M</p>
                     <p className="text-xs text-gray-500 mt-2">Average valuation price</p>
                   </div>
                 </div>
@@ -338,7 +621,7 @@ const Dashboard: React.FC = () => {
                               <td className="py-3 px-2 text-gray-800">{valuation.location}</td>
                               <td className="py-3 px-2 text-gray-700">{valuation.area.toLocaleString('en-US')}</td>
                               <td className="py-3 px-2 text-right font-medium text-emerald-700">
-                                ₨{(valuation.valuationPrice / 1000000).toFixed(0)}M
+                                FRW {(valuation.valuationPrice / 1000000).toFixed(0)}M
                               </td>
                               <td className="py-3 px-2 text-gray-600">
                                 {new Date(valuation.createdAt).toLocaleDateString('en-US', { 
@@ -375,7 +658,7 @@ const Dashboard: React.FC = () => {
                       </span>
                     </div>
                     <p className="text-xs text-gray-600">
-                      Expires: {new Date(user.subscriptionExpiresAt || '').toLocaleDateString('en-US')}
+                      Expires: {subscriptionExpiryText}
                     </p>
                   </div>
 
@@ -409,7 +692,7 @@ const Dashboard: React.FC = () => {
                     </Link>
                     {user.subscriptionTier === 'free' && (
                       <Link
-                        href="/checkout"
+                        href="/dashboard/subscription"
                         className="block w-full px-4 py-2.5 text-center text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
                       >
                         <i className="fas fa-star mr-2"></i>
@@ -448,7 +731,7 @@ const Dashboard: React.FC = () => {
                       <p className="text-gray-600">Referrals</p>
                     </div>
                     <div className="p-2.5 bg-gray-50 rounded">
-                      <p className="text-xl font-bold text-emerald-700">₨0</p>
+                      <p className="text-xl font-bold text-emerald-700">FRW 0</p>
                       <p className="text-gray-600">Earned</p>
                     </div>
                   </div>
@@ -483,10 +766,10 @@ const Dashboard: React.FC = () => {
               <div>
                 <h3 className="text-white font-semibold mb-4">Resources</h3>
                 <ul className="space-y-2.5 text-sm">
-                  <li><Link href="/docs" className="hover:text-emerald-400 transition-colors">Documentation</Link></li>
-                  <li><Link href="/faq" className="hover:text-emerald-400 transition-colors">FAQ</Link></li>
-                  <li><Link href="/support" className="hover:text-emerald-400 transition-colors">Support</Link></li>
-                  <li><Link href="/api" className="hover:text-emerald-400 transition-colors">API</Link></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors cursor-not-allowed">Documentation</a></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors cursor-not-allowed">FAQ</a></li>
+                  <li><Link href="/notifications" className="hover:text-emerald-400 transition-colors">Support</Link></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors cursor-not-allowed">API</a></li>
                 </ul>
               </div>
 
@@ -494,10 +777,10 @@ const Dashboard: React.FC = () => {
               <div>
                 <h3 className="text-white font-semibold mb-4">Company</h3>
                 <ul className="space-y-2.5 text-sm">
-                  <li><Link href="/about" className="hover:text-emerald-400 transition-colors">About</Link></li>
-                  <li><Link href="/contact" className="hover:text-emerald-400 transition-colors">Contact</Link></li>
-                  <li><Link href="/careers" className="hover:text-emerald-400 transition-colors">Careers</Link></li>
-                  <li><Link href="/partners" className="hover:text-emerald-400 transition-colors">Partners</Link></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors cursor-not-allowed">About</a></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors cursor-not-allowed">Contact</a></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors cursor-not-allowed">Careers</a></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors cursor-not-allowed">Partners</a></li>
                 </ul>
               </div>
 
@@ -505,10 +788,10 @@ const Dashboard: React.FC = () => {
               <div>
                 <h3 className="text-white font-semibold mb-4">Legal</h3>
                 <ul className="space-y-2.5 text-sm">
-                  <li><Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy</Link></li>
-                  <li><Link href="/terms" className="hover:text-emerald-400 transition-colors">Terms</Link></li>
-                  <li><Link href="/data-protection" className="hover:text-emerald-400 transition-colors">Data Protection</Link></li>
-                  <li><Link href="/compliance" className="hover:text-emerald-400 transition-colors">Compliance</Link></li>
+                  <li><Link href="/legal/privacy" className="hover:text-emerald-400 transition-colors">Privacy</Link></li>
+                  <li><Link href="/legal/terms" className="hover:text-emerald-400 transition-colors">Terms</Link></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors cursor-not-allowed">Data Protection</a></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors cursor-not-allowed">Compliance</a></li>
                 </ul>
               </div>
 

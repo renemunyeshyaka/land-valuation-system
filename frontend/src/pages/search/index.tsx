@@ -492,10 +492,10 @@ const PropertySearch: React.FC = () => {
                       <div className="border-t border-gray-200 pt-4">
                         <p className="text-sm text-gray-600 mb-1">Asking Price</p>
                         <p className="text-2xl font-bold text-emerald-700">
-                          ₨{(property.price / 1000000).toFixed(1)}M
+                          FRW {(property.price / 1000000).toFixed(1)}M
                         </p>
                         <p className="text-xs text-gray-500 mt-2">
-                          Valuation: ₨{(property.valuation / 1000000).toFixed(1)}M
+                          Valuation: FRW {(property.valuation / 1000000).toFixed(1)}M
                         </p>
                       </div>
                     </div>
@@ -548,11 +548,11 @@ const PropertySearch: React.FC = () => {
                         </div>
                         <div>
                           <p className="text-gray-600">Price</p>
-                          <p className="font-bold text-emerald-700">₨{(property.price / 1000000).toFixed(1)}M</p>
+                          <p className="font-bold text-emerald-700">FRW {(property.price / 1000000).toFixed(1)}M</p>
                         </div>
                         <div>
                           <p className="text-gray-600">Valuation</p>
-                          <p className="font-semibold text-gray-800">₨{(property.valuation / 1000000).toFixed(1)}M</p>
+                          <p className="font-semibold text-gray-800">FRW {(property.valuation / 1000000).toFixed(1)}M</p>
                         </div>
                       </div>
                     </div>

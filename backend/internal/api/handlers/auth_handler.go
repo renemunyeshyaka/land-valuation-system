@@ -53,7 +53,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	user, accessToken, refreshToken, err := h.authService.Register(c.Request.Context(), &models.User{
+	user, err := h.authService.Register(c.Request.Context(), &models.User{
 		Email:     req.Email,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
@@ -65,11 +65,10 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusCreated, "User registered successfully", &AuthResponse{
-		User:         user,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		ExpiresAt:    time.Now().Add(24 * time.Hour),
+	utils.SuccessResponse(c, http.StatusCreated, "Registration successful. Please check your email for verification code", gin.H{
+		"user_id": user.ID,
+		"email":   user.Email,
+		"message": "A 6-digit verification code has been sent to your email",
 	})
 }
 
@@ -82,17 +81,16 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, accessToken, refreshToken, err := h.authService.Login(c.Request.Context(), req.Email, req.Password)
+	user, err := h.authService.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusUnauthorized, "Login failed", err.Error())
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Login successful", &AuthResponse{
-		User:         user,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		ExpiresAt:    time.Now().Add(24 * time.Hour),
+	utils.SuccessResponse(c, http.StatusOK, "OTP sent to your email", gin.H{
+		"user_id": user.ID,
+		"email":   user.Email,
+		"message": "A 6-digit OTP has been sent to your email. It will expire in 5 minutes",
 	})
 }
 
@@ -138,22 +136,93 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // VerifyEmail handles email verification
 // @Router /auth/verify-email [post]
 func (h *AuthHandler) VerifyEmail(c *gin.Context) {
-	type VerifyRequest struct {
-		Token string `json:"token" binding:"required"`
+	type VerifyEmailRequest struct {
+		Email string `json:"email" binding:"required,email"`
+		Code  string `json:"code" binding:"required,len=6"`
 	}
 
-	var req VerifyRequest
+	var req VerifyEmailRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
 		return
 	}
 
-	if err := h.authService.VerifyEmail(c.Request.Context(), req.Token); err != nil {
+	if err := h.authService.VerifyEmail(c.Request.Context(), req.Email, req.Code); err != nil {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Email verification failed", err.Error())
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Email verified successfully", nil)
+	utils.SuccessResponse(c, http.StatusOK, "Email verified successfully. You can now log in", nil)
+}
+
+// ResendActivationCode handles resending email verification code
+// @Router /auth/resend-activation [post]
+func (h *AuthHandler) ResendActivationCode(c *gin.Context) {
+	type ResendRequest struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+
+	var req ResendRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		return
+	}
+
+	if err := h.authService.ResendActivationCode(c.Request.Context(), req.Email); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Failed to resend activation code", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Verification code sent to your email", nil)
+}
+
+// VerifyOTP handles OTP verification after login
+// @Router /auth/verify-otp [post]
+func (h *AuthHandler) VerifyOTP(c *gin.Context) {
+	type VerifyOTPRequest struct {
+		Email string `json:"email" binding:"required,email"`
+		Code  string `json:"code" binding:"required,len=6"`
+	}
+
+	var req VerifyOTPRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		return
+	}
+
+	user, accessToken, refreshToken, err := h.authService.VerifyOTP(c.Request.Context(), req.Email, req.Code)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "OTP verification failed", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Login successful", &AuthResponse{
+		User:         user,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		ExpiresAt:    time.Now().Add(24 * time.Hour),
+	})
+}
+
+// ResendOTP handles resending OTP code
+// @Router /auth/resend-otp [post]
+func (h *AuthHandler) ResendOTP(c *gin.Context) {
+	type ResendOTPRequest struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+
+	var req ResendOTPRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		return
+	}
+
+	if err := h.authService.ResendOTP(c.Request.Context(), req.Email); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Failed to resend OTP", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "New OTP sent to your email", nil)
 }
 
 // RequestPasswordReset handles password reset request

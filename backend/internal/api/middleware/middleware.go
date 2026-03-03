@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -29,10 +30,15 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
+		// Get JWT secret from environment
+		jwtSecret := os.Getenv("JWT_SECRET")
+		if jwtSecret == "" {
+			jwtSecret = "your-secret-key" // fallback for development
+		}
+
 		// Parse JWT token
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			// TODO: Get secret key from config
-			return []byte("your-secret-key"), nil
+			return []byte(jwtSecret), nil
 		})
 
 		if err != nil || !token.Valid {

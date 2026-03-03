@@ -11,7 +11,8 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-API_URL="http://localhost:5000"
+# Configuration - use environment variable or default to localhost
+API_URL="${API_BASE_URL:-http://localhost:5000}"
 
 echo -e "${BLUE}Test 1: Get Available Payment Methods${NC}"
 echo "GET $API_URL/api/v1/payments/methods"

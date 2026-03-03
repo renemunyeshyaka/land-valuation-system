@@ -240,7 +240,7 @@ const PropertyDetail: React.FC = () => {
                 <div className="border-t border-gray-200 pt-4 mb-4">
                   <p className="text-sm text-gray-600 mb-1">Asking Price</p>
                   <p className="text-3xl font-bold text-emerald-700">
-                    ₨{(property.price / 1000000).toFixed(1)}M
+                    FRW {(property.price / 1000000).toFixed(1)}M
                   </p>
                 </div>
 
@@ -337,7 +337,7 @@ const PropertyDetail: React.FC = () => {
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Estimated Value</p>
                       <p className="text-2xl font-bold text-emerald-700">
-                        ₨{(property.valuation / 1000000).toFixed(1)}M
+                        FRW {(property.valuation / 1000000).toFixed(1)}M
                       </p>
                     </div>
 
@@ -499,7 +499,7 @@ const PropertyDetail: React.FC = () => {
                     <div className="p-4">
                       <h3 className="font-bold text-gray-800 mb-2 line-clamp-2">{prop.location}</h3>
                       <p className="text-xs text-gray-600 mb-3">{prop.type}</p>
-                      <p className="text-emerald-700 font-bold">₨{(prop.price / 1000000).toFixed(1)}M</p>
+                      <p className="text-emerald-700 font-bold">FRW {(prop.price / 1000000).toFixed(1)}M</p>
                     </div>
                   </Link>
                 ))}

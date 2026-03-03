@@ -12,7 +12,7 @@ import {
   MessageCircle,
   Search
 } from 'lucide-react'
-import { formatPrice, formatSize } from '../../utils/formatters'
+import { formatPrice, formatSize } from '../../utils/formatters.js'
 
 interface PropertyCardProps {
   property: any
