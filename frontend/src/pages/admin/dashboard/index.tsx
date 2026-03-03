@@ -8,6 +8,21 @@ import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '@/u
 import FourStepProcess from '../../../components/FourStepProcess';
 import SubscriptionSelector from '../../../components/SubscriptionSelector';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+interface AdminNotification {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  title: string;
+  message: string;
+  type: string;
+  sentAt: string;
+  read: boolean;
+  sentBy: string;
+}
+
 /**
  * ADMIN DASHBOARD PAGE · Land Valuation System
  * 
@@ -39,6 +54,9 @@ const AdminDashboard: React.FC = () => {
   const [showEditUserModal, setShowEditUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', tier: 'Free', status: 'active' });
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [notificationUser, setNotificationUser] = useState<any>(null);
+  const [notificationData, setNotificationData] = useState({ title: '', message: '', type: 'info' });
 
   const clearAuthAndRedirectToLogin = () => {
     clearAuth();
@@ -389,6 +407,90 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  // Handle Send Notification
+  const handleOpenNotification = (user: any) => {
+    setNotificationUser(user);
+    setNotificationData({ title: '', message: '', type: 'info' });
+    setShowNotificationModal(true);
+  };
+
+  // Handle Send Notification
+  const handleSendNotification = async () => {
+    if (!notificationData.title || !notificationData.message) {
+      toast.error('Title and message are required');
+      return;
+    }
+
+    try {
+      if (!notificationUser) {
+        toast.error('No user selected');
+        return;
+      }
+
+      const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+
+      if (accessToken) {
+        const response = await fetchWithTokenRefresh(`${API_BASE_URL}/api/v1/admin/notifications`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            user_id: String(notificationUser.id),
+            title: notificationData.title.trim(),
+            message: notificationData.message.trim(),
+            type: notificationData.type,
+          }),
+        });
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload?.error?.message || `Failed with status ${response.status}`);
+        }
+      } else {
+        const payload: AdminNotification = {
+          id: `${Date.now()}`,
+          userId: String(notificationUser.id),
+          userEmail: String(notificationUser.email || '').toLowerCase(),
+          userName: String(notificationUser.name || ''),
+          title: notificationData.title.trim(),
+          message: notificationData.message.trim(),
+          type: notificationData.type,
+          sentAt: new Date().toISOString(),
+          read: false,
+          sentBy: 'Admin',
+        };
+
+        const existingNotifications = localStorage.getItem('user_notifications');
+        const parsedNotifications: AdminNotification[] = existingNotifications
+          ? JSON.parse(existingNotifications)
+          : [];
+        const updatedNotifications = [payload, ...parsedNotifications];
+        localStorage.setItem('user_notifications', JSON.stringify(updatedNotifications));
+      }
+      
+      // In production, this would call your backend API
+      // await fetchWithTokenRefresh(`/api/notifications/send`, {
+      //   method: 'POST',
+      //   body: JSON.stringify({
+      //     userId: notificationUser.id,
+      //     title: notificationData.title,
+      //     message: notificationData.message,
+      //     type: notificationData.type
+      //   })
+      // });
+
+      toast.success(`Notification sent to ${notificationUser.name}`);
+      setShowNotificationModal(false);
+      setNotificationUser(null);
+      setNotificationData({ title: '', message: '', type: 'info' });
+    } catch (error) {
+      toast.error('Failed to send notification');
+      console.error('Notification error:', error);
+    }
+  };
+
   // Filter users based on search
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
@@ -605,11 +707,18 @@ const AdminDashboard: React.FC = () => {
                           </td>
                           <td className="py-3 px-4 text-gray-600">{user.joinDate}</td>
                           <td className="py-3 px-4">
-                            <button 
-                              onClick={() => handleEditUser(user)}
-                              className="text-emerald-700 hover:text-emerald-800 text-xs font-medium">
-                              <i className="fas fa-edit mr-1"></i>Edit
-                            </button>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => handleEditUser(user)}
+                                className="text-emerald-700 hover:text-emerald-800 text-xs font-medium hover:bg-emerald-50 px-2 py-1 rounded transition-colors">
+                                <i className="fas fa-edit mr-1"></i>Edit
+                              </button>
+                              <button 
+                                onClick={() => handleOpenNotification(user)}
+                                className="text-blue-700 hover:text-blue-800 text-xs font-medium hover:bg-blue-50 px-2 py-1 rounded transition-colors">
+                                <i className="fas fa-bell mr-1"></i>Notify
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -874,6 +983,64 @@ const AdminDashboard: React.FC = () => {
                   onClick={handleSaveUser}
                   className="px-4 py-2 text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg font-medium transition-colors">
                   Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NOTIFICATION MODAL */}
+        {showNotificationModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-bold text-gray-900">Send Notification</h3>
+                <p className="text-sm text-gray-600 mt-1">To: <span className="font-medium">{notificationUser?.name}</span></p>
+              </div>
+              <div className="px-6 py-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notification Type</label>
+                  <select 
+                    value={notificationData.type}
+                    onChange={(e) => setNotificationData({...notificationData, type: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="info">Info</option>
+                    <option value="success">Success</option>
+                    <option value="warning">Warning</option>
+                    <option value="error">Error</option>
+                    <option value="promotion">Promotion</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <input 
+                    type="text"
+                    value={notificationData.title}
+                    onChange={(e) => setNotificationData({...notificationData, title: e.target.value})}
+                    placeholder="e.g., Account Update"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                  <textarea 
+                    value={notificationData.message}
+                    onChange={(e) => setNotificationData({...notificationData, message: e.target.value})}
+                    placeholder="Enter notification message..."
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-24"
+                  ></textarea>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-gray-200 flex gap-3 justify-end">
+                <button 
+                  onClick={() => setShowNotificationModal(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors">
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSendNotification}
+                  className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 rounded-lg font-medium transition-colors">
+                  <i className="fas fa-paper-plane mr-2"></i>Send
                 </button>
               </div>
             </div>

@@ -8,6 +8,8 @@ import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '../
 import FourStepProcess from '../../components/FourStepProcess';
 import SubscriptionSelector from '../../components/SubscriptionSelector';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 /**
  * USER DASHBOARD · Land Valuation System
  * 
@@ -43,6 +45,19 @@ interface UserData {
   }>;
 }
 
+interface DashboardNotification {
+  id: string | number;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  title: string;
+  message: string;
+  type: string;
+  sentAt: string;
+  read: boolean;
+  sentBy: string;
+}
+
 const Dashboard: React.FC = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -51,6 +66,7 @@ const Dashboard: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [authRedirecting, setAuthRedirecting] = useState(false);
   const [tokenExpired, setTokenExpired] = useState(false); // Track if token is already known to be expired
+  const [notifications, setNotifications] = useState<DashboardNotification[]>([]);
 
   const clearAuthAndRedirectToLogin = () => {
     if (authRedirecting) {
@@ -362,6 +378,125 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const loadNotificationsForUser = async (targetUser: UserData) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const accessToken = localStorage.getItem('access_token');
+
+    if (accessToken) {
+      try {
+        const response = await fetchWithTokenRefresh(`${API_BASE_URL}/api/v1/users/notifications?limit=20`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (response.ok) {
+          const payload = await response.json();
+          const apiNotifications: any[] = Array.isArray(payload?.data)
+            ? payload.data
+            : [];
+
+          const normalized: DashboardNotification[] = apiNotifications.map((item: any) => ({
+            id: item.id,
+            userId: String(item.user_id ?? item.userId ?? ''),
+            userEmail: String(item.userEmail ?? ''),
+            userName: String(item.userName ?? ''),
+            title: String(item.title ?? ''),
+            message: String(item.message ?? ''),
+            type: String(item.type ?? 'info'),
+            sentAt: String(item.created_at ?? item.sentAt ?? new Date().toISOString()),
+            read: Boolean(item.is_read ?? item.read),
+            sentBy: String(item.sentBy ?? 'Admin'),
+          }));
+
+          normalized.sort(
+            (a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
+          );
+
+          setNotifications(normalized);
+          return;
+        }
+      } catch (error) {
+        console.debug('Failed to load notifications from API, using fallback:', error);
+      }
+    }
+
+    const storedNotifications = localStorage.getItem('user_notifications');
+    if (!storedNotifications) {
+      setNotifications([]);
+      return;
+    }
+
+    let parsedNotifications: DashboardNotification[] = [];
+    try {
+      parsedNotifications = JSON.parse(storedNotifications);
+    } catch (error) {
+      console.error('Failed to parse notifications:', error);
+      setNotifications([]);
+      return;
+    }
+
+    const normalizedEmail = targetUser.email.toLowerCase();
+    const filtered = parsedNotifications
+      .filter((item) => item.userEmail === normalizedEmail || item.userId === String(targetUser.id))
+      .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
+
+    setNotifications(filtered);
+  };
+
+  const markNotificationAsRead = (notificationId: string) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const notificationIdStr = String(notificationId);
+    const accessToken = localStorage.getItem('access_token');
+
+    if (accessToken) {
+      fetchWithTokenRefresh(`${API_BASE_URL}/api/v1/users/notifications/${notificationIdStr}/read`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }).catch((error) => {
+        console.debug('Failed to mark notification read via API:', error);
+      });
+    }
+
+    const storedNotifications = localStorage.getItem('user_notifications');
+    if (!storedNotifications) {
+      return;
+    }
+
+    let parsedNotifications: DashboardNotification[] = [];
+    try {
+      parsedNotifications = JSON.parse(storedNotifications);
+    } catch (error) {
+      console.error('Failed to parse notifications:', error);
+      return;
+    }
+
+    const updated = parsedNotifications.map((item) =>
+      String(item.id) === notificationIdStr ? { ...item, read: true } : item
+    );
+
+    localStorage.setItem('user_notifications', JSON.stringify(updated));
+    setNotifications((prev) => prev.map((item) =>
+      String(item.id) === notificationIdStr ? { ...item, read: true } : item
+    ));
+  };
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    void loadNotificationsForUser(user);
+  }, [user]);
+
   // Get subscription tier info
   const getTierInfo = (tier: string) => {
     const tiers: { [key: string]: { color: string; name: string; valuations: number } } = {
@@ -376,6 +511,7 @@ const Dashboard: React.FC = () => {
   const tierInfo = user ? getTierInfo(user.subscriptionTier) : null;
   const usedValuations = user?.recentValuations.length || 0;
   const maxValuations = tierInfo?.valuations || 3;
+  const unreadNotifications = notifications.filter((item) => !item.read).length;
   const hasValidExpiry = Boolean(
     user?.subscriptionExpiresAt && !Number.isNaN(new Date(user.subscriptionExpiresAt).getTime())
   );
@@ -711,6 +847,54 @@ const Dashboard: React.FC = () => {
                       </Link>
                     )}
                   </div>
+                </div>
+
+                <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-800">Admin Notifications</h2>
+                    {unreadNotifications > 0 && (
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
+                        {unreadNotifications} new
+                      </span>
+                    )}
+                  </div>
+
+                  {notifications.length > 0 ? (
+                    <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                      {notifications.slice(0, 5).map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`border rounded-lg p-3 ${notification.read ? 'border-gray-200 bg-gray-50' : 'border-blue-200 bg-blue-50'}`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-gray-800">{notification.title}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {new Date(notification.sentAt).toLocaleString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                            {!notification.read && (
+                              <button
+                                onClick={() => markNotificationAsRead(String(notification.id))}
+                                className="text-xs font-medium text-blue-700 hover:text-blue-800"
+                              >
+                                Mark read
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-700 mt-2">{notification.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600">No notifications yet.</p>
+                  )}
                 </div>
 
                 {/* Referral Card */}

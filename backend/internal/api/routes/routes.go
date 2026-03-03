@@ -32,6 +32,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client) 
 	setupPaymentRoutes(router, db, redisClient)
 	setupAnalyticsRoutes(router, db)
 	setupAdminRoutes(router, db)
+	setupNotificationRoutes(router, db)
 	setupExchangeRateRoutes(router, redisClient)
 	setupHealthRoutes(router)
 }
@@ -257,6 +258,24 @@ func setupAdminRoutes(router *gin.Engine, db *gorm.DB) {
 		admin.GET("/subscriptions", adminHandler.ManageSubscriptions)
 		admin.POST("/properties/:id/approve", adminHandler.ApproveProperty)
 		admin.POST("/properties/:id/reject", adminHandler.RejectProperty)
+	}
+}
+
+func setupNotificationRoutes(router *gin.Engine, db *gorm.DB) {
+	notificationService := services.NewNotificationService(db)
+	notificationHandler := handlers.NewNotificationHandler(notificationService)
+
+	admin := router.Group("/api/v1/admin")
+	admin.Use(middleware.AuthRequired(), middleware.AdminRequired())
+	{
+		admin.POST("/notifications", notificationHandler.SendToUser)
+	}
+
+	users := router.Group("/api/v1/users")
+	users.Use(middleware.AuthRequired())
+	{
+		users.GET("/notifications", notificationHandler.ListUserNotifications)
+		users.POST("/notifications/:id/read", notificationHandler.MarkNotificationRead)
 	}
 }
 

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/router';
+import toast from 'react-hot-toast';
 
 interface PropertyFormData {
   title: string;
@@ -58,6 +59,31 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
   const [documents, setDocuments] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
+  // File validation constants
+  const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+  const MAX_UPLOAD_SIZE = 10 * 1024 * 1024; // 10 MB
+  const MAX_IMAGES = 5;
+  const MAX_DOCUMENTS = 5;
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+  const ALLOWED_DOCUMENT_TYPES = ['application/pdf'];
+
+  // Helper function to validate file type
+  const isValidImageType = (file: File): boolean => {
+    return ALLOWED_IMAGE_TYPES.includes(file.type);
+  };
+
+  const isValidDocumentType = (file: File): boolean => {
+    return ALLOWED_DOCUMENT_TYPES.includes(file.type);
+  };
+
+  const isBlockedMediaType = (file: File): boolean => {
+    return file.type.startsWith('audio/') || file.type.startsWith('video/');
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    return (bytes / (1024 * 1024)).toFixed(2);
+  };
+
   const districts = [
     'Kigali City',
     'Musanze',
@@ -85,23 +111,111 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      setImages(prev => [...prev, ...files]);
+      let validFiles: File[] = [];
+      let totalSize = images.reduce((sum, f) => sum + f.size, 0);
+
+      for (const file of files) {
+        // Check for blocked media types first
+        if (isBlockedMediaType(file)) {
+          toast.error(`${file.name}: Audio and video files are not allowed`);
+          continue;
+        }
+
+        // Check file type
+        if (!isValidImageType(file)) {
+          toast.error(`${file.name}: Invalid image format. Only JPG, PNG, GIF allowed`);
+          continue;
+        }
+
+        // Check individual file size
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error(`${file.name}: Exceeds 2 MB limit (${formatFileSize(file.size)} MB)`);
+          continue;
+        }
+
+        // Check total upload size
+        if (totalSize + file.size > MAX_UPLOAD_SIZE) {
+          toast.error(`Adding ${file.name} would exceed 10 MB total upload limit`);
+          continue;
+        }
+
+        validFiles.push(file);
+        totalSize += file.size;
+      }
+
+      // Check image count
+      if (images.length + validFiles.length > MAX_IMAGES) {
+        toast.error(`Maximum ${MAX_IMAGES} images allowed (you already have ${images.length})`);
+        validFiles = validFiles.slice(0, MAX_IMAGES - images.length);
+      }
+
+      if (validFiles.length === 0) return;
+
+      setImages(prev => [...prev, ...validFiles]);
 
       // Create previews
-      files.forEach(file => {
+      validFiles.forEach(file => {
         const reader = new FileReader();
         reader.onloadend = () => {
           setImagePreviews(prev => [...prev, reader.result as string]);
         };
         reader.readAsDataURL(file);
       });
+
+      if (validFiles.length > 0) {
+        toast.success(`${validFiles.length} image(s) added successfully`);
+      }
     }
   };
 
   const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      setDocuments(prev => [...prev, ...files]);
+      let validFiles: File[] = [];
+      let totalSize = documents.reduce((sum, f) => sum + f.size, 0);
+
+      for (const file of files) {
+        // Check for blocked media types first
+        if (isBlockedMediaType(file)) {
+          toast.error(`${file.name}: Audio and video files are not allowed`);
+          continue;
+        }
+
+        // Check file type
+        if (!isValidDocumentType(file)) {
+          toast.error(`${file.name}: Only PDF documents are allowed`);
+          continue;
+        }
+
+        // Check individual file size
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error(`${file.name}: Exceeds 2 MB limit (${formatFileSize(file.size)} MB)`);
+          continue;
+        }
+
+        // Check total upload size
+        if (totalSize + file.size > MAX_UPLOAD_SIZE) {
+          toast.error(`Adding ${file.name} would exceed 10 MB total upload limit`);
+          continue;
+        }
+
+        validFiles.push(file);
+        totalSize += file.size;
+      }
+
+      // Check document count
+      if (documents.length + validFiles.length > MAX_DOCUMENTS) {
+        toast.error(`Maximum ${MAX_DOCUMENTS} documents allowed (you already have ${documents.length})`);
+        validFiles = validFiles.slice(0, MAX_DOCUMENTS - documents.length);
+      }
+
+      if (validFiles.length === 0) return;
+
+      setDocuments(prev => [...prev, ...validFiles]);
+
+      if (validFiles.length > 0) {
+        toast.success(`${validFiles.length} document(s) added successfully`);
+      }
     }
   };
 
@@ -539,7 +653,7 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
                   Property Images
                 </h4>
                 <p className="text-sm text-gray-600 mb-4">
-                  Upload photos of your property (Maximum 10 images)
+                  Upload photos of your property (Maximum {MAX_IMAGES} images, 2 MB each, 10 MB total. JPG, PNG, GIF only)
                 </p>
                 <input
                   ref={imageInputRef}
@@ -588,7 +702,7 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
                   Title Documents & Certificates
                 </h4>
                 <p className="text-sm text-gray-600 mb-4">
-                  Upload land title, ownership certificate, or other legal documents
+                  Upload legal documents ({MAX_DOCUMENTS} max, 2 MB each, 10 MB total, PDF only)
                 </p>
                 <input
                   ref={documentInputRef}

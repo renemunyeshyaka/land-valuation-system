@@ -249,8 +249,8 @@ const Profile: React.FC = () => {
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Profile picture must be less than 5MB');
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('Profile picture must be less than 2 MB');
         return;
       }
 
@@ -488,7 +488,7 @@ const Profile: React.FC = () => {
                       disabled={saving}
                       className="hidden"
                     />
-                    <p className="text-xs text-gray-500 text-center">Max 5MB, JPG/PNG</p>
+                    <p className="text-xs text-gray-500 text-center">Max 2 MB, JPG/PNG</p>
                   </div>
 
                   <div className="flex-1 flex flex-col justify-center gap-3">

@@ -1,11 +1,16 @@
 package handlers
 
 import (
+	"encoding/base64"
+	"fmt"
+	"io"
 	"net/http"
+	"strings"
 
 	"backend/internal/models"
 	"backend/internal/services"
 	"backend/internal/utils"
+	"backend/pkg/filevalidation"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,37 +39,114 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "User profile retrieved", user)
 }
 
-// UpdateProfile updates user profile
+// UpdateProfile updates user profile with optional file upload
 // @Router /users/profile [put]
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
-	type UpdateProfileRequest struct {
-		FirstName     string `json:"first_name"`
-		LastName      string `json:"last_name"`
-		PhoneNumber   string `json:"phone_number"`
-		ProfilePicture string `json:"profile_picture"`
-		Bio           string `json:"bio"`
-		Language      string `json:"language_preference"`
-		City          string `json:"city"`
-		Country       string `json:"country"`
-	}
-
 	userID := c.MustGet("user_id").(string)
 
-	var req UpdateProfileRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
-		return
+	// Check if this is a multipart form request or JSON
+	contentType := c.ContentType()
+	var profilePictureURL string
+	var firstNameVal, lastNameVal, phoneNumberVal, bioVal, languageVal, cityVal, countryVal string
+
+	if strings.Contains(contentType, "multipart/form-data") {
+		// Handle multipart form data with optional file upload
+		c.Request.ParseMultipartForm(filevalidation.MaxFileSize)
+
+		firstNameVal = c.PostForm("first_name")
+		lastNameVal = c.PostForm("last_name")
+		phoneNumberVal = c.PostForm("phone_number")
+		bioVal = c.PostForm("bio")
+		languageVal = c.PostForm("language_preference")
+		cityVal = c.PostForm("city")
+		countryVal = c.PostForm("country")
+
+		// Handle profile picture file if provided
+		form, err := c.MultipartForm()
+		if err == nil && form.File["profile_picture"] != nil && len(form.File["profile_picture"]) > 0 {
+			fileHeader := form.File["profile_picture"][0]
+
+			// Validate file size
+			if err := filevalidation.ValidateFileSize(fileHeader.Size, fileHeader.Filename); err != nil {
+				utils.ErrorResponse(c, http.StatusBadRequest, "Invalid profile picture", err.Error())
+				return
+			}
+
+			// Open file
+			file, err := fileHeader.Open()
+			if err != nil {
+				utils.ErrorResponse(c, http.StatusBadRequest, "Failed to read profile picture", err.Error())
+				return
+			}
+			defer file.Close()
+
+			// Read file data
+			fileData, err := io.ReadAll(file)
+			if err != nil {
+				utils.ErrorResponse(c, http.StatusBadRequest, "Failed to read profile picture data", err.Error())
+				return
+			}
+
+			// Validate image
+			if err := filevalidation.ValidateImageFile(fileHeader.Filename, fileHeader.Header.Get("Content-Type"), fileHeader.Size); err != nil {
+				utils.ErrorResponse(c, http.StatusBadRequest, "Invalid profile picture", err.Error())
+				return
+			}
+
+			// Convert to base64 DataURL
+			mimeType := filevalidation.DetectMIMEType(fileData)
+			if mimeType == "" || !strings.Contains(mimeType, "image") {
+				mimeType = "image/jpeg"
+			}
+			profilePictureURL = fmt.Sprintf("data:%s;base64,%s", mimeType, base64.StdEncoding.EncodeToString(fileData))
+		} else if profilePictureDataURL := c.PostForm("profile_picture"); profilePictureDataURL != "" {
+			// Handle profile picture as DataURL string (from frontend)
+			profilePictureURL = profilePictureDataURL
+		}
+	} else {
+		// Handle JSON request (legacy/DataURL support)
+		type UpdateProfileRequest struct {
+			FirstName      string `json:"first_name"`
+			LastName       string `json:"last_name"`
+			PhoneNumber    string `json:"phone_number"`
+			ProfilePicture string `json:"profile_picture"`
+			Bio            string `json:"bio"`
+			Language       string `json:"language_preference"`
+			City           string `json:"city"`
+			Country        string `json:"country"`
+		}
+
+		var req UpdateProfileRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+			return
+		}
+
+		firstNameVal = req.FirstName
+		lastNameVal = req.LastName
+		phoneNumberVal = req.PhoneNumber
+		profilePictureURL = req.ProfilePicture
+		bioVal = req.Bio
+		languageVal = req.Language
+		cityVal = req.City
+		countryVal = req.Country
+
+		// Validate DataURL format if provided
+		if profilePictureURL != "" && !strings.HasPrefix(profilePictureURL, "data:") {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Invalid profile picture format", "Profile picture must be a DataURL")
+			return
+		}
 	}
 
 	updates := &models.User{
-		FirstName:          req.FirstName,
-		LastName:           req.LastName,
-		Phone:              req.PhoneNumber,
-		ProfilePictureURL:  req.ProfilePicture,
-		Bio:                req.Bio,
-		LanguagePreference: req.Language,
-		City:               req.City,
-		Country:            req.Country,
+		FirstName:          firstNameVal,
+		LastName:           lastNameVal,
+		Phone:              phoneNumberVal,
+		ProfilePictureURL:  profilePictureURL,
+		Bio:                bioVal,
+		LanguagePreference: languageVal,
+		City:               cityVal,
+		Country:            countryVal,
 	}
 
 	user, err := h.userService.UpdateUser(c.Request.Context(), userID, updates)
@@ -80,9 +162,9 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 // @Router /users/kyc [post]
 func (h *UserHandler) SubmitKYC(c *gin.Context) {
 	type SubmitKYCRequest struct {
-		NationalID    string `json:"national_id" binding:"required"`
-		DocumentURL   string `json:"document_url" binding:"required,url"`
-		DocumentType  string `json:"document_type"`
+		NationalID   string `json:"national_id" binding:"required"`
+		DocumentURL  string `json:"document_url" binding:"required,url"`
+		DocumentType string `json:"document_type"`
 	}
 
 	userID := c.MustGet("user_id").(string)
@@ -166,12 +248,12 @@ func (h *UserHandler) GetAccountSettings(c *gin.Context) {
 // @Router /users/account-settings [put]
 func (h *UserHandler) UpdateAccountSettings(c *gin.Context) {
 	type UpdateSettingsRequest struct {
-		EmailNotifications    bool   `json:"email_notifications"`
-		SMSNotifications      bool   `json:"sms_notifications"`
-		PushNotifications     bool   `json:"push_notifications"`
-		Newsletter            bool   `json:"newsletter"`
-		DataCollection        bool   `json:"data_collection"`
-		PrivacyLevel          string `json:"privacy_level"`
+		EmailNotifications bool   `json:"email_notifications"`
+		SMSNotifications   bool   `json:"sms_notifications"`
+		PushNotifications  bool   `json:"push_notifications"`
+		Newsletter         bool   `json:"newsletter"`
+		DataCollection     bool   `json:"data_collection"`
+		PrivacyLevel       string `json:"privacy_level"`
 	}
 
 	userID := c.MustGet("user_id").(string)
