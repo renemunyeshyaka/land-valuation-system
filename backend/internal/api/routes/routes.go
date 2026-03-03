@@ -27,6 +27,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client) 
 	setupAuthRoutes(router, db)
 	setupUserRoutes(router, db)
 	setupPropertyRoutes(router, db)
+	setupValuationRoutes(router, db)
 	setupSubscriptionRoutes(router, db)
 	setupPaymentRoutes(router, db, redisClient)
 	setupAnalyticsRoutes(router, db)
@@ -110,6 +111,29 @@ func setupPropertyRoutes(router *gin.Engine, db *gorm.DB) {
 	marketplace := router.Group("/api/v1/marketplace")
 	{
 		marketplace.GET("/properties-for-sale", marketplaceHandler.GetPropertyListingsOnSale)
+	}
+}
+
+func setupValuationRoutes(router *gin.Engine, db *gorm.DB) {
+	// Initialize repositories and services
+	propertyRepo := repository.NewPropertyRepository(db)
+	valuationRepo := repository.NewValuationRepository(db)
+	gazetteService := &services.GazetteService{}
+	valuationService := services.NewValuationService(propertyRepo, valuationRepo, gazetteService)
+	valuationHandler := handlers.NewValuationHandler(valuationService)
+
+	valuations := router.Group("/api/v1/valuations")
+	{
+		// Public endpoint - anyone can request a valuation estimate
+		valuations.POST("", valuationHandler.CreateValuation)
+		valuations.GET("/:id", valuationHandler.GetValuationByID)
+
+		// Protected routes - user's own valuations
+		protected := valuations.Group("")
+		protected.Use(middleware.AuthRequired())
+		{
+			protected.GET("", valuationHandler.ListValuations)
+		}
 	}
 }
 
