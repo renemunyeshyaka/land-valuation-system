@@ -23,7 +23,7 @@ func NewMarketplaceHandler(marketplaceService *services.MarketplaceService) *Mar
 }
 
 // GetMarketplaceListings gets property listings from external marketplaces
-// @Router /properties/:id/marketplace-listings [get]
+// @Router /properties/{id}/marketplace-listings [get]
 func (h *MarketplaceHandler) GetMarketplaceListings(c *gin.Context) {
 	propertyID := c.Param("id")
 
@@ -40,7 +40,7 @@ func (h *MarketplaceHandler) GetMarketplaceListings(c *gin.Context) {
 }
 
 // SyncMarketplaceAPIs synchronizes property data with external marketplaces
-// @Router /properties/:id/sync-marketplace [post]
+// @Router /properties/{id}/sync-marketplace [post]
 func (h *MarketplaceHandler) SyncMarketplaceAPIs(c *gin.Context) {
 	propertyID := c.Param("id")
 	userID := c.MustGet("user_id").(string)

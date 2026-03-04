@@ -88,6 +88,10 @@ Thumbs.db
 *.md
 NEW_IMPLEMENTATION_ROADMAP.md
 docs/
+!backend/docs/
+!backend/docs/docs.go
+!backend/docs/swagger.json
+!backend/docs/swagger.yaml
 ENVIRONMENT_SETUP.md
 QUICK_START.md
 ADMIN_FEATURES.md

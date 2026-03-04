@@ -169,7 +169,7 @@ func (h *SubscriptionHandler) UpdateBillingInfo(c *gin.Context) {
 }
 
 // GetInvoice retrieves specific invoice
-// @Router /subscriptions/invoices/:id [get]
+// @Router /subscriptions/invoices/{id} [get]
 func (h *SubscriptionHandler) GetInvoice(c *gin.Context) {
 	invoiceID := c.Param("id")
 	userID := c.MustGet("user_id").(string)

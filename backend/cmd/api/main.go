@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "backend/docs"
 	"context"
 	"log"
 	"net/http"
@@ -18,6 +19,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // @title Land Valuation System API
@@ -90,6 +93,7 @@ func main() {
 
 	// Setup routes
 	routes.Setup(router, db, redisCache)
+	router.GET("/api/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Create server
 	srv := &http.Server{

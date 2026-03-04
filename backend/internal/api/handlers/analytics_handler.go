@@ -36,7 +36,7 @@ func (h *AnalyticsHandler) GetDashboard(c *gin.Context) {
 }
 
 // GetPropertyAnalytics retrieves property-specific analytics
-// @Router /analytics/properties/:id [get]
+// @Router /analytics/properties/{id} [get]
 func (h *AnalyticsHandler) GetPropertyAnalytics(c *gin.Context) {
 	propertyID := c.Param("id")
 	timeRange := c.DefaultQuery("range", "30d")

@@ -19,6 +19,15 @@ type UserHandler struct {
 	userService *services.UserService
 }
 
+// SubmitKYCRequest represents KYC submission request
+type SubmitKYCRequest struct {
+	NationalID   string `json:"national_id" binding:"required,min=6,max=30" example:"1ABCDE1234567890"`
+	DocumentURL  string `json:"document_url" binding:"required,url" example:"https://example.com/doc.pdf"`
+	DocumentType string `json:"document_type" binding:"required,oneof=national_id birth_certificate passport driver_license" example:"national_id"`
+	FirstName    string `json:"first_name" binding:"required,min=2" example:"John"`
+	LastName     string `json:"last_name" binding:"required,min=2" example:"Doe"`
+}
+
 func NewUserHandler(userService *services.UserService) *UserHandler {
 	return &UserHandler{
 		userService: userService,
@@ -159,44 +168,113 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 }
 
 // SubmitKYC submits KYC documentation
+// @Summary Submit KYC documentation
+// @Description Submit Know Your Customer identity verification documents (national ID, birth certificate, etc.)
+// @Tags kyc
+// @Accept json
+// @Produce json
+// @Param request body SubmitKYCRequest true "KYC submission"
+// @Success 201 {object} utils.APIResponse "KYC submitted successfully"
+// @Failure 400 {object} utils.APIResponse "Invalid request or validation failed"
+// @Failure 401 {object} utils.APIResponse "Unauthorized"
+// @Failure 500 {object} utils.APIResponse "Server error"
+// @Security BearerAuth
 // @Router /users/kyc [post]
 func (h *UserHandler) SubmitKYC(c *gin.Context) {
-	type SubmitKYCRequest struct {
-		NationalID   string `json:"national_id" binding:"required"`
-		DocumentURL  string `json:"document_url" binding:"required,url"`
-		DocumentType string `json:"document_type"`
-	}
-
 	userID := c.MustGet("user_id").(string)
 
 	var req SubmitKYCRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid KYC submission format", err.Error())
+		return
+	}
+
+	// Validate national ID format (Rwanda format: 1 letter + 16 digits)
+	if len(req.NationalID) != 16 || (req.NationalID[0] < 'A' || req.NationalID[0] > 'Z') {
+		for i := 1; i < len(req.NationalID); i++ {
+			if req.NationalID[i] < '0' || req.NationalID[i] > '9' {
+				utils.ErrorResponse(c, http.StatusBadRequest, "Invalid national ID format",
+					"National ID must be 1 letter followed by 16 digits")
+				return
+			}
+		}
+	}
+
+	// Validate document URL is not empty
+	if len(req.DocumentURL) < 10 {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid document URL",
+			"Document URL must be a valid HTTP(S) URL")
+		return
+	}
+
+	// Validate name fields
+	if len(req.FirstName) < 2 || len(req.FirstName) > 50 {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid first name",
+			"First name must be between 2 and 50 characters")
+		return
+	}
+	if len(req.LastName) < 2 || len(req.LastName) > 50 {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid last name",
+			"Last name must be between 2 and 50 characters")
 		return
 	}
 
 	user, err := h.userService.SubmitKYC(c.Request.Context(), userID, req.NationalID, req.DocumentURL)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "KYC submission failed", err.Error())
+		// Distinguish between different error types
+		switch err.Error() {
+		case "kyc_already_submitted":
+			utils.ErrorResponse(c, http.StatusBadRequest, "KYC submission failed",
+				"KYC has already been submitted for this account")
+		case "invalid_national_id":
+			utils.ErrorResponse(c, http.StatusBadRequest, "KYC submission failed",
+				"Invalid or duplicate national ID")
+		case "user_not_found":
+			utils.ErrorResponse(c, http.StatusNotFound, "KYC submission failed",
+				"User account not found")
+		default:
+			utils.ErrorResponse(c, http.StatusBadRequest, "KYC submission failed", err.Error())
+		}
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusCreated, "KYC submitted successfully", user)
+	utils.SuccessResponse(c, http.StatusCreated, "KYC submitted successfully and is now under review", gin.H{
+		"user_id":    user.ID,
+		"kyc_status": "pending_review",
+		"message":    "Your KYC documents are under review. This typically takes 1-3 business days.",
+	})
 }
 
 // GetKYCStatus retrieves KYC status
+// @Summary Get KYC verification status
+// @Description Retrieve the current KYC verification status and submission details
+// @Tags kyc
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.APIResponse "KYC status retrieved"
+// @Failure 401 {object} utils.APIResponse "Unauthorized"
+// @Failure 404 {object} utils.APIResponse "KYC not found"
+// @Failure 500 {object} utils.APIResponse "Server error"
+// @Security BearerAuth
 // @Router /users/kyc/status [get]
 func (h *UserHandler) GetKYCStatus(c *gin.Context) {
 	userID := c.MustGet("user_id").(string)
 
 	status, err := h.userService.GetKYCStatus(c.Request.Context(), userID)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusNotFound, "KYC status not found", err.Error())
+		if err.Error() == "kyc_not_found" {
+			utils.ErrorResponse(c, http.StatusNotFound, "KYC status not found",
+				"No KYC submission found for this user")
+		} else {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve KYC status",
+				err.Error())
+		}
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "KYC status retrieved", gin.H{
-		"status": status,
+	utils.SuccessResponse(c, http.StatusOK, "KYC status retrieved successfully", gin.H{
+		"user_id": userID,
+		"status":  status,
 	})
 }
 

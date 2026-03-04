@@ -14,6 +14,13 @@ type AdminHandler struct {
 	adminService *services.AdminService
 }
 
+// VerifyKYCRequest represents KYC verification request
+type VerifyKYCRequest struct {
+	Status  string `json:"status" binding:"required,oneof=approved rejected pending" example:"approved"`
+	Comment string `json:"comment" binding:"max=500" example:"All documents verified successfully"`
+	Reason  string `json:"reason" example:"Invalid national ID format"`
+}
+
 func NewAdminHandler(adminService *services.AdminService) *AdminHandler {
 	return &AdminHandler{
 		adminService: adminService,
@@ -43,7 +50,7 @@ func (h *AdminHandler) GetAllUsers(c *gin.Context) {
 }
 
 // GetUser retrieves specific user details (admin only)
-// @Router /admin/users/:id [get]
+// @Router /admin/users/{id} [get]
 func (h *AdminHandler) GetUser(c *gin.Context) {
 	userID := c.Param("id")
 
@@ -57,31 +64,100 @@ func (h *AdminHandler) GetUser(c *gin.Context) {
 }
 
 // VerifyUserKYC verifies user KYC (admin only)
-// @Router /admin/users/:id/verify-kyc [post]
+// @Summary Verify user KYC (Admin)
+// @Description Approve or reject the KYC verification submitted by a user (admin only)
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param request body VerifyKYCRequest true "KYC verification decision"
+// @Success 200 {object} utils.APIResponse "KYC verified"
+// @Failure 400 {object} utils.APIResponse "Invalid request or validation failed"
+// @Failure 401 {object} utils.APIResponse "Unauthorized"
+// @Failure 403 {object} utils.APIResponse "Forbidden - Admin access required"
+// @Failure 404 {object} utils.APIResponse "User or KYC not found"
+// @Failure 500 {object} utils.APIResponse "Server error"
+// @Security BearerAuth
+// @Router /admin/users/{id}/verify-kyc [post]
 func (h *AdminHandler) VerifyUserKYC(c *gin.Context) {
-	type VerifyKYCRequest struct {
-		Status  string `json:"status" binding:"required"`
-		Comment string `json:"comment"`
-	}
-
 	userID := c.Param("id")
+
+	// Validate user ID
+	if userID == "" {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid user ID", "")
+		return
+	}
 
 	var req VerifyKYCRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid KYC verification request format", err.Error())
 		return
 	}
 
-	if err := h.adminService.VerifyUserKYC(c.Request.Context(), userID, req.Status, req.Comment); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "KYC verification failed", err.Error())
+	// Validate comment length
+	if len(req.Comment) > 500 {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid comment",
+			"Comment must not exceed 500 characters")
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "User KYC verified", nil)
+	// If rejecting, require a reason
+	if req.Status == "rejected" && req.Reason == "" {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid verification request",
+			"Rejection reason is required when status is 'rejected'")
+		return
+	}
+
+	// Prepare comment with status and reason
+	fullComment := req.Comment
+	if req.Status == "rejected" && req.Reason != "" {
+		fullComment = req.Reason + (func() string {
+			if req.Comment != "" {
+				return ". " + req.Comment
+			}
+			return ""
+		}())
+	}
+
+	if err := h.adminService.VerifyUserKYC(c.Request.Context(), userID, req.Status, fullComment); err != nil {
+		// Distinguish between different error types
+		switch err.Error() {
+		case "user_not_found":
+			utils.ErrorResponse(c, http.StatusNotFound, "KYC verification failed",
+				"User not found")
+		case "kyc_not_found":
+			utils.ErrorResponse(c, http.StatusNotFound, "KYC verification failed",
+				"No KYC submission found for this user")
+		case "kyc_already_verified":
+			utils.ErrorResponse(c, http.StatusBadRequest, "KYC verification failed",
+				"KYC has already been verified for this user")
+		default:
+			utils.ErrorResponse(c, http.StatusBadRequest, "KYC verification failed", err.Error())
+		}
+		return
+	}
+
+	// Return appropriate message based on status
+	var message string
+	switch req.Status {
+	case "approved":
+		message = "User KYC verified and approved successfully"
+	case "rejected":
+		message = "User KYC rejected with reason provided"
+	case "pending":
+		message = "User KYC status set to pending review"
+	default:
+		message = "User KYC verification updated"
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, message, gin.H{
+		"user_id": userID,
+		"status":  req.Status,
+	})
 }
 
 // SuspendUser suspends user account (admin only)
-// @Router /admin/users/:id/suspend [post]
+// @Router /admin/users/{id}/suspend [post]
 func (h *AdminHandler) SuspendUser(c *gin.Context) {
 	type SuspendRequest struct {
 		Reason string `json:"reason" binding:"required"`
@@ -104,7 +180,7 @@ func (h *AdminHandler) SuspendUser(c *gin.Context) {
 }
 
 // ReactivateUser reactivates suspended user (admin only)
-// @Router /admin/users/:id/reactivate [post]
+// @Router /admin/users/{id}/reactivate [post]
 func (h *AdminHandler) ReactivateUser(c *gin.Context) {
 	userID := c.Param("id")
 
@@ -117,7 +193,7 @@ func (h *AdminHandler) ReactivateUser(c *gin.Context) {
 }
 
 // ModerateContent moderates user content (admin only)
-// @Router /admin/content/:id/moderate [post]
+// @Router /admin/content/{id}/moderate [post]
 func (h *AdminHandler) ModerateContent(c *gin.Context) {
 	type ModerationRequest struct {
 		Action  string `json:"action" binding:"required"`
@@ -226,7 +302,7 @@ func (h *AdminHandler) ManageSubscriptions(c *gin.Context) {
 }
 
 // ApproveProperty approves property listing (admin only)
-// @Router /admin/properties/:id/approve [post]
+// @Router /admin/properties/{id}/approve [post]
 func (h *AdminHandler) ApproveProperty(c *gin.Context) {
 	propertyID := c.Param("id")
 
@@ -239,7 +315,7 @@ func (h *AdminHandler) ApproveProperty(c *gin.Context) {
 }
 
 // RejectProperty rejects property listing (admin only)
-// @Router /admin/properties/:id/reject [post]
+// @Router /admin/properties/{id}/reject [post]
 func (h *AdminHandler) RejectProperty(c *gin.Context) {
 	type RejectRequest struct {
 		Reason string `json:"reason" binding:"required"`

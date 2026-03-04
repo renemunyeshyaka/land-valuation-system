@@ -6,6 +6,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type APIError struct {
+	Message string `json:"message"`
+	Details string `json:"details,omitempty"`
+}
+
+type APIResponse struct {
+	Success bool        `json:"success"`
+	Message string      `json:"message,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
+	Error   *APIError   `json:"error,omitempty"`
+}
+
 // ErrorResponse sends an error response
 func ErrorResponse(c *gin.Context, code int, message string, details string) {
 	c.JSON(code, gin.H{

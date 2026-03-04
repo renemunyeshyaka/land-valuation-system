@@ -1,0 +1,865 @@
+basePath: /api/v1
+definitions:
+  handlers.CreateValuationRequest:
+    properties:
+      district:
+        type: string
+      include_comparables:
+        type: boolean
+      include_factors:
+        type: boolean
+      property_size_sqm:
+        type: number
+      property_type:
+        enum:
+        - residential
+        - commercial
+        - agricultural
+        - industrial
+        type: string
+      sector:
+        type: string
+    required:
+    - district
+    - property_size_sqm
+    - property_type
+    type: object
+  handlers.MobileMoneyRequest:
+    properties:
+      amount:
+        example: 50000
+        type: number
+      description:
+        example: Property payment
+        type: string
+      phone_number:
+        example: "+250788123456"
+        type: string
+      provider:
+        enum:
+        - mtn
+        - airtel
+        example: mtn
+        type: string
+    required:
+    - amount
+    - phone_number
+    - provider
+    type: object
+  handlers.PropertySearchRequest:
+    properties:
+      district:
+        example: Kigali
+        type: string
+      latitude:
+        example: -1.9536
+        type: number
+      longitude:
+        example: 29.8739
+        type: number
+      max_price:
+        example: 10000000
+        type: number
+      max_size:
+        example: 1000
+        type: number
+      min_price:
+        example: 1000000
+        type: number
+      min_size:
+        example: 100
+        type: number
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 50
+        type: integer
+      property_type:
+        example: residential
+        type: string
+      radius:
+        example: 5000
+        type: number
+      sort_by:
+        example: created_at
+        type: string
+      sort_order:
+        example: desc
+        type: string
+    required:
+    - latitude
+    - longitude
+    type: object
+  handlers.PropertySummary:
+    properties:
+      district:
+        type: string
+      id:
+        type: integer
+      land_size:
+        type: number
+      price:
+        type: number
+      property_type:
+        type: string
+      sector:
+        type: string
+      title:
+        type: string
+    type: object
+  handlers.SubmitKYCRequest:
+    properties:
+      document_type:
+        enum:
+        - national_id
+        - birth_certificate
+        - passport
+        - driver_license
+        example: national_id
+        type: string
+      document_url:
+        example: https://example.com/doc.pdf
+        type: string
+      first_name:
+        example: John
+        minLength: 2
+        type: string
+      last_name:
+        example: Doe
+        minLength: 2
+        type: string
+      national_id:
+        example: 1ABCDE1234567890
+        maxLength: 30
+        minLength: 6
+        type: string
+    required:
+    - document_type
+    - document_url
+    - first_name
+    - last_name
+    - national_id
+    type: object
+  handlers.ValuationResponse:
+    properties:
+      adjustments:
+        additionalProperties:
+          format: float64
+          type: number
+        type: object
+      base_price:
+        type: number
+      comparables:
+        items:
+          $ref: '#/definitions/handlers.PropertySummary'
+        type: array
+      confidence:
+        type: number
+      confidence_level:
+        type: string
+      estimated_value_rwf:
+        type: number
+      factors:
+        items:
+          $ref: '#/definitions/models.ValuationFactor'
+        type: array
+      gazette_reference:
+        type: string
+      recommendations:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      zone_coefficient:
+        type: number
+    type: object
+  handlers.VerifyKYCRequest:
+    properties:
+      comment:
+        example: All documents verified successfully
+        maxLength: 500
+        type: string
+      reason:
+        example: Invalid national ID format
+        type: string
+      status:
+        enum:
+        - approved
+        - rejected
+        - pending
+        example: approved
+        type: string
+    required:
+    - status
+    type: object
+  models.ValuationFactor:
+    properties:
+      description:
+        type: string
+      impact:
+        description: positive, negative, neutral
+        type: string
+      name:
+        type: string
+      value:
+        type: number
+      weight:
+        type: number
+    type: object
+  utils.APIError:
+    properties:
+      details:
+        type: string
+      message:
+        type: string
+    type: object
+  utils.APIResponse:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/utils.APIError'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+host: api.landvaluationsystem.rw
+info:
+  contact:
+    email: support@landvaluationsystem.rw
+    name: API Support
+    url: http://www.landvaluationsystem.rw/support
+  description: Rwanda Land Valuation System with Official Gazette Integration
+  license:
+    name: Proprietary
+    url: http://www.landvaluationsystem.rw/license
+  termsOfService: http://swagger.io/terms/
+  title: Land Valuation System API
+  version: "1.0"
+paths:
+  /admin/audit-logs:
+    get:
+      responses: {}
+  /admin/config:
+    get:
+      responses: {}
+    put:
+      responses: {}
+  /admin/content/{id}/moderate:
+    post:
+      responses: {}
+  /admin/health:
+    get:
+      responses: {}
+  /admin/notifications:
+    post:
+      responses: {}
+  /admin/properties/{id}/approve:
+    post:
+      responses: {}
+  /admin/properties/{id}/reject:
+    post:
+      responses: {}
+  /admin/subscriptions:
+    get:
+      responses: {}
+  /admin/users:
+    get:
+      responses: {}
+  /admin/users/{id}:
+    get:
+      responses: {}
+  /admin/users/{id}/reactivate:
+    post:
+      responses: {}
+  /admin/users/{id}/suspend:
+    post:
+      responses: {}
+  /admin/users/{id}/verify-kyc:
+    post:
+      consumes:
+      - application/json
+      description: Approve or reject the KYC verification submitted by a user (admin
+        only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: KYC verification decision
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.VerifyKYCRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: KYC verified
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "400":
+          description: Invalid request or validation failed
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "403":
+          description: Forbidden - Admin access required
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "404":
+          description: User or KYC not found
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Verify user KYC (Admin)
+      tags:
+      - admin
+  /analytics/activity-report:
+    get:
+      responses: {}
+  /analytics/dashboard:
+    get:
+      responses: {}
+  /analytics/export:
+    post:
+      responses: {}
+  /analytics/heatmap:
+    get:
+      responses: {}
+  /analytics/market-trends:
+    get:
+      responses: {}
+  /analytics/properties/{id}:
+    get:
+      responses: {}
+  /analytics/revenue:
+    get:
+      responses: {}
+  /analytics/searches:
+    get:
+      responses: {}
+  /analytics/valuation-insights:
+    get:
+      responses: {}
+  /api/v1/exchange-rate:
+    get:
+      consumes:
+      - application/json
+      description: Returns live exchange rate information for USD and RWF
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get current USD/RWF exchange rate
+      tags:
+      - currency
+  /api/v1/exchange-rate/convert:
+    get:
+      consumes:
+      - application/json
+      description: Convert an amount from one currency to another
+      parameters:
+      - description: Amount to convert
+        in: query
+        name: amount
+        required: true
+        type: number
+      - description: Source currency (USD or RWF)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: Target currency (USD or RWF)
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Convert between USD and RWF
+      tags:
+      - currency
+  /api/v1/exchange-rate/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Force refresh of the cached exchange rate
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Refresh exchange rate cache
+      tags:
+      - currency
+  /api/v1/properties:
+    get:
+      responses: {}
+    post:
+      responses: {}
+  /api/v1/properties/{id}:
+    delete:
+      responses: {}
+    get:
+      responses: {}
+    put:
+      responses: {}
+  /api/v1/properties/search:
+    post:
+      consumes:
+      - application/json
+      description: Search for properties near a location with optional filters for
+        price, type, and district
+      parameters:
+      - description: Search filters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.PropertySearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Properties found
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Search properties by location and filters
+      tags:
+      - properties
+  /api/v1/properties/stats:
+    get:
+      responses: {}
+  /api/v1/valuations:
+    get:
+      description: Get a list of all valuations created by the authenticated user
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/handlers.ValuationResponse'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: List user's valuations
+      tags:
+      - valuations
+    post:
+      consumes:
+      - application/json
+      description: Calculate estimated property value based on location, size, and
+        type
+      parameters:
+      - description: Valuation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateValuationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.ValuationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Calculate property valuation
+      tags:
+      - valuations
+  /api/v1/valuations/{id}:
+    get:
+      description: Retrieve a specific valuation result by ID
+      parameters:
+      - description: Valuation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.ValuationResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Get valuation by ID
+      tags:
+      - valuations
+  /auth/2fa/enable:
+    post:
+      responses: {}
+  /auth/2fa/verify:
+    post:
+      responses: {}
+  /auth/forgot-password:
+    post:
+      responses: {}
+  /auth/login:
+    post:
+      responses: {}
+  /auth/logout:
+    post:
+      responses: {}
+  /auth/refresh:
+    post:
+      responses: {}
+  /auth/register:
+    post:
+      responses: {}
+  /auth/resend-activation:
+    post:
+      responses: {}
+  /auth/resend-otp:
+    post:
+      responses: {}
+  /auth/reset-password:
+    post:
+      responses: {}
+  /auth/verify-email:
+    post:
+      responses: {}
+  /auth/verify-otp:
+    post:
+      responses: {}
+  /marketplace/properties-for-sale:
+    get:
+      responses: {}
+  /payments/{transaction_id}/status:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the current status of a payment transaction
+      parameters:
+      - description: Transaction ID
+        in: path
+        name: transaction_id
+        required: true
+        type: string
+      - description: Payment provider (mtn|airtel)
+        in: query
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment status retrieved
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "404":
+          description: Transaction not found
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Check payment status
+      tags:
+      - payments
+  /payments/callback:
+    post:
+      consumes:
+      - application/json
+      description: Process payment provider callbacks (webhook)
+      parameters:
+      - description: Payment provider (mtn|airtel)
+        in: query
+        name: provider
+        required: true
+        type: string
+      - description: Callback payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Callback processed
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "400":
+          description: Invalid callback
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Handle payment callback
+      tags:
+      - payments
+  /payments/mobile-money:
+    post:
+      consumes:
+      - application/json
+      description: Initiate a payment via MTN or Airtel mobile money with validation
+      parameters:
+      - description: Payment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.MobileMoneyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Payment initiated
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "400":
+          description: Invalid request or validation failed
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Initiate mobile money payment
+      tags:
+      - payments
+  /properties/{id}/marketplace-listings:
+    get:
+      responses: {}
+  /properties/{id}/sync-marketplace:
+    post:
+      responses: {}
+  /subscriptions/billing-history:
+    get:
+      responses: {}
+  /subscriptions/billing-info:
+    put:
+      responses: {}
+  /subscriptions/cancel:
+    post:
+      responses: {}
+  /subscriptions/current:
+    get:
+      responses: {}
+  /subscriptions/downgrade:
+    post:
+      responses: {}
+  /subscriptions/invoices/{id}:
+    get:
+      responses: {}
+  /subscriptions/plans:
+    get:
+      responses: {}
+  /subscriptions/upgrade:
+    post:
+      responses: {}
+  /users/account:
+    delete:
+      responses: {}
+  /users/account-settings:
+    get:
+      responses: {}
+    put:
+      responses: {}
+  /users/activity:
+    get:
+      responses: {}
+  /users/change-password:
+    post:
+      responses: {}
+  /users/kyc:
+    post:
+      consumes:
+      - application/json
+      description: Submit Know Your Customer identity verification documents (national
+        ID, birth certificate, etc.)
+      parameters:
+      - description: KYC submission
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SubmitKYCRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: KYC submitted successfully
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "400":
+          description: Invalid request or validation failed
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Submit KYC documentation
+      tags:
+      - kyc
+  /users/kyc/status:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the current KYC verification status and submission details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: KYC status retrieved
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "404":
+          description: KYC not found
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get KYC verification status
+      tags:
+      - kyc
+  /users/notifications:
+    get:
+      responses: {}
+  /users/notifications/{id}/read:
+    post:
+      responses: {}
+  /users/profile:
+    get:
+      responses: {}
+    put:
+      responses: {}
+schemes:
+- https
+- http
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

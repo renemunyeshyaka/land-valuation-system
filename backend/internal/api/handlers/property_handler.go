@@ -20,6 +20,23 @@ type PropertyHandler struct {
 	propertyRepo *repository.PropertyRepository
 }
 
+// PropertySearchRequest represents property search filters
+type PropertySearchRequest struct {
+	Latitude     float64 `json:"latitude" binding:"required" example:"-1.9536"`
+	Longitude    float64 `json:"longitude" binding:"required" example:"29.8739"`
+	Radius       float64 `json:"radius,omitempty" example:"5000"`
+	MinPrice     float64 `json:"min_price,omitempty" example:"1000000"`
+	MaxPrice     float64 `json:"max_price,omitempty" example:"10000000"`
+	MinSize      float64 `json:"min_size,omitempty" example:"100"`
+	MaxSize      float64 `json:"max_size,omitempty" example:"1000"`
+	PropertyType string  `json:"property_type,omitempty" example:"residential"`
+	District     string  `json:"district,omitempty" example:"Kigali"`
+	Page         int     `json:"page,omitempty" example:"1"`
+	PageSize     int     `json:"page_size,omitempty" example:"50"`
+	SortBy       string  `json:"sort_by,omitempty" example:"created_at"`
+	SortOrder    string  `json:"sort_order,omitempty" example:"desc"`
+}
+
 func NewPropertyHandler(propertyRepo *repository.PropertyRepository) *PropertyHandler {
 	return &PropertyHandler{
 		propertyRepo: propertyRepo,
@@ -68,7 +85,7 @@ func (h *PropertyHandler) ListProperties(c *gin.Context) {
 }
 
 // GetProperty retrieves a single property by ID
-// @Router /api/v1/properties/:id [get]
+// @Router /api/v1/properties/{id} [get]
 func (h *PropertyHandler) GetProperty(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
 
@@ -288,7 +305,7 @@ func (h *PropertyHandler) CreateProperty(c *gin.Context) {
 }
 
 // UpdateProperty updates an existing property
-// @Router /api/v1/properties/:id [put]
+// @Router /api/v1/properties/{id} [put]
 func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
 	userID, _ := c.Get("user_id")
@@ -346,7 +363,7 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 }
 
 // DeleteProperty deletes a property
-// @Router /api/v1/properties/:id [delete]
+// @Router /api/v1/properties/{id} [delete]
 func (h *PropertyHandler) DeleteProperty(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
 	userID, _ := c.Get("user_id")
@@ -371,25 +388,82 @@ func (h *PropertyHandler) DeleteProperty(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Property deleted successfully", nil)
 }
 
-// SearchNearby searches for properties near a location
-// @Router /api/v1/properties/search/nearby [get]
+// SearchNearby searches for properties with filters
+// @Summary Search properties by location and filters
+// @Description Search for properties near a location with optional filters for price, type, and district
+// @Tags properties
+// @Accept json
+// @Produce json
+// @Param request body PropertySearchRequest true "Search filters"
+// @Success 200 {object} utils.APIResponse "Properties found"
+// @Failure 400 {object} utils.APIResponse "Invalid request"
+// @Failure 500 {object} utils.APIResponse "Server error"
+// @Router /api/v1/properties/search [post]
 func (h *PropertyHandler) SearchNearby(c *gin.Context) {
-	lat, _ := strconv.ParseFloat(c.Query("latitude"), 64)
-	lng, _ := strconv.ParseFloat(c.Query("longitude"), 64)
-	radius, _ := strconv.ParseFloat(c.DefaultQuery("radius", "5000"), 64) // default 5km
+	var req PropertySearchRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid search request", err.Error())
+		return
+	}
 
-	if lat == 0 || lng == 0 {
+	// Validate required fields
+	if req.Latitude == 0 || req.Longitude == 0 {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Latitude and longitude are required", "")
 		return
 	}
 
+	// Set defaults
+	if req.Radius == 0 {
+		req.Radius = 5000 // 5km default
+	}
+	if req.Page == 0 {
+		req.Page = 1
+	}
+	if req.PageSize == 0 {
+		req.PageSize = 50
+	}
+	if req.SortBy == "" {
+		req.SortBy = "created_at"
+	}
+	if req.SortOrder == "" {
+		req.SortOrder = "desc"
+	}
+
+	// Validate price range
+	if req.MinPrice < 0 || req.MaxPrice < 0 {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Price values cannot be negative", "")
+		return
+	}
+	if req.MinPrice > 0 && req.MaxPrice > 0 && req.MinPrice > req.MaxPrice {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Min price cannot be greater than max price", "")
+		return
+	}
+
+	// Validate size range
+	if req.MinSize < 0 || req.MaxSize < 0 {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Size values cannot be negative", "")
+		return
+	}
+	if req.MinSize > 0 && req.MaxSize > 0 && req.MinSize > req.MaxSize {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Min size cannot be greater than max size", "")
+		return
+	}
+
 	filter := repository.PropertyFilter{
-		Latitude:  lat,
-		Longitude: lng,
-		Radius:    radius,
-		Status:    "available",
-		Page:      1,
-		PageSize:  50,
+		Latitude:     req.Latitude,
+		Longitude:    req.Longitude,
+		Radius:       req.Radius,
+		MinPrice:     req.MinPrice,
+		MaxPrice:     req.MaxPrice,
+		MinSize:      req.MinSize,
+		MaxSize:      req.MaxSize,
+		PropertyType: req.PropertyType,
+		District:     req.District,
+		Status:       "available",
+		Page:         req.Page,
+		PageSize:     req.PageSize,
+		SortBy:       req.SortBy,
+		SortOrder:    req.SortOrder,
 	}
 
 	properties, total, err := h.propertyRepo.FindAll(filter)
@@ -400,12 +474,17 @@ func (h *PropertyHandler) SearchNearby(c *gin.Context) {
 
 	utils.SuccessResponse(c, http.StatusOK, "Properties found", gin.H{
 		"properties": properties,
-		"total":      total,
+		"pagination": gin.H{
+			"page":        req.Page,
+			"page_size":   req.PageSize,
+			"total":       total,
+			"total_pages": (int(total) + req.PageSize - 1) / req.PageSize,
+		},
 	})
 }
 
 // GetStatistics returns property statistics
-// @Router /api/v1/properties/statistics [get]
+// @Router /api/v1/properties/stats [get]
 func (h *PropertyHandler) GetStatistics(c *gin.Context) {
 	stats, err := h.propertyRepo.GetStatistics()
 	if err != nil {
