@@ -134,7 +134,16 @@ func setupValuationRoutes(router *gin.Engine, db *gorm.DB) {
 		protected.Use(middleware.AuthRequired())
 		{
 			protected.GET("", valuationHandler.ListValuations)
+			protected.GET("/history", valuationHandler.GetValuationHistory)
 		}
+	}
+
+	// Admin routes for valuation approval workflow
+	adminValuations := router.Group("/api/v1/admin/valuations")
+	adminValuations.Use(middleware.AuthRequired(), middleware.AdminRequired())
+	{
+		adminValuations.POST("/:id/approve", valuationHandler.ApproveValuation)
+		adminValuations.POST("/:id/reject", valuationHandler.RejectValuation)
 	}
 }
 
@@ -269,6 +278,7 @@ func setupNotificationRoutes(router *gin.Engine, db *gorm.DB) {
 	admin.Use(middleware.AuthRequired(), middleware.AdminRequired())
 	{
 		admin.POST("/notifications", notificationHandler.SendToUser)
+		admin.POST("/notifications/broadcast", notificationHandler.BroadcastNotification)
 	}
 
 	users := router.Group("/api/v1/users")
@@ -276,6 +286,9 @@ func setupNotificationRoutes(router *gin.Engine, db *gorm.DB) {
 	{
 		users.GET("/notifications", notificationHandler.ListUserNotifications)
 		users.POST("/notifications/:id/read", notificationHandler.MarkNotificationRead)
+		users.POST("/notifications/read-all", notificationHandler.MarkAllAsRead)
+		users.GET("/notifications/unread-count", notificationHandler.GetUnreadCount)
+		users.DELETE("/notifications/:id", notificationHandler.DeleteNotification)
 	}
 }
 

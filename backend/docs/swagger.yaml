@@ -1,5 +1,35 @@
 basePath: /api/v1
 definitions:
+  handlers.ApproveValuationRequest:
+    properties:
+      comment:
+        example: Valuation approved after review
+        maxLength: 500
+        type: string
+    type: object
+  handlers.BroadcastNotificationRequest:
+    properties:
+      message:
+        example: System maintenance scheduled for tonight at 2 AM
+        type: string
+      title:
+        example: System Maintenance
+        type: string
+      type:
+        enum:
+        - info
+        - success
+        - warning
+        - error
+        example: warning
+        type: string
+      user_role:
+        example: all
+        type: string
+    required:
+    - message
+    - title
+    type: object
   handlers.CreateValuationRequest:
     properties:
       district:
@@ -107,6 +137,43 @@ definitions:
         type: string
       title:
         type: string
+    type: object
+  handlers.RejectValuationRequest:
+    properties:
+      comment:
+        example: Additional details on rejection
+        maxLength: 500
+        type: string
+      reason:
+        example: Incorrect property type classification
+        maxLength: 500
+        type: string
+    required:
+    - reason
+    type: object
+  handlers.SendNotificationRequest:
+    properties:
+      message:
+        example: Your payment of 50,000 RWF has been processed successfully
+        type: string
+      title:
+        example: Payment Received
+        type: string
+      type:
+        enum:
+        - info
+        - success
+        - warning
+        - error
+        example: success
+        type: string
+      user_id:
+        example: user_123
+        type: string
+    required:
+    - message
+    - title
+    - user_id
     type: object
   handlers.SubmitKYCRequest:
     properties:
@@ -255,7 +322,70 @@ paths:
       responses: {}
   /admin/notifications:
     post:
-      responses: {}
+      consumes:
+      - application/json
+      description: Admin endpoint to send notification to a specific user
+      parameters:
+      - description: Notification details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SendNotificationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Send notification to a specific user (Admin)
+      tags:
+      - admin
+      - notifications
+  /admin/notifications/broadcast:
+    post:
+      consumes:
+      - application/json
+      description: Admin endpoint to send notification to all users or specific role
+      parameters:
+      - description: Broadcast details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.BroadcastNotificationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Broadcast notification to all users (Admin)
+      tags:
+      - admin
+      - notifications
   /admin/properties/{id}/approve:
     post:
       responses: {}
@@ -327,33 +457,366 @@ paths:
       summary: Verify user KYC (Admin)
       tags:
       - admin
+  /admin/valuations/{id}/approve:
+    post:
+      consumes:
+      - application/json
+      description: Admin endpoint to approve a property valuation
+      parameters:
+      - description: Valuation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Approval details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ApproveValuationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Approve a valuation (Admin)
+      tags:
+      - admin
+      - valuations
+  /admin/valuations/{id}/reject:
+    post:
+      consumes:
+      - application/json
+      description: Admin endpoint to reject a property valuation with reason
+      parameters:
+      - description: Valuation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Rejection details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RejectValuationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Reject a valuation (Admin)
+      tags:
+      - admin
+      - valuations
   /analytics/activity-report:
     get:
-      responses: {}
+      description: Retrieve detailed activity report for the authenticated user
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user activity report
+      tags:
+      - analytics
   /analytics/dashboard:
     get:
-      responses: {}
+      description: Retrieve comprehensive dashboard analytics for the authenticated
+        user
+      parameters:
+      - default: 30d
+        description: Time range (7d, 30d, 90d, 1y)
+        in: query
+        name: range
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get analytics dashboard
+      tags:
+      - analytics
   /analytics/export:
     post:
-      responses: {}
+      consumes:
+      - application/json
+      description: Export analytics report in CSV, PDF, or Excel format
+      parameters:
+      - description: Export parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            end_date:
+              type: string
+            format:
+              type: string
+            start_date:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Export analytics report
+      tags:
+      - analytics
   /analytics/heatmap:
     get:
-      responses: {}
+      description: Retrieve geographic heatmap data showing property prices across
+        regions
+      parameters:
+      - description: Property type
+        in: query
+        name: type
+        type: string
+      - description: Filter by district
+        in: query
+        name: district
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Get property price heatmap
+      tags:
+      - analytics
   /analytics/market-trends:
     get:
-      responses: {}
+      description: Retrieve real estate market trends including price movements and
+        demand patterns
+      parameters:
+      - description: Filter by district
+        in: query
+        name: district
+        type: string
+      - default: 90d
+        description: Time range
+        in: query
+        name: range
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Get market trends
+      tags:
+      - analytics
   /analytics/properties/{id}:
     get:
-      responses: {}
+      description: Retrieve analytics for a specific property including views, inquiries,
+        and price history
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 30d
+        description: Time range
+        in: query
+        name: range
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get property analytics
+      tags:
+      - analytics
   /analytics/revenue:
     get:
-      responses: {}
+      description: Retrieve revenue analytics including payment totals and trends
+        (admin only)
+      parameters:
+      - default: 30d
+        description: Time range
+        in: query
+        name: range
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get revenue analytics (Admin)
+      tags:
+      - admin
+      - analytics
   /analytics/searches:
     get:
-      responses: {}
+      description: Retrieve analytics about property searches performed by the user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get search analytics
+      tags:
+      - analytics
   /analytics/valuation-insights:
     get:
-      responses: {}
+      description: Retrieve insights and trends from property valuations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get valuation insights
+      tags:
+      - analytics
   /api/v1/exchange-rate:
     get:
       consumes:
@@ -518,6 +981,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
       summary: List user's valuations
       tags:
       - valuations
@@ -588,6 +1053,47 @@ paths:
       summary: Get valuation by ID
       tags:
       - valuations
+  /api/v1/valuations/history:
+    get:
+      description: Retrieve all valuations performed on a specific property
+      parameters:
+      - description: Property ID
+        in: query
+        name: property_id
+        required: true
+        type: string
+      - default: 10
+        description: Maximum number of records
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/handlers.ValuationResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get valuation history for a property
+      tags:
+      - valuations
   /auth/2fa/enable:
     post:
       responses: {}
@@ -626,7 +1132,33 @@ paths:
       responses: {}
   /marketplace/properties-for-sale:
     get:
-      responses: {}
+      description: Retrieve paginated list of all properties available for sale on
+        marketplace
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Get all properties for sale
+      tags:
+      - marketplace
   /payments/{transaction_id}/status:
     get:
       consumes:
@@ -735,10 +1267,64 @@ paths:
       - payments
   /properties/{id}/marketplace-listings:
     get:
-      responses: {}
+      description: Retrieve property listings from external marketplace APIs
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Get marketplace listings for property
+      tags:
+      - marketplace
   /properties/{id}/sync-marketplace:
     post:
-      responses: {}
+      description: Synchronize property data with external marketplace platforms
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Sync property with marketplaces
+      tags:
+      - marketplace
   /subscriptions/billing-history:
     get:
       responses: {}
@@ -845,10 +1431,145 @@ paths:
       - kyc
   /users/notifications:
     get:
-      responses: {}
+      description: Get all notifications for the authenticated user
+      parameters:
+      - default: 20
+        description: Maximum number of notifications
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List notifications for current user
+      tags:
+      - notifications
+  /users/notifications/{id}:
+    delete:
+      description: Delete a specific notification for the current user
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete notification
+      tags:
+      - notifications
   /users/notifications/{id}/read:
     post:
-      responses: {}
+      description: Mark a specific notification as read for the current user
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Mark notification as read
+      tags:
+      - notifications
+  /users/notifications/read-all:
+    post:
+      description: Mark all notifications as read for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Mark all notifications as read
+      tags:
+      - notifications
+  /users/notifications/unread-count:
+    get:
+      description: Get the count of unread notifications for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get unread notification count
+      tags:
+      - notifications
   /users/profile:
     get:
       responses: {}

@@ -22,7 +22,15 @@ func NewMarketplaceHandler(marketplaceService *services.MarketplaceService) *Mar
 	}
 }
 
-// GetMarketplaceListings gets property listings from external marketplaces
+// GetMarketplaceListings godoc
+// @Summary Get marketplace listings for property
+// @Description Retrieve property listings from external marketplace APIs
+// @Tags marketplace
+// @Produce json
+// @Param id path string true "Property ID"
+// @Success 200 {object} utils.APIResponse
+// @Failure 404 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
 // @Router /properties/{id}/marketplace-listings [get]
 func (h *MarketplaceHandler) GetMarketplaceListings(c *gin.Context) {
 	propertyID := c.Param("id")
@@ -39,7 +47,17 @@ func (h *MarketplaceHandler) GetMarketplaceListings(c *gin.Context) {
 	})
 }
 
-// SyncMarketplaceAPIs synchronizes property data with external marketplaces
+// SyncMarketplaceAPIs godoc
+// @Summary Sync property with marketplaces
+// @Description Synchronize property data with external marketplace platforms
+// @Tags marketplace
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Property ID"
+// @Success 200 {object} utils.APIResponse
+// @Failure 401 {object} utils.APIResponse
+// @Failure 404 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
 // @Router /properties/{id}/sync-marketplace [post]
 func (h *MarketplaceHandler) SyncMarketplaceAPIs(c *gin.Context) {
 	propertyID := c.Param("id")
@@ -54,7 +72,15 @@ func (h *MarketplaceHandler) SyncMarketplaceAPIs(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Marketplace sync completed", result)
 }
 
-// GetPropertyListingsOnSale retrieves all properties on sale in marketplace
+// GetPropertyListingsOnSale godoc
+// @Summary Get all properties for sale
+// @Description Retrieve paginated list of all properties available for sale on marketplace
+// @Tags marketplace
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(20)
+// @Success 200 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
 // @Router /marketplace/properties-for-sale [get]
 func (h *MarketplaceHandler) GetPropertyListingsOnSale(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))

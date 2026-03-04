@@ -20,7 +20,16 @@ func NewAnalyticsHandler(analyticsService *services.AnalyticsService) *Analytics
 	}
 }
 
-// GetDashboard retrieves dashboard analytics
+// GetDashboard godoc
+// @Summary Get analytics dashboard
+// @Description Retrieve comprehensive dashboard analytics for the authenticated user
+// @Tags analytics
+// @Produce json
+// @Security BearerAuth
+// @Param range query string false "Time range (7d, 30d, 90d, 1y)" default(30d)
+// @Success 200 {object} utils.APIResponse
+// @Failure 401 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
 // @Router /analytics/dashboard [get]
 func (h *AnalyticsHandler) GetDashboard(c *gin.Context) {
 	userID := c.MustGet("user_id").(string)
@@ -35,7 +44,17 @@ func (h *AnalyticsHandler) GetDashboard(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Dashboard retrieved", dashboard)
 }
 
-// GetPropertyAnalytics retrieves property-specific analytics
+// GetPropertyAnalytics godoc
+// @Summary Get property analytics
+// @Description Retrieve analytics for a specific property including views, inquiries, and price history
+// @Tags analytics
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Property ID"
+// @Param range query string false "Time range" default(30d)
+// @Success 200 {object} utils.APIResponse
+// @Failure 404 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
 // @Router /analytics/properties/{id} [get]
 func (h *AnalyticsHandler) GetPropertyAnalytics(c *gin.Context) {
 	propertyID := c.Param("id")
@@ -50,7 +69,15 @@ func (h *AnalyticsHandler) GetPropertyAnalytics(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Property analytics retrieved", analytics)
 }
 
-// GetMarketTrends retrieves market trends
+// GetMarketTrends godoc
+// @Summary Get market trends
+// @Description Retrieve real estate market trends including price movements and demand patterns
+// @Tags analytics
+// @Produce json
+// @Param district query string false "Filter by district"
+// @Param range query string false "Time range" default(90d)
+// @Success 200 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
 // @Router /analytics/market-trends [get]
 func (h *AnalyticsHandler) GetMarketTrends(c *gin.Context) {
 	district := c.Query("district")
@@ -65,7 +92,15 @@ func (h *AnalyticsHandler) GetMarketTrends(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Market trends retrieved", trends)
 }
 
-// GetHeatmap retrieves property heatmap
+// GetHeatmap godoc
+// @Summary Get property price heatmap
+// @Description Retrieve geographic heatmap data showing property prices across regions
+// @Tags analytics
+// @Produce json
+// @Param type query string false "Property type"
+// @Param district query string false "Filter by district"
+// @Success 200 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
 // @Router /analytics/heatmap [get]
 func (h *AnalyticsHandler) GetHeatmap(c *gin.Context) {
 	propertyType := c.Query("type")
@@ -80,7 +115,17 @@ func (h *AnalyticsHandler) GetHeatmap(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Heatmap retrieved", heatmap)
 }
 
-// GetUserActivityReport retrieves user activity report
+// GetUserActivityReport godoc
+// @Summary Get user activity report
+// @Description Retrieve detailed activity report for the authenticated user
+// @Tags analytics
+// @Produce json
+// @Security BearerAuth
+// @Param start_date query string false "Start date (YYYY-MM-DD)"
+// @Param end_date query string false "End date (YYYY-MM-DD)"
+// @Success 200 {object} utils.APIResponse
+// @Failure 401 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
 // @Router /analytics/activity-report [get]
 func (h *AnalyticsHandler) GetUserActivityReport(c *gin.Context) {
 	userID := c.MustGet("user_id").(string)
@@ -96,7 +141,15 @@ func (h *AnalyticsHandler) GetUserActivityReport(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Activity report retrieved", report)
 }
 
-// GetSearchAnalytics retrieves search analytics
+// GetSearchAnalytics godoc
+// @Summary Get search analytics
+// @Description Retrieve analytics about property searches performed by the user
+// @Tags analytics
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.APIResponse
+// @Failure 401 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
 // @Router /analytics/searches [get]
 func (h *AnalyticsHandler) GetSearchAnalytics(c *gin.Context) {
 	userID := c.MustGet("user_id").(string)
@@ -110,7 +163,15 @@ func (h *AnalyticsHandler) GetSearchAnalytics(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Search analytics retrieved", analytics)
 }
 
-// GetValuationInsights retrieves valuation insights
+// GetValuationInsights godoc
+// @Summary Get valuation insights
+// @Description Retrieve insights and trends from property valuations
+// @Tags analytics
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.APIResponse
+// @Failure 401 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
 // @Router /analytics/valuation-insights [get]
 func (h *AnalyticsHandler) GetValuationInsights(c *gin.Context) {
 	userID := c.MustGet("user_id").(string)
@@ -124,7 +185,18 @@ func (h *AnalyticsHandler) GetValuationInsights(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Valuation insights retrieved", insights)
 }
 
-// ExportAnalyticsReport exports analytics report
+// ExportAnalyticsReport godoc
+// @Summary Export analytics report
+// @Description Export analytics report in CSV, PDF, or Excel format
+// @Tags analytics
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body object{format=string,start_date=string,end_date=string} true "Export parameters"
+// @Success 200 {file} file
+// @Failure 400 {object} utils.APIResponse
+// @Failure 401 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
 // @Router /analytics/export [post]
 func (h *AnalyticsHandler) ExportAnalyticsReport(c *gin.Context) {
 	type ExportRequest struct {
@@ -150,7 +222,17 @@ func (h *AnalyticsHandler) ExportAnalyticsReport(c *gin.Context) {
 	c.FileAttachment(file, "analytics_report."+req.Format)
 }
 
-// GetRevenueAnalytics retrieves revenue analytics (admin only)
+// GetRevenueAnalytics godoc
+// @Summary Get revenue analytics (Admin)
+// @Description Retrieve revenue analytics including payment totals and trends (admin only)
+// @Tags admin,analytics
+// @Produce json
+// @Security BearerAuth
+// @Param range query string false "Time range" default(30d)
+// @Success 200 {object} utils.APIResponse
+// @Failure 401 {object} utils.APIResponse
+// @Failure 403 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
 // @Router /analytics/revenue [get]
 func (h *AnalyticsHandler) GetRevenueAnalytics(c *gin.Context) {
 	timeRange := c.DefaultQuery("range", "30d")

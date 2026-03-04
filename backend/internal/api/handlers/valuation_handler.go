@@ -120,6 +120,7 @@ func (h *ValuationHandler) GetValuationByID(c *gin.Context) {
 // @Description Get a list of all valuations created by the authenticated user
 // @Tags valuations
 // @Produce json
+// @Security BearerAuth
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
 // @Success 200 {object} utils.APIResponse{data=[]ValuationResponse}
@@ -143,6 +144,130 @@ func (h *ValuationHandler) ListValuations(c *gin.Context) {
 		"page":       page,
 		"limit":      limit,
 		"total":      0,
+	})
+}
+
+// ApproveValuationRequest represents admin approval request
+type ApproveValuationRequest struct {
+	Comment string `json:"comment" binding:"max=500" example:"Valuation approved after review"`
+}
+
+// RejectValuationRequest represents admin rejection request
+type RejectValuationRequest struct {
+	Reason  string `json:"reason" binding:"required,max=500" example:"Incorrect property type classification"`
+	Comment string `json:"comment" binding:"max=500" example:"Additional details on rejection"`
+}
+
+// ApproveValuation godoc
+// @Summary Approve a valuation (Admin)
+// @Description Admin endpoint to approve a property valuation
+// @Tags admin,valuations
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Valuation ID"
+// @Param request body ApproveValuationRequest true "Approval details"
+// @Success 200 {object} utils.APIResponse
+// @Failure 400 {object} utils.APIResponse
+// @Failure 404 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
+// @Router /admin/valuations/{id}/approve [post]
+func (h *ValuationHandler) ApproveValuation(c *gin.Context) {
+	id := c.Param("id")
+
+	var req ApproveValuationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		return
+	}
+
+	// Convert to uint
+	valuationID, err := strconv.ParseUint(id, 10, 32)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid valuation ID", err.Error())
+		return
+	}
+
+	// TODO: Implement actual approval in database
+	// For now, return success response
+	utils.SuccessResponse(c, http.StatusOK, "Valuation approved successfully", gin.H{
+		"valuation_id": valuationID,
+		"status":       "approved",
+		"comment":      req.Comment,
+		"approved_at":  "2026-03-04T10:00:00Z",
+	})
+}
+
+// RejectValuation godoc
+// @Summary Reject a valuation (Admin)
+// @Description Admin endpoint to reject a property valuation with reason
+// @Tags admin,valuations
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Valuation ID"
+// @Param request body RejectValuationRequest true "Rejection details"
+// @Success 200 {object} utils.APIResponse
+// @Failure 400 {object} utils.APIResponse
+// @Failure 404 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
+// @Router /admin/valuations/{id}/reject [post]
+func (h *ValuationHandler) RejectValuation(c *gin.Context) {
+	id := c.Param("id")
+
+	var req RejectValuationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		return
+	}
+
+	// Convert to uint
+	valuationID, err := strconv.ParseUint(id, 10, 32)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid valuation ID", err.Error())
+		return
+	}
+
+	// TODO: Implement actual rejection in database
+	// For now, return success response
+	utils.SuccessResponse(c, http.StatusOK, "Valuation rejected", gin.H{
+		"valuation_id": valuationID,
+		"status":       "rejected",
+		"reason":       req.Reason,
+		"comment":      req.Comment,
+		"rejected_at":  "2026-03-04T10:00:00Z",
+	})
+}
+
+// GetValuationHistory godoc
+// @Summary Get valuation history for a property
+// @Description Retrieve all valuations performed on a specific property
+// @Tags valuations
+// @Produce json
+// @Security BearerAuth
+// @Param property_id query string true "Property ID"
+// @Param limit query int false "Maximum number of records" default(10)
+// @Success 200 {object} utils.APIResponse{data=[]ValuationResponse}
+// @Failure 400 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
+// @Router /api/v1/valuations/history [get]
+func (h *ValuationHandler) GetValuationHistory(c *gin.Context) {
+	propertyID := c.Query("property_id")
+	if propertyID == "" {
+		utils.ErrorResponse(c, http.StatusBadRequest, "property_id query parameter is required", "")
+		return
+	}
+
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if limit < 1 || limit > 100 {
+		limit = 10
+	}
+
+	// TODO: Implement fetching valuation history from database
+	utils.SuccessResponse(c, http.StatusOK, "Valuation history retrieved", gin.H{
+		"property_id": propertyID,
+		"valuations":  []ValuationResponse{},
+		"total":       0,
 	})
 }
 
