@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "lib": ["es2020", "dom"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "typeRoots": [
+      "./node_modules/@types",
+      "./frontend/node_modules/@types"
+    ]
+  },
+  "include": [
+    "cypress.d.ts",
+    "cypress/**/*.ts"
+  ],
+  "exclude": ["node_modules", "frontend/node_modules"]
+}

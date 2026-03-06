@@ -58,6 +58,13 @@ type User struct {
 	OTPLockedUntil             *time.Time `json:"-"`
 	LastOTPSentAt              *time.Time `json:"-"`
 
+	// Referral Program
+	ReferrerUserID   *uint   `gorm:"index" json:"referrer_user_id,omitempty"`
+	ReferralCode     string  `gorm:"uniqueIndex;size:20" json:"referral_code"`
+	ReferralDiscount float64 `gorm:"default:0" json:"referral_discount"` // percentage discount (0-100)
+	ReferredUsers    int     `gorm:"default:0" json:"referred_users"`    // count of users referred
+	ReferredBy       *User   `gorm:"foreignKey:ReferrerUserID" json:"referred_by,omitempty"`
+
 	// Relationships
 	Properties      []Property `gorm:"foreignKey:OwnerID;references:ID" json:"properties,omitempty"`
 	SavedProperties []Property `gorm:"many2many:user_saved_properties;" json:"saved_properties,omitempty"`

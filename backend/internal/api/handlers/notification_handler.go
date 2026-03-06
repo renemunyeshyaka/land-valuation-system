@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"backend/internal/services"
 	"backend/internal/utils"
@@ -135,11 +136,14 @@ func (h *NotificationHandler) MarkNotificationRead(c *gin.Context) {
 func (h *NotificationHandler) MarkAllAsRead(c *gin.Context) {
 	userID := c.MustGet("user_id").(string)
 
-	// TODO: Implement marking all notifications as read in database
-	_ = userID // avoid unused variable error
+	markedCount, err := h.notificationService.MarkAllAsRead(c.Request.Context(), userID)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to mark notifications as read", err.Error())
+		return
+	}
 
 	utils.SuccessResponse(c, http.StatusOK, "All notifications marked as read", gin.H{
-		"marked_count": 0,
+		"marked_count": markedCount,
 	})
 }
 
@@ -156,11 +160,14 @@ func (h *NotificationHandler) MarkAllAsRead(c *gin.Context) {
 func (h *NotificationHandler) GetUnreadCount(c *gin.Context) {
 	userID := c.MustGet("user_id").(string)
 
-	// TODO: Implement fetching unread count from database
-	_ = userID // avoid unused variable error
+	unreadCount, err := h.notificationService.GetUnreadCount(c.Request.Context(), userID)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve unread count", err.Error())
+		return
+	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Unread count retrieved", gin.H{
-		"unread_count": 0,
+		"unread_count": unreadCount,
 	})
 }
 
@@ -192,13 +199,23 @@ func (h *NotificationHandler) BroadcastNotification(c *gin.Context) {
 
 	adminUserID := c.MustGet("user_id").(string)
 
-	// TODO: Implement broadcasting notification to all users or specific role
-	_ = adminUserID // avoid unused variable error
+	recipientsCount, err := h.notificationService.BroadcastNotification(
+		c.Request.Context(),
+		req.Title,
+		req.Message,
+		req.Type,
+		req.UserRole,
+		adminUserID,
+	)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to broadcast notification", err.Error())
+		return
+	}
 
 	utils.SuccessResponse(c, http.StatusCreated, "Notification broadcasted successfully", gin.H{
-		"recipients_count": 0,
+		"recipients_count": recipientsCount,
 		"user_role":        req.UserRole,
-		"broadcast_id":     "bc_" + strconv.FormatInt(1234567890, 10),
+		"broadcast_id":     "bc_" + strconv.FormatInt(time.Now().UnixNano(), 10),
 	})
 }
 
@@ -218,9 +235,10 @@ func (h *NotificationHandler) DeleteNotification(c *gin.Context) {
 	userID := c.MustGet("user_id").(string)
 	notificationID := c.Param("id")
 
-	// TODO: Implement deleting notification from database
-	_ = userID         // avoid unused variable error
-	_ = notificationID // avoid unused variable error
+	if err := h.notificationService.DeleteNotification(c.Request.Context(), notificationID, userID); err != nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "Failed to delete notification", err.Error())
+		return
+	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Notification deleted successfully", nil)
 }

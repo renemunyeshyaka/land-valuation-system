@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "lib": ["es2020", "dom"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "typeRoots": [
+      "../../frontend/node_modules/@types"
+    ],
+    "paths": {
+      "@/*": ["../frontend/src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", "support/global.d.ts"],
+  "exclude": ["node_modules"]
+}
+

@@ -1,0 +1,365 @@
+{
+  "info": {
+    "name": "Land Valuation System - Auth & User API",
+    "description": "Testing endpoints for Registration, Auth, User Profile, and Notifications",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"TestPassword123\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"user_type\": \"individual\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-email",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-email"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"TestPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-otp"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Profile",
+      "item": [
+        {
+          "name": "Get User Profile (/profile)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/profile",
+              "host": ["{{base_url}}"],
+              "path": ["users", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Profile (/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile (/profile)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe Updated\",\n  \"phone_number\": \"+250788123456\",\n  \"bio\": \"Land valuation expert\",\n  \"language_preference\": \"en\",\n  \"city\": \"Kigali\",\n  \"country\": \"Rwanda\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/profile",
+              "host": ["{{base_url}}"],
+              "path": ["users", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile (/me)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe Updated\",\n  \"phone_number\": \"+250788123456\",\n  \"bio\": \"Land valuation expert\",\n  \"language_preference\": \"en\",\n  \"city\": \"Kigali\",\n  \"country\": \"Rwanda\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/notifications?limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["users", "notifications"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/notifications/unread-count",
+              "host": ["{{base_url}}"],
+              "path": ["users", "notifications", "unread-count"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/notifications/1/read",
+              "host": ["{{base_url}}"],
+              "path": ["users", "notifications", "1", "read"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All as Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/notifications/read-all",
+              "host": ["{{base_url}}"],
+              "path": ["users", "notifications", "read-all"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/notifications/1",
+              "host": ["{{base_url}}"],
+              "path": ["users", "notifications", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Notification to User (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"1\",\n  \"title\": \"Payment Received\",\n  \"message\": \"Your payment of 50,000 RWF has been processed successfully\",\n  \"type\": \"success\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "notifications"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Broadcast Notification (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"System Maintenance\",\n  \"message\": \"System maintenance scheduled for tonight at 2 AM\",\n  \"type\": \"warning\",\n  \"user_role\": \"all\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/notifications/broadcast",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "notifications", "broadcast"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "your_access_token_here",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "your_admin_token_here",
+      "type": "string"
+    }
+  ]
+}

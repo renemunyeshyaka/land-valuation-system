@@ -43,7 +43,7 @@
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@types/mapbox-gl": "^2.7.18",
-    "@types/node": "^20.19.35",
+    "@types/node": "^20.19.37",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.17",
     "@typescript-eslint/eslint-plugin": "^6.13.2",

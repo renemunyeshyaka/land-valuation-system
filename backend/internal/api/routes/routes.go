@@ -34,7 +34,8 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client) 
 	setupAdminRoutes(router, db)
 	setupNotificationRoutes(router, db)
 	setupExchangeRateRoutes(router, redisClient)
-	setupHealthRoutes(router)
+	setupReferralRoutes(router, db)
+	setupHealthRoutes(router, db)
 }
 
 func setupAuthRoutes(router *gin.Engine, db *gorm.DB) {
@@ -75,6 +76,11 @@ func setupUserRoutes(router *gin.Engine, db *gorm.DB) {
 	{
 		users.GET("/profile", userHandler.GetProfile)
 		users.PUT("/profile", userHandler.UpdateProfile)
+
+		// Aliases for /me endpoints (same as /profile)
+		users.GET("/me", userHandler.GetProfile)
+		users.PUT("/me", userHandler.UpdateProfile)
+
 		users.POST("/kyc", userHandler.SubmitKYC)
 		users.GET("/kyc/status", userHandler.GetKYCStatus)
 		users.POST("/change-password", userHandler.ChangePassword)
@@ -310,17 +316,38 @@ func setupExchangeRateRoutes(router *gin.Engine, redisClient *redis.Client) {
 	}
 }
 
-func setupHealthRoutes(router *gin.Engine) {
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status": "healthy",
-		})
-	})
+func setupReferralRoutes(router *gin.Engine, db *gorm.DB) {
+	referralService := services.NewReferralService(db)
+	referralHandler := handlers.NewReferralHandler(referralService)
 
-	router.GET("/api/v1/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":  "ok",
-			"service": "land-valuation-api",
-		})
-	})
+	referrals := router.Group("/api/v1/referral")
+	{
+		// Public endpoints - anyone can validate a referral code
+		referrals.GET("/:code", referralHandler.ValidateReferralCode)
+		referrals.GET("/stats/public", referralHandler.GetReferralStats)
+
+		// Protected endpoints - authenticated users only
+		protected := referrals.Group("")
+		protected.Use(middleware.AuthRequired())
+		{
+			protected.GET("/me/info", referralHandler.GetMyReferralInfo)
+			protected.POST("/generate", referralHandler.GenerateReferralCode)
+		}
+	}
+}
+
+func setupHealthRoutes(router *gin.Engine, db *gorm.DB) {
+	healthHandler := handlers.NewHealthHandler(db)
+
+	// Root level health endpoints (no /api/v1 prefix for monitoring)
+	router.GET("/health", healthHandler.HealthCheck)
+	router.GET("/ready", healthHandler.ReadinessCheck)
+	router.GET("/live", healthHandler.LivenessCheck)
+
+	// API versioned health endpoints
+	health := router.Group("/api/v1/health")
+	{
+		health.GET("", healthHandler.HealthCheck)
+		health.GET("/db", healthHandler.DatabaseStats)
+	}
 }

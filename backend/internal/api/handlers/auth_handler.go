@@ -45,6 +45,14 @@ type AuthResponse struct {
 }
 
 // Register handles user registration
+// @Summary Register a new user
+// @Description Create a new user account with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body RegisterRequest true "Registration request"
+// @Success 201 {object} gin.H{user_id:string,email:string,message:string}
+// @Failure 400 {object} gin.H{error:string,details:string}
 // @Router /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
@@ -73,6 +81,15 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 // Login handles user login
+// @Summary User login
+// @Description Authenticate user and send OTP verification code
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "Login credentials"
+// @Success 200 {object} gin.H{user_id:string,email:string,message:string}
+// @Failure 400 {object} gin.H{error:string,details:string}
+// @Failure 401 {object} gin.H{error:string,details:string}
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
@@ -95,6 +112,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 // RefreshToken handles token refresh
+// @Summary Refresh access token
+// @Description Get a new access token using refresh token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body RefreshRequest true "Refresh token request"
+// @Success 200 {object} gin.H{access_token:string,refresh_token:string,expires_at:string}
+// @Failure 400 {object} gin.H{error:string,details:string}
+// @Failure 401 {object} gin.H{error:string,details:string}
 // @Router /auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	type RefreshRequest struct {
@@ -121,6 +147,14 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 }
 
 // Logout handles user logout
+// @Summary User logout
+// @Description Invalidate user session and tokens
+// @Tags auth
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} gin.H{message:string}
+// @Failure 401 {object} gin.H{error:string,details:string}
+// @Failure 500 {object} gin.H{error:string,details:string}
 // @Router /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	userID := c.MustGet("user_id").(string)
@@ -134,6 +168,14 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 // VerifyEmail handles email verification
+// @Summary Verify email address
+// @Description Verify user email with 6-digit code sent via email
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body VerifyEmailRequest true "Email verification request"
+// @Success 200 {object} gin.H{message:string}
+// @Failure 400 {object} gin.H{error:string,details:string}
 // @Router /auth/verify-email [post]
 func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 	type VerifyEmailRequest struct {
@@ -156,6 +198,14 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 }
 
 // ResendActivationCode handles resending email verification code
+// @Summary Resend email verification code
+// @Description Send a new verification code to user email
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body ResendRequest true "Resend code request"
+// @Success 200 {object} gin.H{message:string}
+// @Failure 400 {object} gin.H{error:string,details:string}
 // @Router /auth/resend-activation [post]
 func (h *AuthHandler) ResendActivationCode(c *gin.Context) {
 	type ResendRequest struct {
@@ -177,6 +227,15 @@ func (h *AuthHandler) ResendActivationCode(c *gin.Context) {
 }
 
 // VerifyOTP handles OTP verification after login
+// @Summary Verify OTP for login
+// @Description Verify OTP sent to email after login
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body VerifyOTPRequest true "OTP verification request"
+// @Success 200 {object} AuthResponse
+// @Failure 400 {object} gin.H{error:string,details:string}
+// @Failure 401 {object} gin.H{error:string,details:string}
 // @Router /auth/verify-otp [post]
 func (h *AuthHandler) VerifyOTP(c *gin.Context) {
 	type VerifyOTPRequest struct {
@@ -205,6 +264,14 @@ func (h *AuthHandler) VerifyOTP(c *gin.Context) {
 }
 
 // ResendOTP handles resending OTP code
+// @Summary Resend OTP code
+// @Description Send a new OTP code to user email
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body ResendOTPRequest true "Resend OTP request"
+// @Success 200 {object} gin.H{message:string}
+// @Failure 400 {object} gin.H{error:string,details:string}
 // @Router /auth/resend-otp [post]
 func (h *AuthHandler) ResendOTP(c *gin.Context) {
 	type ResendOTPRequest struct {
@@ -226,6 +293,14 @@ func (h *AuthHandler) ResendOTP(c *gin.Context) {
 }
 
 // RequestPasswordReset handles password reset request
+// @Summary Request password reset
+// @Description Send password reset email
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body ForgotPasswordRequest true "Forgot password request"
+// @Success 200 {object} gin.H{message:string}
+// @Failure 400 {object} gin.H{error:string,details:string}
 // @Router /auth/forgot-password [post]
 func (h *AuthHandler) RequestPasswordReset(c *gin.Context) {
 	type ForgotPasswordRequest struct {
@@ -247,6 +322,14 @@ func (h *AuthHandler) RequestPasswordReset(c *gin.Context) {
 }
 
 // ResetPassword handles password reset
+// @Summary Reset user password
+// @Description Reset password using token from reset email
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body ResetPasswordRequest true "Reset password request"
+// @Success 200 {object} gin.H{message:string}
+// @Failure 400 {object} gin.H{error:string,details:string}
 // @Router /auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	type ResetPasswordRequest struct {
@@ -269,6 +352,14 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 }
 
 // Enable2FA handles 2FA enablement
+// @Summary Enable two-factor authentication
+// @Description Generate TOTP secret for 2FA
+// @Tags auth
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} gin.H{secret:string}
+// @Failure 401 {object} gin.H{error:string,details:string}
+// @Failure 500 {object} gin.H{error:string,details:string}
 // @Router /auth/2fa/enable [post]
 func (h *AuthHandler) Enable2FA(c *gin.Context) {
 	userID := c.MustGet("user_id").(string)
@@ -285,6 +376,16 @@ func (h *AuthHandler) Enable2FA(c *gin.Context) {
 }
 
 // Verify2FA handles 2FA verification
+// @Summary Verify two-factor authentication code
+// @Description Verify TOTP code to enable 2FA
+// @Tags auth
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body Verify2FARequest true "2FA verification request"
+// @Success 200 {object} gin.H{message:string}
+// @Failure 400 {object} gin.H{error:string,details:string}
+// @Failure 401 {object} gin.H{error:string,details:string}
 // @Router /auth/2fa/verify [post]
 func (h *AuthHandler) Verify2FA(c *gin.Context) {
 	type Verify2FARequest struct {

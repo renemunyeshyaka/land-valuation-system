@@ -218,3 +218,21 @@ func (r *UserRepository) GetByEmailVerificationCode(ctx context.Context, code st
 	}
 	return &user, nil
 }
+
+// GetActiveByRole retrieves active users by their role (user_type)
+func (r *UserRepository) GetActiveByRole(ctx context.Context, userRole string) ([]models.User, error) {
+	var users []models.User
+
+	query := r.db.WithContext(ctx).Where("is_active = ?", true)
+
+	if userRole != "" && userRole != "all" {
+		query = query.Where("user_type = ?", userRole)
+	}
+
+	result := query.Find(&users)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return users, nil
+}
