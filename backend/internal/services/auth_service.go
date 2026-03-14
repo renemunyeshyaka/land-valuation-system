@@ -2,8 +2,10 @@ package services
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
+	"math/big"
 	"os"
 	"time"
 
@@ -50,6 +52,10 @@ func (s *AuthService) Register(ctx context.Context, user *models.User, password 
 	user.IsVerified = false
 	user.EmailVerified = false
 	user.KYCStatus = "pending"
+
+	// Generate unique referral code for user
+	referralCode := s.generateReferralCode(fmt.Sprintf("%d", time.Now().Unix()))
+	user.ReferralCode = referralCode
 
 	// Create user
 	createdUser, err := s.userRepo.Create(ctx, user)
@@ -369,14 +375,66 @@ func (s *AuthService) RequestPasswordReset(ctx context.Context, email string) er
 		return nil
 	}
 
-	// TODO: Generate reset token and send email
-	_ = user
+	// Generate secure reset token
+	token, err := generateSecureToken(32)
+	if err != nil {
+		return nil // Don't reveal error
+	}
+	expiresAt := time.Now().Add(1 * time.Hour)
+
+	// Store token and expiry
+	err = s.userRepo.UpdatePasswordResetToken(ctx, fmt.Sprintf("%d", user.ID), token, expiresAt)
+	if err != nil {
+		return nil // Don't reveal error
+	}
+
+	// Send password reset email
+	firstName := user.FirstName
+	if firstName == "" {
+		firstName = "User"
+	}
+	_ = s.emailService.SendPasswordResetEmail(user.Email, firstName, token)
+	// Always return nil to avoid leaking info
 	return nil
+}
+
+// generateSecureToken creates a secure random string of the given length
+func generateSecureToken(length int) (string, error) {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, length)
+	for i := range b {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			return "", err
+		}
+		b[i] = charset[n.Int64()]
+	}
+	return string(b), nil
 }
 
 // ResetPassword resets user password
 func (s *AuthService) ResetPassword(ctx context.Context, token, newPassword string) error {
-	// TODO: Verify token and reset password
+	// Find user by reset token
+	user, err := s.userRepo.GetByPasswordResetToken(ctx, token)
+	if err != nil || user == nil {
+		return errors.New("invalid or expired token")
+	}
+	// Check expiry
+	if user.PasswordResetExpiresAt == nil || user.PasswordResetExpiresAt.Before(time.Now()) {
+		return errors.New("token expired")
+	}
+	// Hash new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return errors.New("failed to hash password")
+	}
+	// Update password and clear reset token
+	err = s.userRepo.UpdatePassword(ctx, fmt.Sprintf("%d", user.ID), string(hashedPassword))
+	if err != nil {
+		return errors.New("failed to update password")
+	}
+	// Clear reset token fields
+	_ = s.userRepo.UpdatePasswordResetToken(ctx, fmt.Sprintf("%d", user.ID), "", nil)
 	return nil
 }
 
@@ -424,4 +482,23 @@ func (s *AuthService) generateRefreshToken(user *models.User) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(s.jwtSecret))
+}
+
+// generateReferralCode creates a unique referral code for a user
+func (s *AuthService) generateReferralCode(seed string) string {
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	code := make([]byte, 8)
+
+	for i := 0; i < len(code); i++ {
+		max := big.NewInt(int64(len(charset)))
+		n, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			// Fallback if random fails
+			code[i] = charset[(int(time.Now().UnixNano())+i)%len(charset)]
+		} else {
+			code[i] = charset[n.Int64()]
+		}
+	}
+
+	return string(code)
 }

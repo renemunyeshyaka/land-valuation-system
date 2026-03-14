@@ -1,6 +1,9 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -53,6 +56,34 @@ type ValuationFactor struct {
 
 // Custom JSON type for PostgreSQL
 type JSON map[string]interface{}
+
+// Value implements the driver.Valuer interface for database storage
+func (j JSON) Value() (driver.Value, error) {
+	if j == nil {
+		return nil, nil
+	}
+	return json.Marshal(j)
+}
+
+// Scan implements the sql.Scanner interface for database retrieval
+func (j *JSON) Scan(value interface{}) error {
+	if value == nil {
+		*j = nil
+		return nil
+	}
+
+	var bytes []byte
+	switch v := value.(type) {
+	case []byte:
+		bytes = v
+	case string:
+		bytes = []byte(v)
+	default:
+		return fmt.Errorf("failed to scan JSON field: unsupported type %T", value)
+	}
+
+	return json.Unmarshal(bytes, j)
+}
 
 func (v *Valuation) CalculateFinalPrice() {
 	v.FinalPrice = v.BasePrice * v.ZoneCoefficient * v.MarketAdjustment * v.LocationAdjustment * v.SizeAdjustment

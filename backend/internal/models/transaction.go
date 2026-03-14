@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"time"
 
 	"gorm.io/gorm"
@@ -66,4 +67,8 @@ type Transaction struct {
 func (t *Transaction) BeforeSave(tx *gorm.DB) error {
 	t.TotalAmount = t.Amount + t.ServiceFee + t.TaxAmount
 	return nil
+}
+
+type TransactionRepository interface {
+	GetByID(ctx context.Context, id uint) (*Transaction, error)
 }

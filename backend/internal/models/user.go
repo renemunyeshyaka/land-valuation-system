@@ -27,8 +27,13 @@ type User struct {
 	IsDiaspora bool   `gorm:"default:false" json:"is_diaspora"`
 
 	// Subscription
-	SubscriptionTier   string     `gorm:"size:50;default:free" json:"subscription_tier"` // free, basic, professional, ultimate
-	SubscriptionExpiry *time.Time `json:"subscription_expiry,omitempty"`
+	SubscriptionTier          string     `gorm:"size:50;default:free" json:"subscription_tier"`       // free, basic, professional, ultimate
+	SubscriptionStatus        string     `gorm:"size:30;default:inactive" json:"subscription_status"` // inactive, active, past_due, cancelled
+	SubscriptionExpiry        *time.Time `json:"subscription_expiry,omitempty"`
+	SubscriptionPaymentMethod string     `gorm:"size:50" json:"subscription_payment_method,omitempty"` // e.g. stripe, momo, bank
+	SubscriptionLastPayment   *time.Time `json:"subscription_last_payment,omitempty"`
+	SubscriptionNextRenewal   *time.Time `json:"subscription_next_renewal,omitempty"`
+	SubscriptionCancelReason  string     `gorm:"size:255" json:"subscription_cancel_reason,omitempty"`
 
 	// Profile
 	ProfileImage    string `gorm:"size:255" json:"profile_image"`
@@ -82,6 +87,9 @@ type User struct {
 	Country               string     `gorm:"size:100" json:"country"`
 	VerificationToken     string     `gorm:"size:255" json:"verification_token"`
 	VerificationExpiresAt *time.Time `json:"verification_expires_at,omitempty"`
+	// Password Reset
+	PasswordResetToken     string     `gorm:"size:255" json:"password_reset_token"`
+	PasswordResetExpiresAt *time.Time `json:"password_reset_expires_at,omitempty"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {

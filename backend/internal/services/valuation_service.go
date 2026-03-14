@@ -5,8 +5,14 @@ import (
 	"backend/internal/repository"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 )
+
+// LandParcelRepo returns the land parcel repository (exported accessor)
+func (s *ValuationService) LandParcelRepo() *repository.LandParcelRepository {
+	return s.landParcelRepo
+}
 
 // GazetteService is a placeholder for build compatibility
 type GazetteService struct{}
@@ -25,6 +31,7 @@ func (g *GazetteService) GetCurrentGazetteDate() string {
 
 type ValuationService struct {
 	propertyRepo   *repository.PropertyRepository
+	landParcelRepo *repository.LandParcelRepository
 	valuationRepo  *repository.ValuationRepository
 	gazetteService *GazetteService
 }
@@ -55,11 +62,13 @@ func (s *ValuationService) SearchByLocation(ctx context.Context, lat, lng, radiu
 
 func NewValuationService(
 	propertyRepo *repository.PropertyRepository,
+	landParcelRepo *repository.LandParcelRepository,
 	valuationRepo *repository.ValuationRepository,
 	gazetteService *GazetteService,
 ) *ValuationService {
 	return &ValuationService{
 		propertyRepo:   propertyRepo,
+		landParcelRepo: landParcelRepo,
 		valuationRepo:  valuationRepo,
 		gazetteService: gazetteService,
 	}
@@ -87,8 +96,20 @@ func (s *ValuationService) CalculateValuation(req ValuationRequest) (*ValuationR
 		return nil, fmt.Errorf("property not found: %w", err)
 	}
 
+	// Fetch land parcel by UPI
+	var landParcel *models.LandParcel
+	if s.landParcelRepo != nil && property.UPI != "" {
+		landParcel, _ = s.landParcelRepo.FindByUPI(property.UPI)
+	}
+
+	var district, sector string
+	if landParcel != nil {
+		district = landParcel.District
+		sector = landParcel.Sector
+	}
+
 	// Get zone coefficient from gazette
-	zoneCoeff, err := s.gazetteService.GetZoneCoefficient(property.District, property.Sector)
+	zoneCoeff, err := s.gazetteService.GetZoneCoefficient(district, sector)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get zone coefficient: %w", err)
 	}
@@ -100,7 +121,7 @@ func (s *ValuationService) CalculateValuation(req ValuationRequest) (*ValuationR
 		BasePrice:          property.Price,
 		ZoneCoefficient:    zoneCoeff,
 		MarketAdjustment:   s.calculateMarketAdjustment(property),
-		LocationAdjustment: s.calculateLocationAdjustment(property),
+		LocationAdjustment: s.calculateLocationAdjustmentWithParcel(property, landParcel),
 		SizeAdjustment:     s.calculateSizeAdjustment(property.LandSize),
 		GazetteReference:   s.gazetteService.GetCurrentGazetteReference(),
 		GazetteDate:        nil,
@@ -161,10 +182,12 @@ func (s *ValuationService) calculateMarketAdjustment(property *models.Property) 
 	return adjustment
 }
 
-func (s *ValuationService) calculateLocationAdjustment(property *models.Property) float64 {
+func (s *ValuationService) calculateLocationAdjustmentWithParcel(property *models.Property, parcel *models.LandParcel) float64 {
 	adjustment := 1.0
-
-	// Adjust based on district
+	var district string
+	if parcel != nil {
+		district = parcel.District
+	}
 	districtMultipliers := map[string]float64{
 		"Kigali City": 1.3,
 		"Musanze":     1.1,
@@ -172,14 +195,9 @@ func (s *ValuationService) calculateLocationAdjustment(property *models.Property
 		"Huye":        1.0,
 		"Nyagatare":   0.95,
 	}
-
-	if mult, exists := districtMultipliers[property.District]; exists {
+	if mult, exists := districtMultipliers[district]; exists {
 		adjustment *= mult
 	}
-
-	// Adjust based on proximity to amenities
-	// This would require geolocation analysis
-
 	return adjustment
 }
 
@@ -267,28 +285,8 @@ func (s *ValuationService) factorsToJSON(factors []models.ValuationFactor) model
 }
 
 func (s *ValuationService) findComparableProperties(property *models.Property) ([]models.Property, error) {
-	// Find similar properties in the same district
-	filter := repository.PropertyFilter{
-		District:     property.District,
-		PropertyType: property.PropertyType,
-		Status:       "available",
-		MinPrice:     property.Price * 0.7,
-		MaxPrice:     property.Price * 1.3,
-		MinSize:      property.LandSize * 0.8,
-		MaxSize:      property.LandSize * 1.2,
-	}
-
-	properties, _, err := s.propertyRepo.FindAll(filter)
-	if err != nil {
-		return nil, err
-	}
-
-	// Limit to 10 comparables
-	if len(properties) > 10 {
-		properties = properties[:10]
-	}
-
-	return properties, nil
+	// UPI-only search cannot find comparables; return empty slice
+	return []models.Property{}, nil
 }
 
 func (s *ValuationService) getConfidenceLevel(score float64) string {
@@ -325,4 +323,216 @@ func (s *ValuationService) generateRecommendations(valuation *models.Valuation, 
 	}
 
 	return recommendations
+}
+
+// UPIValuationResponse is the response structure for UPI-based valuation
+type UPIValuationResponse struct {
+	UPI      string `json:"upi"`
+	Property struct {
+		District     string  `json:"district"`
+		Sector       string  `json:"sector"`
+		PropertyType string  `json:"property_type"`
+		AreaSqm      float64 `json:"area_sqm"`
+	} `json:"property"`
+	Valuation struct {
+		BasePriceRWF  float64 `json:"base_price_rwf"`
+		TotalValueRWF float64 `json:"total_value_rwf"`
+		Coefficient   float64 `json:"coefficient"`
+		GazetteRef    string  `json:"gazette_ref"`
+		CalculatedAt  string  `json:"calculated_at"`
+	} `json:"valuation"`
+}
+
+// GetValuationByUPI retrieves official land parcel data by UPI and calculates its valuation automatically
+// This uses land_parcels as the source of truth for government official data
+func (s *ValuationService) GetValuationByUPI(upi string) (*UPIValuationResponse, error) {
+	cleanUPI := strings.TrimSpace(upi)
+	if cleanUPI == "" {
+		return nil, fmt.Errorf("UPI is required")
+	}
+
+	candidates := generateUPICandidates(cleanUPI)
+
+	// 1) Primary source: land_parcels table
+	var landParcel *models.LandParcel
+	if s.landParcelRepo != nil {
+		for _, candidate := range candidates {
+			p, err := s.landParcelRepo.FindByUPI(candidate)
+			if err == nil && p != nil {
+				landParcel = p
+				break
+			}
+		}
+	}
+
+	// 2) Backward-compatible fallback: properties table
+	if landParcel == nil {
+		for _, candidate := range candidates {
+			property, err := s.propertyRepo.FindByUPI(candidate)
+			if err == nil && property != nil {
+				return s.buildResponseFromProperty(cleanUPI, property), nil
+			}
+		}
+		return nil, fmt.Errorf("property not found for UPI: %s", cleanUPI)
+	}
+
+	// Get zone coefficient from land parcel or gazette service
+	zoneCoeff := landParcel.ZoneCoefficient
+	if zoneCoeff == 0 || zoneCoeff < 0.1 {
+		// Fallback to gazette service if not in land parcel
+		fetchedCoeff, err := s.gazetteService.GetZoneCoefficient(landParcel.District, landParcel.Sector)
+		if err == nil {
+			zoneCoeff = fetchedCoeff
+		} else {
+			zoneCoeff = 1.0
+		}
+	}
+
+	// Calculate base price per sqm
+	basePricePerSqm := landParcel.BasePricePerSqm
+	if basePricePerSqm == 0 || basePricePerSqm < 0.01 {
+		// Fallback to default pricing if not set in land parcel
+		basePricePerSqm = s.getDefaultBasePriceForDistrict(landParcel.District, landParcel.PropertyType)
+	}
+
+	// Calculate total value = basePricePerSqm × landSizeSqm × zoneCoefficient
+	totalValue := basePricePerSqm * landParcel.LandSizeSqm * zoneCoeff
+
+	// Build response
+	response := &UPIValuationResponse{UPI: cleanUPI}
+	response.Property.District = landParcel.District
+	response.Property.Sector = landParcel.Sector
+	response.Property.PropertyType = landParcel.PropertyType
+	response.Property.AreaSqm = landParcel.LandSizeSqm
+	response.Valuation.BasePriceRWF = basePricePerSqm
+	response.Valuation.TotalValueRWF = totalValue
+	response.Valuation.Coefficient = zoneCoeff
+	response.Valuation.GazetteRef = s.gazetteService.GetCurrentGazetteReference()
+	response.Valuation.CalculatedAt = time.Now().Format(time.RFC3339)
+
+	return response, nil
+}
+
+func (s *ValuationService) buildResponseFromProperty(upi string, property *models.Property) *UPIValuationResponse {
+	// Fetch land parcel for location info
+	var district, sector string
+	if s.landParcelRepo != nil && property.UPI != "" {
+		if parcel, err := s.landParcelRepo.FindByUPI(property.UPI); err == nil && parcel != nil {
+			district = parcel.District
+			sector = parcel.Sector
+		}
+	}
+	zoneCoeff, err := s.gazetteService.GetZoneCoefficient(district, sector)
+	if err != nil {
+		if property.ZoneCoefficient > 0 {
+			zoneCoeff = property.ZoneCoefficient
+		} else {
+			zoneCoeff = 1.0
+		}
+	}
+
+	basePricePerSqm := 0.0
+	if property.LandSize > 0 {
+		basePricePerSqm = property.Price / property.LandSize
+	}
+	if basePricePerSqm <= 0 {
+		basePricePerSqm = s.getDefaultBasePriceForDistrict(district, property.PropertyType)
+	}
+
+	totalValue := basePricePerSqm * property.LandSize * zoneCoeff
+
+	response := &UPIValuationResponse{UPI: upi}
+	response.Property.District = district
+	response.Property.Sector = sector
+	response.Property.PropertyType = property.PropertyType
+	response.Property.AreaSqm = property.LandSize
+	response.Valuation.BasePriceRWF = basePricePerSqm
+	response.Valuation.TotalValueRWF = totalValue
+	response.Valuation.Coefficient = zoneCoeff
+	response.Valuation.GazetteRef = s.gazetteService.GetCurrentGazetteReference()
+	response.Valuation.CalculatedAt = time.Now().Format(time.RFC3339)
+	return response
+}
+
+func generateUPICandidates(raw string) []string {
+	trimmed := strings.TrimSpace(raw)
+	upper := strings.ToUpper(trimmed)
+
+	// Remove separators users frequently type in parcel IDs.
+	replacer := strings.NewReplacer(" ", "", "-", "", "/", "", ".", "")
+	compact := replacer.Replace(upper)
+
+	candidates := []string{trimmed, upper, compact}
+	return uniqueStrings(candidates)
+}
+
+func uniqueStrings(values []string) []string {
+	seen := make(map[string]struct{}, len(values))
+	result := make([]string, 0, len(values))
+	for _, v := range values {
+		if v == "" {
+			continue
+		}
+		if _, ok := seen[v]; ok {
+			continue
+		}
+		seen[v] = struct{}{}
+		result = append(result, v)
+	}
+	return result
+}
+
+// getDefaultBasePriceForDistrict returns default base price per sqm for a district/property type
+func (s *ValuationService) getDefaultBasePriceForDistrict(district, propertyType string) float64 {
+	// Default pricing structure (RWF per sqm)
+	priceMap := map[string]map[string]float64{
+		"Kigali": {
+			"residential":  75000,
+			"commercial":   120000,
+			"industrial":   95000,
+			"agricultural": 15000,
+			"mixed":        85000,
+		},
+		"Eastern Province": {
+			"residential":  35000,
+			"commercial":   55000,
+			"industrial":   45000,
+			"agricultural": 15000,
+			"mixed":        40000,
+		},
+		"Western Province": {
+			"residential":  45000,
+			"commercial":   70000,
+			"industrial":   55000,
+			"agricultural": 20000,
+			"mixed":        50000,
+		},
+		"Northern Province": {
+			"residential":  38000,
+			"commercial":   60000,
+			"industrial":   48000,
+			"agricultural": 18000,
+			"mixed":        42000,
+		},
+		"Southern Province": {
+			"residential":  32000,
+			"commercial":   50000,
+			"industrial":   42000,
+			"agricultural": 12000,
+			"mixed":        36000,
+		},
+	}
+
+	if districtPrices, ok := priceMap[district]; ok {
+		if price, ok := districtPrices[propertyType]; ok {
+			return price
+		}
+		// Default to residential if property type not found
+		if price, ok := districtPrices["residential"]; ok {
+			return price
+		}
+	}
+
+	// Fallback default
+	return 50000.0
 }

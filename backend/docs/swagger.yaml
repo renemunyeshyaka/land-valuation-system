@@ -292,6 +292,15 @@ definitions:
       success:
         type: boolean
     type: object
+  handlers.EstimateSearchRequest:
+    properties:
+      upi:
+        type: string
+        example: 1/03/01/04/3000
+        description: Unique Parcel Identifier (UPI) code for the parcel
+    required:
+    - upi
+    type: object
 host: api.landvaluationsystem.rw
 info:
   contact:

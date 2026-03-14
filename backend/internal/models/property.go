@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
@@ -14,6 +15,8 @@ type PropertyFilter struct {
 	PropertyType string
 	Status       string
 	District     string
+	Sector       string // Added for location filtering
+	UPI          string // Added for UPI filtering
 	MinPrice     float64
 	MaxPrice     float64
 	MinSize      float64
@@ -44,10 +47,7 @@ type Property struct {
 	Status       string `gorm:"not null;size:50;default:available" json:"status"` // available, pending, sold, rented
 
 	// Location
-	District  string  `gorm:"not null;size:100;index" json:"district"`
-	Sector    string  `gorm:"size:100" json:"sector"`
-	Cell      string  `gorm:"size:100" json:"cell"`
-	Village   string  `gorm:"size:100" json:"village"`
+	UPI       string  `gorm:"size:50;uniqueIndex;not null" json:"upi"` // Unique Parcel Identifier (x/xx/xx/xx/xxxx)
 	Address   string  `gorm:"size:255" json:"address"`
 	Latitude  float64 `gorm:"type:decimal(10,8)" json:"latitude"`
 	Longitude float64 `gorm:"type:decimal(11,8)" json:"longitude"`
@@ -57,6 +57,10 @@ type Property struct {
 	SizeUnit         string  `gorm:"size:10;default:sqm" json:"size_unit"`
 	ZoneCoefficient  float64 `gorm:"type:decimal(5,2)" json:"zone_coefficient"`
 	GazetteReference string  `gorm:"size:100;index" json:"gazette_reference"`
+
+	// Land Parcel Reference - Links to official government land data
+	LandParcelID *uuid.UUID  `gorm:"type:uuid;index" json:"land_parcel_id,omitempty"` // Optional reference to official land parcel
+	LandParcel   *LandParcel `gorm:"foreignKey:LandParcelID" json:"land_parcel,omitempty"`
 
 	// Pricing
 	Price       float64 `gorm:"not null" json:"price"`

@@ -1,307 +1,42 @@
 package handlers
 
 import (
-	"encoding/base64"
-	"fmt"
-	"io"
-	"net/http"
-	"strconv"
-	"strings"
-
-	"backend/internal/models"
 	"backend/internal/repository"
 	"backend/internal/utils"
-	"backend/pkg/filevalidation"
+	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
+
+// ListProperties returns a list of properties (stub)
+func (h *PropertyHandler) ListProperties(c *gin.Context) {
+	utils.SuccessResponse(c, http.StatusOK, "ListProperties not implemented", nil)
+}
+
+// GetProperty returns a property by ID (stub)
+func (h *PropertyHandler) GetProperty(c *gin.Context) {
+	utils.SuccessResponse(c, http.StatusOK, "GetProperty not implemented", nil)
+}
+
+// SearchNearby searches for properties by UPI only (stub)
+func (h *PropertyHandler) SearchNearby(c *gin.Context) {
+	utils.SuccessResponse(c, http.StatusOK, "SearchNearby not implemented", nil)
+}
+
+// CreateProperty creates a new property
+func (h *PropertyHandler) CreateProperty(c *gin.Context) {
+	// TODO: Implement property creation logic
+	utils.SuccessResponse(c, http.StatusOK, "CreateProperty not implemented", nil)
+}
 
 type PropertyHandler struct {
 	propertyRepo *repository.PropertyRepository
 }
 
-// PropertySearchRequest represents property search filters
-type PropertySearchRequest struct {
-	Latitude     float64 `json:"latitude" binding:"required" example:"-1.9536"`
-	Longitude    float64 `json:"longitude" binding:"required" example:"29.8739"`
-	Radius       float64 `json:"radius,omitempty" example:"5000"`
-	MinPrice     float64 `json:"min_price,omitempty" example:"1000000"`
-	MaxPrice     float64 `json:"max_price,omitempty" example:"10000000"`
-	MinSize      float64 `json:"min_size,omitempty" example:"100"`
-	MaxSize      float64 `json:"max_size,omitempty" example:"1000"`
-	PropertyType string  `json:"property_type,omitempty" example:"residential"`
-	District     string  `json:"district,omitempty" example:"Kigali"`
-	Page         int     `json:"page,omitempty" example:"1"`
-	PageSize     int     `json:"page_size,omitempty" example:"50"`
-	SortBy       string  `json:"sort_by,omitempty" example:"created_at"`
-	SortOrder    string  `json:"sort_order,omitempty" example:"desc"`
-}
-
+// NewPropertyHandler returns a new PropertyHandler
 func NewPropertyHandler(propertyRepo *repository.PropertyRepository) *PropertyHandler {
-	return &PropertyHandler{
-		propertyRepo: propertyRepo,
-	}
-}
-
-// ListProperties retrieves properties with filters
-// @Router /api/v1/properties [get]
-func (h *PropertyHandler) ListProperties(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
-	minPrice, _ := strconv.ParseFloat(c.Query("min_price"), 64)
-	maxPrice, _ := strconv.ParseFloat(c.Query("max_price"), 64)
-	minSize, _ := strconv.ParseFloat(c.Query("min_size"), 64)
-	maxSize, _ := strconv.ParseFloat(c.Query("max_size"), 64)
-
-	filter := repository.PropertyFilter{
-		District:     c.Query("district"),
-		PropertyType: c.Query("property_type"),
-		Status:       c.DefaultQuery("status", "available"),
-		MinPrice:     minPrice,
-		MaxPrice:     maxPrice,
-		MinSize:      minSize,
-		MaxSize:      maxSize,
-		Page:         page,
-		PageSize:     pageSize,
-		SortBy:       c.DefaultQuery("sort_by", "created_at"),
-		SortOrder:    c.DefaultQuery("sort_order", "desc"),
-	}
-
-	properties, total, err := h.propertyRepo.FindAll(filter)
-	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve properties", err.Error())
-		return
-	}
-
-	utils.SuccessResponse(c, http.StatusOK, "Properties retrieved successfully", gin.H{
-		"properties": properties,
-		"pagination": gin.H{
-			"page":        page,
-			"page_size":   pageSize,
-			"total":       total,
-			"total_pages": (int(total) + pageSize - 1) / pageSize,
-		},
-	})
-}
-
-// GetProperty retrieves a single property by ID
-// @Router /api/v1/properties/{id} [get]
-func (h *PropertyHandler) GetProperty(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
-
-	property, err := h.propertyRepo.FindByID(uint(id), "Owner")
-	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve property", err.Error())
-		return
-	}
-
-	if property == nil {
-		utils.ErrorResponse(c, http.StatusNotFound, "Property not found", "")
-		return
-	}
-
-	// Increment view count
-	h.propertyRepo.IncrementViews(uint(id))
-
-	utils.SuccessResponse(c, http.StatusOK, "Property retrieved successfully", property)
-}
-
-// CreateProperty creates a new property with file uploads
-// @Router /api/v1/properties [post]
-func (h *PropertyHandler) CreateProperty(c *gin.Context) {
-	// Set max multipart form size to 10 MB
-	c.Request.ParseMultipartForm(filevalidation.MaxUploadSize)
-
-	// Parse form fields
-	title := c.PostForm("title")
-	description := c.PostForm("description")
-	propertyType := c.PostForm("property_type")
-	district := c.PostForm("district")
-	sector := c.PostForm("sector")
-	cell := c.PostForm("cell")
-	village := c.PostForm("village")
-	address := c.PostForm("address")
-	latitude, err := strconv.ParseFloat(c.PostForm("latitude"), 64)
-	if err != nil || latitude == 0 {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid latitude", "")
-		return
-	}
-	longitude, err := strconv.ParseFloat(c.PostForm("longitude"), 64)
-	if err != nil || longitude == 0 {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid longitude", "")
-		return
-	}
-	landSize, err := strconv.ParseFloat(c.PostForm("land_size"), 64)
-	if err != nil || landSize <= 0 {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid land size", "")
-		return
-	}
-	price, err := strconv.ParseFloat(c.PostForm("price"), 64)
-	if err != nil || price <= 0 {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid price", "")
-		return
-	}
-
-	// Validate required fields
-	if title == "" || propertyType == "" || district == "" {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Title, property type, and district are required", "")
-		return
-	}
-
-	// Get user ID from context
-	userID, exists := c.Get("user_id")
-	if !exists {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", "")
-		return
-	}
-
-	// Process image files
-	form, err := c.MultipartForm()
-	if err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Failed to parse form", err.Error())
-		return
-	}
-
-	imageFiles := form.File["images"]
-	documentFiles := form.File["documents"]
-
-	// Validate image count
-	if err := filevalidation.ValidateImageCount(len(imageFiles)); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid image count", err.Error())
-		return
-	}
-
-	// Validate document count
-	if err := filevalidation.ValidateDocumentCount(len(documentFiles)); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid document count", err.Error())
-		return
-	}
-
-	// Process images
-	var imageDataURLs []string
-	var totalUploadSize int64
-
-	for _, fileHeader := range imageFiles {
-		// Validate file size
-		if err := filevalidation.ValidateFileSize(fileHeader.Size, fileHeader.Filename); err != nil {
-			utils.ErrorResponse(c, http.StatusBadRequest, "Invalid image file", err.Error())
-			return
-		}
-
-		// Check total upload size
-		totalUploadSize += fileHeader.Size
-		if err := filevalidation.ValidateTotalUploadSize(totalUploadSize); err != nil {
-			utils.ErrorResponse(c, http.StatusBadRequest, "Total upload size exceeded", err.Error())
-			return
-		}
-
-		// Open file
-		file, err := fileHeader.Open()
-		if err != nil {
-			utils.ErrorResponse(c, http.StatusBadRequest, "Failed to read image", err.Error())
-			return
-		}
-		defer file.Close()
-
-		// Read file data
-		fileData, err := io.ReadAll(file)
-		if err != nil {
-			utils.ErrorResponse(c, http.StatusBadRequest, "Failed to read image data", err.Error())
-			return
-		}
-
-		// Validate image
-		if err := filevalidation.ValidateImageFile(fileHeader.Filename, fileHeader.Header.Get("Content-Type"), fileHeader.Size); err != nil {
-			utils.ErrorResponse(c, http.StatusBadRequest, "Invalid image file", err.Error())
-			return
-		}
-
-		// Convert to base64 DataURL
-		mimeType := filevalidation.DetectMIMEType(fileData)
-		if mimeType == "" || !strings.Contains(mimeType, "image") {
-			mimeType = "image/jpeg"
-		}
-		dataURL := fmt.Sprintf("data:%s;base64,%s", mimeType, base64.StdEncoding.EncodeToString(fileData))
-		imageDataURLs = append(imageDataURLs, dataURL)
-	}
-
-	// Process documents
-	var documentDataURLs []string
-	for _, fileHeader := range documentFiles {
-		// Validate file size
-		if err := filevalidation.ValidateFileSize(fileHeader.Size, fileHeader.Filename); err != nil {
-			utils.ErrorResponse(c, http.StatusBadRequest, "Invalid document file", err.Error())
-			return
-		}
-
-		// Check total upload size
-		totalUploadSize += fileHeader.Size
-		if err := filevalidation.ValidateTotalUploadSize(totalUploadSize); err != nil {
-			utils.ErrorResponse(c, http.StatusBadRequest, "Total upload size exceeded", err.Error())
-			return
-		}
-
-		// Open file
-		file, err := fileHeader.Open()
-		if err != nil {
-			utils.ErrorResponse(c, http.StatusBadRequest, "Failed to read document", err.Error())
-			return
-		}
-		defer file.Close()
-
-		// Read file data
-		fileData, err := io.ReadAll(file)
-		if err != nil {
-			utils.ErrorResponse(c, http.StatusBadRequest, "Failed to read document data", err.Error())
-			return
-		}
-
-		// Validate document
-		if err := filevalidation.ValidateDocumentFile(fileHeader.Filename, fileHeader.Header.Get("Content-Type"), fileHeader.Size); err != nil {
-			utils.ErrorResponse(c, http.StatusBadRequest, "Invalid document file", err.Error())
-			return
-		}
-
-		// Convert to base64 DataURL
-		dataURL := fmt.Sprintf("data:application/pdf;base64,%s", base64.StdEncoding.EncodeToString(fileData))
-		documentDataURLs = append(documentDataURLs, dataURL)
-	}
-
-	// Create property
-	property := &models.Property{
-		Title:        title,
-		Description:  description,
-		PropertyType: propertyType,
-		District:     district,
-		Sector:       sector,
-		Cell:         cell,
-		Village:      village,
-		Address:      address,
-		Latitude:     latitude,
-		Longitude:    longitude,
-		LandSize:     landSize,
-		Price:        price,
-		Status:       "available",
-		OwnerID:      userID.(uint),
-		Currency:     "RWF",
-	}
-
-	// Store images and documents as JSON arrays
-	// (In production, you'd store them in cloud storage like S3/Azure Blob)
-	if len(imageDataURLs) > 0 {
-		// Keep as DataURLs in the model or convert to storage paths
-		property.Images = imageDataURLs
-	}
-	if len(documentDataURLs) > 0 {
-		property.Documents = documentDataURLs
-	}
-
-	if err := h.propertyRepo.Create(property); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create property", err.Error())
-		return
-	}
-
-	utils.SuccessResponse(c, http.StatusCreated, "Property created successfully", property)
+	return &PropertyHandler{propertyRepo: propertyRepo}
 }
 
 // UpdateProperty updates an existing property
@@ -390,7 +125,7 @@ func (h *PropertyHandler) DeleteProperty(c *gin.Context) {
 
 // SearchNearby searches for properties with filters
 // @Summary Search properties by location and filters
-// @Description Search for properties near a location with optional filters for price, type, and district
+// @Description Search for properties by UPI (Unique Parcel Identifier) only
 // @Tags properties
 // @Accept json
 // @Produce json
@@ -399,89 +134,7 @@ func (h *PropertyHandler) DeleteProperty(c *gin.Context) {
 // @Failure 400 {object} utils.APIResponse "Invalid request"
 // @Failure 500 {object} utils.APIResponse "Server error"
 // @Router /api/v1/properties/search [post]
-func (h *PropertyHandler) SearchNearby(c *gin.Context) {
-	var req PropertySearchRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid search request", err.Error())
-		return
-	}
-
-	// Validate required fields
-	if req.Latitude == 0 || req.Longitude == 0 {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Latitude and longitude are required", "")
-		return
-	}
-
-	// Set defaults
-	if req.Radius == 0 {
-		req.Radius = 5000 // 5km default
-	}
-	if req.Page == 0 {
-		req.Page = 1
-	}
-	if req.PageSize == 0 {
-		req.PageSize = 50
-	}
-	if req.SortBy == "" {
-		req.SortBy = "created_at"
-	}
-	if req.SortOrder == "" {
-		req.SortOrder = "desc"
-	}
-
-	// Validate price range
-	if req.MinPrice < 0 || req.MaxPrice < 0 {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Price values cannot be negative", "")
-		return
-	}
-	if req.MinPrice > 0 && req.MaxPrice > 0 && req.MinPrice > req.MaxPrice {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Min price cannot be greater than max price", "")
-		return
-	}
-
-	// Validate size range
-	if req.MinSize < 0 || req.MaxSize < 0 {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Size values cannot be negative", "")
-		return
-	}
-	if req.MinSize > 0 && req.MaxSize > 0 && req.MinSize > req.MaxSize {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Min size cannot be greater than max size", "")
-		return
-	}
-
-	filter := repository.PropertyFilter{
-		Latitude:     req.Latitude,
-		Longitude:    req.Longitude,
-		Radius:       req.Radius,
-		MinPrice:     req.MinPrice,
-		MaxPrice:     req.MaxPrice,
-		MinSize:      req.MinSize,
-		MaxSize:      req.MaxSize,
-		PropertyType: req.PropertyType,
-		District:     req.District,
-		Status:       "available",
-		Page:         req.Page,
-		PageSize:     req.PageSize,
-		SortBy:       req.SortBy,
-		SortOrder:    req.SortOrder,
-	}
-
-	properties, total, err := h.propertyRepo.FindAll(filter)
-	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to search properties", err.Error())
-		return
-	}
-
-	utils.SuccessResponse(c, http.StatusOK, "Properties found", gin.H{
-		"properties": properties,
-		"pagination": gin.H{
-			"page":        req.Page,
-			"page_size":   req.PageSize,
-			"total":       total,
-			"total_pages": (int(total) + req.PageSize - 1) / req.PageSize,
-		},
-	})
-}
+// (UPI-only version implemented above)
 
 // GetStatistics returns property statistics
 // @Router /api/v1/properties/stats [get]

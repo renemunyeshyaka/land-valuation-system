@@ -36,6 +36,18 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client) 
 	setupExchangeRateRoutes(router, redisClient)
 	setupReferralRoutes(router, db)
 	setupHealthRoutes(router, db)
+
+	// Invoice/Receipt download endpoint
+	invoiceService := services.NewInvoiceService()
+	userService := services.NewUserService(db)
+	txnRepo := repository.NewTransactionRepository(db)
+	txnService := services.NewTransactionService(txnRepo)
+	invoiceHandler := handlers.NewInvoiceHandler(invoiceService, userService, txnService)
+	invoice := router.Group("/api/invoice")
+	invoice.Use(middleware.AuthRequired())
+	{
+		invoice.GET(":txn_id/download", invoiceHandler.DownloadInvoice)
+	}
 }
 
 func setupAuthRoutes(router *gin.Engine, db *gorm.DB) {
@@ -124,15 +136,21 @@ func setupPropertyRoutes(router *gin.Engine, db *gorm.DB) {
 func setupValuationRoutes(router *gin.Engine, db *gorm.DB) {
 	// Initialize repositories and services
 	propertyRepo := repository.NewPropertyRepository(db)
+	landParcelRepo := repository.NewLandParcelRepository(db)
 	valuationRepo := repository.NewValuationRepository(db)
 	gazetteService := &services.GazetteService{}
-	valuationService := services.NewValuationService(propertyRepo, valuationRepo, gazetteService)
+	valuationService := services.NewValuationService(propertyRepo, landParcelRepo, valuationRepo, gazetteService)
 	valuationHandler := handlers.NewValuationHandler(valuationService)
+
+	// Register refined Estimate Search endpoint
+	router.POST("/api/v1/estimate-search", handlers.EstimateSearchHandler(valuationService))
 
 	valuations := router.Group("/api/v1/valuations")
 	{
 		// Public endpoint - anyone can request a valuation estimate
 		valuations.POST("", valuationHandler.CreateValuation)
+		// UPI-based automatic valuation
+		valuations.GET("/by-upi/:upi", valuationHandler.GetValuationByUPI)
 		valuations.GET("/:id", valuationHandler.GetValuationByID)
 
 		// Protected routes - user's own valuations
@@ -198,26 +216,9 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 		protected := payments.Group("")
 		protected.Use(middleware.AuthRequired())
 		{
-			// Mobile Money (existing)
+			// Mobile Money (active)
 			protected.POST("/mobile-money", paymentHandler.InitiateMobileMoneyPayment)
 			protected.GET("/:transaction_id/status", paymentHandler.CheckPaymentStatus)
-
-			// Bank Transfer
-			protected.POST("/bank/initiate", multiPaymentHandler.InitiateBankPayment)
-			protected.POST("/bank/submit-proof", multiPaymentHandler.SubmitBankPaymentProof)
-			protected.GET("/bank/status/:transaction_id", multiPaymentHandler.GetBankPaymentStatus)
-
-			// Blockchain/Crypto
-			protected.POST("/crypto/initiate", multiPaymentHandler.InitiateBlockchainPayment)
-			protected.POST("/crypto/submit-proof", multiPaymentHandler.SubmitBlockchainProof)
-			protected.GET("/crypto/status/:transaction_id", multiPaymentHandler.GetBlockchainPaymentStatus)
-		}
-
-		// Admin-only routes
-		admin := payments.Group("/admin")
-		admin.Use(middleware.AuthRequired(), middleware.AdminRequired())
-		{
-			admin.POST("/bank/verify", multiPaymentHandler.VerifyBankPayment)
 		}
 	}
 

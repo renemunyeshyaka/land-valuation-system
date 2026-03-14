@@ -13,6 +13,72 @@ import (
 	"gorm.io/gorm"
 )
 
+// GetAllActiveSubscriptions retrieves all active subscriptions (for cron job)
+func (s *SubscriptionService) GetAllActiveSubscriptions(ctx context.Context, offset, limit int) ([]*models.Subscription, int, error) {
+	return s.subRepo.GetAllActive(ctx, offset, limit)
+}
+
+// UpdateSubscription updates a subscription (for cron job)
+func (s *SubscriptionService) UpdateSubscription(ctx context.Context, sub *models.Subscription) (*models.Subscription, error) {
+	return s.subRepo.Update(ctx, sub)
+}
+
+// UpdateSubscriptionAfterPayment updates the user's subscription after successful payment
+func (s *SubscriptionService) UpdateSubscriptionAfterPayment(ctx context.Context, userID string, planType string, txn *models.Transaction) error {
+	userRepo := repository.NewUserRepository(s.db)
+	user, err := userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	// Get or create subscription
+	sub, err := s.subRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		// Create new subscription if not found
+		now := time.Now()
+		expiry := now.AddDate(1, 0, 0) // 1 year
+		sub = &models.Subscription{
+			UserID:    user.ID,
+			PlanType:  planType,
+			Status:    "active",
+			StartDate: now.Unix(),
+			EndDate:   expiry.Unix(),
+			AutoRenew: true,
+		}
+		_, err = s.subRepo.Create(ctx, sub)
+		if err != nil {
+			return err
+		}
+	} else {
+		// Extend or activate existing subscription
+		now := time.Now()
+		sub.PlanType = planType
+		sub.Status = "active"
+		sub.EndDate = now.AddDate(1, 0, 0).Unix()
+		_, err = s.subRepo.Update(ctx, sub)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Update user subscription fields
+	now := time.Now()
+	expiry := now.AddDate(1, 0, 0)
+	user.SubscriptionTier = planType
+	user.SubscriptionStatus = "active"
+	user.SubscriptionExpiry = &expiry
+	user.SubscriptionPaymentMethod = txn.PaymentMethod
+	user.SubscriptionLastPayment = &now
+	user.SubscriptionNextRenewal = &expiry
+	user.SubscriptionCancelReason = ""
+	_, err = userRepo.Update(ctx, user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 const unlimited = -1
 
 type SubscriptionService struct {

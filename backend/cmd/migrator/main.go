@@ -68,6 +68,14 @@ func main() {
 		"002_seed_data.sql",
 		"003_add_mfa_fields.sql",
 		"004_setup_admin_users.sql",
+		"005_add_performance_indexes.sql",
+		"006_add_referral_fields.sql",
+		"007_add_upi_field.sql",
+		"008_seed_properties_with_upi.sql",
+		// "009_create_land_parcels_table.sql", // removed, table deprecated
+		"010_add_land_parcel_fk_to_properties.sql",
+		"011_create_gazette_land_prices_table.sql",
+		"012_create_active_gazette_prices_view.sql",
 	}
 
 	for _, file := range migrationFiles {

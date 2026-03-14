@@ -22,12 +22,9 @@ func NewValuationHandler(valuationService *services.ValuationService) *Valuation
 
 // CreateValuationRequest represents the API request for valuation
 type CreateValuationRequest struct {
-	District           string  `json:"district" binding:"required"`
-	Sector             string  `json:"sector"`
-	PropertySizeSqm    float64 `json:"property_size_sqm" binding:"required,gt=0"`
-	PropertyType       string  `json:"property_type" binding:"required,oneof=residential commercial agricultural industrial"`
-	IncludeFactors     bool    `json:"include_factors"`
-	IncludeComparables bool    `json:"include_comparables"`
+	UPI                string `json:"upi" binding:"required"`
+	IncludeFactors     bool   `json:"include_factors"`
+	IncludeComparables bool   `json:"include_comparables"`
 }
 
 // ValuationResponse represents the API response for valuation
@@ -73,18 +70,24 @@ func (h *ValuationHandler) CreateValuation(c *gin.Context) {
 		return
 	}
 
-	// For MVP, create a temporary property object for valuation
+	// Fetch land parcel by UPI using repository
+	landParcel, err := h.valuationService.LandParcelRepo().FindByUPI(req.UPI)
+	if err != nil || landParcel == nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "Land parcel not found for UPI", req.UPI)
+		return
+	}
+
+	// Create a temporary property object for valuation using land parcel info
 	property := &models.Property{
-		LandSize:     req.PropertySizeSqm,
-		PropertyType: req.PropertyType,
-		District:     req.District,
-		Sector:       req.Sector,
-		Status:       "valuation",
+		UPI:          landParcel.UPI,
+		LandSize:     landParcel.LandSizeSqm,
+		PropertyType: landParcel.PropertyType,
+		// Add other fields as needed
 	}
 
 	// Set base price and zone coefficient based on Official Gazette
-	property.Price = h.calculateBasePrice(req.District, req.PropertySizeSqm, req.PropertyType)
-	property.ZoneCoefficient = h.getZoneCoefficient(req.District)
+	property.Price = h.calculateBasePrice(landParcel.District, landParcel.LandSizeSqm, landParcel.PropertyType)
+	property.ZoneCoefficient = h.getZoneCoefficient(landParcel.District)
 
 	// Perform valuation calculation
 	result := h.performQuickValuation(property, req.IncludeFactors, req.IncludeComparables)
@@ -113,6 +116,40 @@ func (h *ValuationHandler) GetValuationByID(c *gin.Context) {
 
 	// TODO: Implement fetching valuation from database when needed
 	utils.ErrorResponse(c, http.StatusNotImplemented, "Endpoint not yet implemented for ID: "+id, "")
+}
+
+// GetValuationByUPI godoc
+// @Summary Get property valuation by UPI
+// @Description Automatically calculate property valuation by providing a Unique Parcel Identifier (UPI)
+// @Tags valuations
+// @Produce json
+// @Param upi path string true "Unique Parcel Identifier" example("3711")
+// @Success 200 {object} utils.APIResponse{data=services.UPIValuationResponse}
+// @Failure 400 {object} utils.APIResponse
+// @Failure 404 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
+// @Router /api/v1/valuations/by-upi/{upi} [get]
+func (h *ValuationHandler) GetValuationByUPI(c *gin.Context) {
+	upi := c.Param("upi")
+
+	// Validate UPI
+	if upi == "" {
+		utils.ErrorResponse(c, http.StatusBadRequest, "UPI is required", "")
+		return
+	}
+
+	// Get valuation from service
+	result, err := h.valuationService.GetValuationByUPI(upi)
+	if err != nil {
+		if err.Error() == "property not found for UPI: "+upi {
+			utils.ErrorResponse(c, http.StatusNotFound, "Property not found", err.Error())
+			return
+		}
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to calculate valuation", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Valuation calculated successfully", result)
 }
 
 // ListValuations godoc
@@ -273,9 +310,15 @@ func (h *ValuationHandler) GetValuationHistory(c *gin.Context) {
 
 // performQuickValuation performs valuation without DB storage
 func (h *ValuationHandler) performQuickValuation(property *models.Property, includeFactors, includeComparables bool) *ValuationResponse {
+	// For location info, fetch land parcel by UPI using repository
+	landParcel, _ := h.valuationService.LandParcelRepo().FindByUPI(property.UPI)
+	if landParcel == nil {
+		landParcel = &models.LandParcel{}
+	}
+
 	// Calculate adjustments
 	marketAdj := h.calculateMarketAdjustment(property.PropertyType)
-	locationAdj := h.calculateLocationAdjustment(property.District)
+	locationAdj := h.calculateLocationAdjustment(landParcel.District)
 	sizeAdj := h.calculateSizeAdjustment(property.LandSize)
 
 	// Calculate final value
@@ -283,7 +326,7 @@ func (h *ValuationHandler) performQuickValuation(property *models.Property, incl
 	finalValue := baseValue * property.ZoneCoefficient * marketAdj * locationAdj * sizeAdj
 
 	// Calculate confidence
-	confidence := h.calculateConfidence(property)
+	confidence := h.calculateConfidenceWithParcel(property, landParcel)
 	confidenceLevel := h.getConfidenceLevel(confidence)
 
 	response := &ValuationResponse{
@@ -304,7 +347,7 @@ func (h *ValuationHandler) performQuickValuation(property *models.Property, incl
 	// Add factors if requested
 	if includeFactors {
 		response.Factors = h.identifyFactors(property)
-		response.Recommendations = h.generateRecommendations(confidence, property)
+		response.Recommendations = h.generateRecommendationsWithParcel(confidence, property, landParcel)
 	}
 
 	// Add comparables if requested
@@ -313,8 +356,8 @@ func (h *ValuationHandler) performQuickValuation(property *models.Property, incl
 			{
 				ID:           1,
 				Title:        "Similar Property A",
-				District:     property.District,
-				Sector:       property.Sector,
+				District:     landParcel.District,
+				Sector:       landParcel.Sector,
 				LandSize:     property.LandSize * 0.95,
 				Price:        finalValue * 0.92,
 				PropertyType: property.PropertyType,
@@ -322,8 +365,8 @@ func (h *ValuationHandler) performQuickValuation(property *models.Property, incl
 			{
 				ID:           2,
 				Title:        "Similar Property B",
-				District:     property.District,
-				Sector:       property.Sector,
+				District:     landParcel.District,
+				Sector:       landParcel.Sector,
 				LandSize:     property.LandSize * 1.05,
 				Price:        finalValue * 1.08,
 				PropertyType: property.PropertyType,
@@ -432,23 +475,20 @@ func (h *ValuationHandler) calculateSizeAdjustment(size float64) float64 {
 	}
 }
 
-func (h *ValuationHandler) calculateConfidence(property *models.Property) float64 {
+func (h *ValuationHandler) calculateConfidenceWithParcel(property *models.Property, parcel *models.LandParcel) float64 {
 	confidence := 70.0
-
-	if property.District != "" {
+	if parcel.District != "" {
 		confidence += 10.0
 	}
-	if property.Sector != "" {
+	if parcel.Sector != "" {
 		confidence += 10.0
 	}
 	if property.ZoneCoefficient > 0 {
 		confidence += 10.0
 	}
-
 	if confidence > 100 {
 		confidence = 100
 	}
-
 	return confidence
 }
 
@@ -493,28 +533,23 @@ func (h *ValuationHandler) identifyFactors(property *models.Property) []models.V
 	return factors
 }
 
-func (h *ValuationHandler) generateRecommendations(confidence float64, property *models.Property) []string {
+func (h *ValuationHandler) generateRecommendationsWithParcel(confidence float64, property *models.Property, parcel *models.LandParcel) []string {
 	recommendations := []string{}
-
 	if confidence < 60 {
 		recommendations = append(recommendations,
 			"Consider providing more detailed location information for improved accuracy")
 	}
-
-	if property.District == "" {
+	if parcel.District == "" {
 		recommendations = append(recommendations,
 			"Add district information to get location-specific adjustments")
 	}
-
 	if property.LandSize > 10000 {
 		recommendations = append(recommendations,
 			"Large properties may benefit from subdivision for better market value")
 	}
-
 	if len(recommendations) == 0 {
 		recommendations = append(recommendations,
 			"Valuation confidence is good. Consider professional inspection for final confirmation")
 	}
-
 	return recommendations
 }

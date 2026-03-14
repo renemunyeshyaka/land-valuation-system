@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"backend/internal/services"
 	"backend/internal/utils"
@@ -165,7 +166,7 @@ func (h *PaymentHandler) InitiateMobileMoneyPayment(c *gin.Context) {
 // @Router /payments/{transaction_id}/status [get]
 func (h *PaymentHandler) CheckPaymentStatus(c *gin.Context) {
 	transactionID := c.Param("transaction_id")
-	provider := c.Query("provider")
+	provider := strings.TrimSpace(c.Query("provider"))
 
 	// Validate transaction ID
 	if transactionID == "" {
@@ -173,10 +174,10 @@ func (h *PaymentHandler) CheckPaymentStatus(c *gin.Context) {
 		return
 	}
 
-	// Validate provider
-	if provider != "mtn" && provider != "airtel" {
+	// Provider is optional here; backend can infer from stored transaction data.
+	if provider != "" && provider != "mtn" && provider != "airtel" && provider != "mtn_momo" && provider != "airtel_money" {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid provider",
-			"Provider must be 'mtn' or 'airtel'")
+			"Provider must be one of: mtn, airtel, mtn_momo, airtel_money")
 		return
 	}
 
@@ -202,9 +203,12 @@ func (h *PaymentHandler) CheckPaymentStatus(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param provider query string true "Payment provider (mtn|airtel)"
+// @Param X-Callback-Token header string false "MTN webhook signature"
+// @Param X-Signature header string false "Airtel webhook signature"
 // @Param payload body map[string]interface{} true "Callback payload"
 // @Success 200 {object} utils.APIResponse "Callback processed"
 // @Failure 400 {object} utils.APIResponse "Invalid callback"
+// @Failure 401 {object} utils.APIResponse "Invalid signature"
 // @Failure 500 {object} utils.APIResponse "Server error"
 // @Router /payments/callback [post]
 func (h *PaymentHandler) HandlePaymentCallback(c *gin.Context) {
@@ -214,12 +218,12 @@ func (h *PaymentHandler) HandlePaymentCallback(c *gin.Context) {
 		return
 	}
 
-	provider := c.Query("provider")
+	provider := strings.TrimSpace(c.Query("provider"))
 
 	// Validate provider
-	if provider != "mtn" && provider != "airtel" {
+	if provider != "mtn" && provider != "airtel" && provider != "mtn_momo" && provider != "airtel_money" {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid provider",
-			"Provider must be 'mtn' or 'airtel'")
+			"Provider must be one of: mtn, airtel, mtn_momo, airtel_money")
 		return
 	}
 
@@ -230,9 +234,21 @@ func (h *PaymentHandler) HandlePaymentCallback(c *gin.Context) {
 		return
 	}
 
-	if err := h.paymentService.ProcessCallback(c.Request.Context(), provider, payload); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Callback processing failed",
-			err.Error())
+	// Extract signature from headers (different providers use different header names)
+	signature := c.GetHeader("X-Callback-Token") // MTN uses this
+	if signature == "" {
+		signature = c.GetHeader("X-Signature") // Airtel may use this
+	}
+
+	if err := h.paymentService.ProcessCallback(c.Request.Context(), provider, payload, signature); err != nil {
+		// Check if it's a signature validation error
+		if strings.Contains(err.Error(), "signature validation failed") {
+			utils.ErrorResponse(c, http.StatusUnauthorized, "Webhook authentication failed",
+				err.Error())
+		} else {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Callback processing failed",
+				err.Error())
+		}
 		return
 	}
 

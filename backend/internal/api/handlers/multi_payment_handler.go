@@ -178,7 +178,8 @@ func (h *MultiPaymentHandler) GetAvailablePaymentMethods(c *gin.Context) {
 			"description": "Instant mobile money transfer",
 		},
 		"bank_transfer": map[string]interface{}{
-			"enabled": true,
+			"enabled": false,
+			"status":  "coming_soon",
 			"banks": []map[string]string{
 				{
 					"name":           "Equity Bank Rwanda",
@@ -187,14 +188,15 @@ func (h *MultiPaymentHandler) GetAvailablePaymentMethods(c *gin.Context) {
 				},
 			},
 			"currency":    []string{"RWF", "USD"},
-			"description": "Bank transfer (manual verification required)",
+			"description": "Deferred for future implementation",
 		},
 		"cryptocurrency": map[string]interface{}{
-			"enabled":     true,
+			"enabled":     false,
+			"status":      "disabled",
 			"chain":       "BNB Smart Chain (BEP20)",
 			"tokens":      []string{"USDT", "USDC", "BNB"},
 			"currency":    []string{"RWF", "USD"},
-			"description": "Cryptocurrency payment with instant blockchain verification",
+			"description": "Disabled per deployment policy",
 		},
 	}
 

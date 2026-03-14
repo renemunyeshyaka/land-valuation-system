@@ -6,7 +6,6 @@ import (
 	"math/big"
 	"net/smtp"
 	"os"
-	"strings"
 )
 
 type EmailService struct {
@@ -287,5 +286,5 @@ func (s *EmailService) buildPasswordResetEmailBody(firstName, code string) strin
     </table>
 </body>
 </html>
-`, firstName, strings.ToUpper(code))
+`, firstName, code)
 }

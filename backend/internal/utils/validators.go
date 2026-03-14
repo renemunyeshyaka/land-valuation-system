@@ -5,6 +5,19 @@ import (
 	"strings"
 )
 
+// ValidateUPI validates Rwanda UPI format: x/xx/xx/xx/xxxx... (province/district/sector/cell/plot)
+func ValidateUPI(upi string) bool {
+	// Accepts: 1/01/01/01/1234 or 1/01/01/01/uuid-like
+	pattern := `^\d{1}/\d{2}/\d{2}/\d{2}/[A-Za-z0-9\-]{4,}$`
+	match, _ := regexp.MatchString(pattern, upi)
+	return match
+}
+
+// RegexMatch returns true if the input matches the regex pattern
+func RegexMatch(pattern, input string) (bool, error) {
+	return regexp.MatchString(pattern, input)
+}
+
 // ValidateEmail validates email format
 func ValidateEmail(email string) bool {
 	pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`

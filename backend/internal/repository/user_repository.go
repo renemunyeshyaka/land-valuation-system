@@ -9,6 +9,29 @@ import (
 	"gorm.io/gorm"
 )
 
+// UpdatePasswordResetToken sets the password reset token and expiry for a user
+func (r *UserRepository) UpdatePasswordResetToken(ctx context.Context, userID, token string, expiresAt interface{}) error {
+	result := r.db.WithContext(ctx).Model(&models.User{}).Where("id = ?", userID).
+		Updates(map[string]interface{}{
+			"password_reset_token":      token,
+			"password_reset_expires_at": expiresAt,
+		})
+	return result.Error
+}
+
+// GetByPasswordResetToken retrieves user by password reset token (and checks expiry)
+func (r *UserRepository) GetByPasswordResetToken(ctx context.Context, token string) (*models.User, error) {
+	var user models.User
+	result := r.db.WithContext(ctx).Where("password_reset_token = ?", token).First(&user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, result.Error
+	}
+	return &user, nil
+}
+
 type UserRepository struct {
 	db *gorm.DB
 }
