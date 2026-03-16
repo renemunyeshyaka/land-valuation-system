@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
+import LandSearchForm from '../../components/LandSearchForm';
 
 /**
  * PROPERTY SEARCH PAGE · Land Valuation System
@@ -18,196 +19,54 @@ import { useSession } from 'next-auth/react';
 
 interface Property {
   id: string;
-  location: string;
+  upi: string;
   district: string;
   sector: string;
   cell: string;
-  propertyType: string;
+  plot_number: string;
+  property_type: string;
   size: number;
   price: number;
   bedrooms?: number;
   bathrooms?: number;
-  image: string;
+  image?: string;
   valuation: number;
-  valuationDate: string;
-  featured: boolean;
+  valuation_date: string;
+  featured?: boolean;
 }
+
 
 const PropertySearch: React.FC = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Search filters state
-  const [searchLocation, setSearchLocation] = useState('');
-  const [propertyType, setPropertyType] = useState('all');
-  const [priceMin, setPriceMin] = useState('');
-  const [priceMax, setPriceMax] = useState('');
-  const [sizeMin, setSizeMin] = useState('');
-  const [sizeMax, setSizeMax] = useState('');
-  const [sortBy, setSortBy] = useState('featured');
-
-  // Mock property data
-  const allProperties: Property[] = [
-    {
-      id: '1',
-      location: 'Kigali Central Business District',
-      district: 'Kigali',
-      sector: 'Gasabo',
-      cell: 'Muhima',
-      propertyType: 'Commercial',
-      size: 500,
-      price: 250000000,
-      image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500&q=80',
-      valuation: 280000000,
-      valuationDate: '2026-02-15',
-      featured: true,
-    },
-    {
-      id: '2',
-      location: 'Nyarutarama Residential Area',
-      district: 'Kigali',
-      sector: 'Kicukiro',
-      cell: 'Nyarutarama',
-      propertyType: 'Residential',
-      size: 250,
-      price: 85000000,
-      bedrooms: 3,
-      bathrooms: 2,
-      image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&q=80',
-      valuation: 92000000,
-      valuationDate: '2026-02-10',
-      featured: true,
-    },
-    {
-      id: '3',
-      location: 'Kimironko Industrial Park',
-      district: 'Kigali',
-      sector: 'Gasabo',
-      cell: 'Kimironko',
-      propertyType: 'Industrial',
-      size: 1200,
-      price: 180000000,
-      image: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=500&q=80',
-      valuation: 195000000,
-      valuationDate: '2026-02-05',
-      featured: false,
-    },
-    {
-      id: '4',
-      location: 'Rebero Hills Apartments',
-      district: 'Kigali',
-      sector: 'Kicukiro',
-      cell: 'Rebero',
-      propertyType: 'Residential',
-      size: 180,
-      price: 65000000,
-      bedrooms: 2,
-      bathrooms: 1,
-      image: 'https://images.unsplash.com/photo-1545324418-cc1ef14d4fe0?w=500&q=80',
-      valuation: 70000000,
-      valuationDate: '2026-01-28',
-      featured: false,
-    },
-    {
-      id: '5',
-      location: 'Gisozi Farm Land',
-      district: 'Kigali',
-      sector: 'Gasabo',
-      cell: 'Gisozi',
-      propertyType: 'Agricultural',
-      size: 2500,
-      price: 45000000,
-      image: 'https://images.unsplash.com/photo-1500595046891-76a5038bdc67?w=500&q=80',
-      valuation: 48000000,
-      valuationDate: '2026-01-15',
-      featured: false,
-    },
-    {
-      id: '6',
-      location: 'Muhima Commercial Space',
-      district: 'Kigali',
-      sector: 'Gasabo',
-      cell: 'Muhima',
-      propertyType: 'Commercial',
-      size: 300,
-      price: 95000000,
-      image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500&q=80',
-      valuation: 105000000,
-      valuationDate: '2026-02-01',
-      featured: false,
-    },
-    {
-      id: '7',
-      location: 'Kicukiro Residential Complex',
-      district: 'Kigali',
-      sector: 'Kicukiro',
-      cell: 'Kicukiro',
-      propertyType: 'Residential',
-      size: 200,
-      price: 58000000,
-      bedrooms: 2,
-      bathrooms: 2,
-      image: 'https://images.unsplash.com/photo-1570129477492-45ec003f2975?w=500&q=80',
-      valuation: 62000000,
-      valuationDate: '2026-02-12',
-      featured: false,
-    },
-    {
-      id: '8',
-      location: 'Remera Prime Location',
-      district: 'Kigali',
-      sector: 'Gasabo',
-      cell: 'Remera',
-      propertyType: 'Residential',
-      size: 350,
-      price: 125000000,
-      bedrooms: 4,
-      bathrooms: 3,
-      image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&q=80',
-      valuation: 138000000,
-      valuationDate: '2026-02-14',
-      featured: true,
-    },
-  ];
-
-  // Filter and sort properties
-  const filteredProperties = allProperties.filter((prop) => {
-    const matchLocation = prop.location.toLowerCase().includes(searchLocation.toLowerCase()) ||
-                         prop.district.toLowerCase().includes(searchLocation.toLowerCase());
-    const matchType = propertyType === 'all' || prop.propertyType === propertyType;
-    const matchPrice = (!priceMin || prop.price >= parseInt(priceMin)) &&
-                      (!priceMax || prop.price <= parseInt(priceMax));
-    const matchSize = (!sizeMin || prop.size >= parseInt(sizeMin)) &&
-                     (!sizeMax || prop.size <= parseInt(sizeMax));
-    
-    return matchLocation && matchType && matchPrice && matchSize;
-  });
-
-  // Sort properties
-  const sortedProperties = [...filteredProperties].sort((a, b) => {
-    switch (sortBy) {
-      case 'price-low':
-        return a.price - b.price;
-      case 'price-high':
-        return b.price - a.price;
-      case 'valuation':
-        return b.valuation - a.valuation;
-      case 'featured':
-      default:
-        return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
+  // Search handler for LandSearchForm
+  const handleSearch = async (criteria: any) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      Object.entries(criteria).forEach(([key, value]) => {
+        if (value && value !== '') params.append(key, value as string);
+      });
+      const res = await fetch(`/api/v1/estimate-search?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch properties');
+      const data = await res.json();
+      setProperties(data);
+    } catch (err: any) {
+      setError(err.message || 'Unknown error');
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
   const handleResetFilters = () => {
-    setSearchLocation('');
-    setPropertyType('all');
-    setPriceMin('');
-    setPriceMax('');
-    setSizeMin('');
-    setSizeMax('');
-    setSortBy('featured');
+    setProperties([]);
+    setError(null);
   };
 
   if (status === 'loading') {
@@ -270,137 +129,30 @@ const PropertySearch: React.FC = () => {
               </p>
             </div>
 
-            {/* Search and Filters */}
+            {/* Multi-field Land Search Form */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
-              
-              {/* Main Search Bar */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Search by Location
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter district, sector, or cell name..."
-                  value={searchLocation}
-                  onChange={(e) => setSearchLocation(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
-                />
-              </div>
-
-              {/* Filter Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                {/* Property Type */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Property Type
-                  </label>
-                  <select
-                    value={propertyType}
-                    onChange={(e) => setPropertyType(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  >
-                    <option value="all">All Types</option>
-                    <option value="Residential">Residential</option>
-                    <option value="Commercial">Commercial</option>
-                    <option value="Industrial">Industrial</option>
-                    <option value="Agricultural">Agricultural</option>
-                  </select>
-                </div>
-
-                {/* Price Range Min */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Min Price (RWF)
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={priceMin}
-                    onChange={(e) => setPriceMin(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  />
-                </div>
-
-                {/* Price Range Max */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Max Price (RWF)
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="999,999,999"
-                    value={priceMax}
-                    onChange={(e) => setPriceMax(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  />
-                </div>
-
-                {/* Size Range Min */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Min Size (sqm)
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={sizeMin}
-                    onChange={(e) => setSizeMin(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  />
-                </div>
-
-                {/* Size Range Max */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Max Size (sqm)
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="999,999"
-                    value={sizeMax}
-                    onChange={(e) => setSizeMax(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  />
-                </div>
-
-                {/* Sort By */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Sort By
-                  </label>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  >
-                    <option value="featured">Featured First</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="valuation">Valuation</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3">
+              <LandSearchForm onSearch={handleSearch} disabled={loading} showAdvanced={true} />
+              <div className="flex gap-3 mt-4">
                 <button
                   onClick={handleResetFilters}
                   className="px-6 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                  disabled={loading}
                 >
                   <i className="fas fa-redo mr-2"></i>
-                  Reset Filters
+                  Reset
                 </button>
               </div>
+              {error && <div className="text-red-600 mt-4">{error}</div>}
             </div>
 
             {/* Results Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-800">
-                  Results <span className="text-emerald-700">({sortedProperties.length})</span>
+                  Results <span className="text-emerald-700">({properties.length})</span>
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Showing all properties matching your criteria
+                  Showing properties matching your search criteria
                 </p>
               </div>
 
@@ -432,7 +184,12 @@ const PropertySearch: React.FC = () => {
             </div>
 
             {/* Properties Results */}
-            {sortedProperties.length === 0 ? (
+            {loading ? (
+              <div className="bg-white rounded-lg border border-gray-100 p-12 text-center">
+                <i className="fas fa-spinner fa-spin text-4xl text-emerald-700 mb-4"></i>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">Searching properties...</h3>
+              </div>
+            ) : properties.length === 0 ? (
               <div className="bg-white rounded-lg border border-gray-100 p-12 text-center">
                 <i className="fas fa-search text-5xl text-gray-300 mb-4"></i>
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">No Properties Found</h3>
@@ -446,19 +203,22 @@ const PropertySearch: React.FC = () => {
               </div>
             ) : viewMode === 'grid' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                {sortedProperties.map((property) => (
-                  <Link
+                {properties.map((property) => (
+                  <div
                     key={property.id}
-                    href={`/search/${property.id}`}
                     className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-emerald-300 transition-all group"
                   >
                     {/* Property Image */}
                     <div className="relative h-48 bg-gray-200 overflow-hidden">
-                      <img
-                        src={property.image}
-                        alt={property.location}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                      {property.image ? (
+                        <img
+                          src={property.image}
+                          alt={property.district + ' ' + property.sector + ' ' + property.cell}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+                      )}
                       {property.featured && (
                         <div className="absolute top-4 right-4 px-3 py-1 bg-emerald-700 text-white text-xs font-bold rounded-full">
                           Featured
@@ -469,22 +229,22 @@ const PropertySearch: React.FC = () => {
                     {/* Property Info */}
                     <div className="p-4">
                       <h3 className="text-lg font-bold text-gray-800 mb-1 line-clamp-2">
-                        {property.location}
+                        {property.district}, {property.sector}, {property.cell} (Plot: {property.plot_number})
                       </h3>
                       <p className="text-sm text-gray-600 mb-3">
                         <i className="fas fa-map-marker-alt mr-1 text-emerald-700"></i>
-                        {property.district}, {property.sector}
+                        UPI: {property.upi}
                       </p>
 
                       {/* Property Details */}
                       <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
                         <div className="bg-gray-50 p-2 rounded">
                           <p className="text-gray-600">Type</p>
-                          <p className="font-semibold text-gray-800">{property.propertyType}</p>
+                          <p className="font-semibold text-gray-800">{property.property_type}</p>
                         </div>
                         <div className="bg-gray-50 p-2 rounded">
                           <p className="text-gray-600">Size</p>
-                          <p className="font-semibold text-gray-800">{property.size.toLocaleString()} m²</p>
+                          <p className="font-semibold text-gray-800">{property.size?.toLocaleString()} m²</p>
                         </div>
                       </div>
 
@@ -499,31 +259,34 @@ const PropertySearch: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             ) : (
               <div className="space-y-4 mb-12">
-                {sortedProperties.map((property) => (
-                  <Link
+                {properties.map((property) => (
+                  <div
                     key={property.id}
-                    href={`/search/${property.id}`}
                     className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 flex gap-6 hover:shadow-lg hover:border-emerald-300 transition-all group"
                   >
                     {/* Image */}
                     <div className="hidden md:block w-48 h-32 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                      <img
-                        src={property.image}
-                        alt={property.location}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      />
+                      {property.image ? (
+                        <img
+                          src={property.image}
+                          alt={property.district + ' ' + property.sector + ' ' + property.cell}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+                      )}
                     </div>
 
                     {/* Info */}
                     <div className="flex-grow">
                       <div className="flex items-start justify-between mb-2">
                         <h3 className="text-lg font-bold text-gray-800">
-                          {property.location}
+                          {property.district}, {property.sector}, {property.cell} (Plot: {property.plot_number})
                           {property.featured && (
                             <span className="ml-2 px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded">
                               Featured
@@ -534,17 +297,17 @@ const PropertySearch: React.FC = () => {
 
                       <p className="text-sm text-gray-600 mb-3">
                         <i className="fas fa-map-marker-alt mr-1 text-emerald-700"></i>
-                        {property.district}, {property.sector}, {property.cell}
+                        UPI: {property.upi}
                       </p>
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
                         <div>
                           <p className="text-gray-600">Type</p>
-                          <p className="font-semibold text-gray-800">{property.propertyType}</p>
+                          <p className="font-semibold text-gray-800">{property.property_type}</p>
                         </div>
                         <div>
                           <p className="text-gray-600">Size</p>
-                          <p className="font-semibold text-gray-800">{property.size.toLocaleString()} m²</p>
+                          <p className="font-semibold text-gray-800">{property.size?.toLocaleString()} m²</p>
                         </div>
                         <div>
                           <p className="text-gray-600">Price</p>
@@ -561,7 +324,7 @@ const PropertySearch: React.FC = () => {
                     <div className="flex items-center">
                       <i className="fas fa-arrow-right text-2xl text-emerald-700 group-hover:translate-x-2 transition-transform"></i>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             )}

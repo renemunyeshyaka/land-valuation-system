@@ -60,6 +60,10 @@ const ForgotPassword: React.FC = () => {
       
       setSubmitted(true);
       toast.success('Password reset email sent! Please check your inbox.');
+      // Redirect to reset-password page after a short delay
+      setTimeout(() => {
+        router.push('/auth/reset-password');
+      }, 1500);
       
     } catch (error: any) {
       toast.error(error.message || 'Failed to send reset email. Please try again.');

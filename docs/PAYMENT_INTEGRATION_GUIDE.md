@@ -33,6 +33,62 @@ Your Land Valuation System now supports **3 payment methods**:
 
 ---
 
+## 📲 Mobile Money Webhooks (MTN + Airtel)
+
+### Endpoint
+`POST /api/v1/payments/webhook?provider=mtn|airtel`
+
+### Signature Headers
+- MTN: `X-Callback-Token`
+- Airtel: `X-Signature`
+
+### Required Environment Variables
+```bash
+MTN_WEBHOOK_SECRET=your_mtn_webhook_secret
+AIRTEL_WEBHOOK_SECRET=your_airtel_webhook_secret
+```
+
+### MTN Sample Callback
+```json
+{
+  "reference_id": "LVS-123456",
+  "status": "SUCCESSFUL",
+  "reason": "Payment completed"
+}
+```
+
+### Airtel Sample Callback
+```json
+{
+  "transaction": {
+    "id": "AIRTEL-789",
+    "status": "TS",
+    "message": "Transaction successful"
+  }
+}
+```
+
+### Expected Responses
+- Invalid signature (with secret configured): `401 Unauthorized`
+- Valid callback: `200 OK` and transaction status synchronized in DB
+
+### Local Testing Commands
+```bash
+# MTN callback test (replace token with real secret)
+curl -X POST "http://localhost:5000/api/v1/payments/webhook?provider=mtn" \
+  -H "Content-Type: application/json" \
+  -H "X-Callback-Token: your_mtn_webhook_secret" \
+  -d '{"reference_id":"LVS-123456","status":"SUCCESSFUL"}'
+
+# Airtel callback test (replace signature with provider signature)
+curl -X POST "http://localhost:5000/api/v1/payments/webhook?provider=airtel" \
+  -H "Content-Type: application/json" \
+  -H "X-Signature: your_airtel_signature" \
+  -d '{"transaction":{"id":"AIRTEL-789","status":"TS"}}'
+```
+
+---
+
 ## 🏦 Bank Payment Mode
 
 ### **How It Works**

@@ -16,26 +16,17 @@ import toast from 'react-hot-toast';
  * - Footer: Locked template (DO NOT MODIFY)
  */
 
+
 const ResetPassword: React.FC = () => {
   const router = useRouter();
-  const { token } = router.query;
   const [loading, setLoading] = useState(false);
-  const [tokenValid, setTokenValid] = useState<boolean | null>(null);
   const [formData, setFormData] = useState({
+    code: '',
     password: '',
     confirmPassword: '',
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
-
-  // Verify token on mount
-  useEffect(() => {
-    if (token) {
-      // In production, verify token with backend
-      // For now, just check if it exists
-      setTokenValid(true);
-    }
-  }, [token]);
 
   // Calculate password strength
   useEffect(() => {
@@ -61,9 +52,15 @@ const ResetPassword: React.FC = () => {
     }
   }, [formData.password]);
 
+
   // Validate form
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
+
+    // Code validation
+    if (!formData.code) {
+      newErrors.code = 'Reset code is required';
+    }
 
     // Password validation
     if (!formData.password) {
@@ -99,8 +96,8 @@ const ResetPassword: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          token: token,
-          password: formData.password,
+          token: formData.code,
+          new_password: formData.password,
         }),
       });
       
@@ -124,51 +121,13 @@ const ResetPassword: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  // Token validation loading
-  if (tokenValid === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <i className="fas fa-spinner fa-spin text-4xl text-emerald-700 mb-4"></i>
-          <p className="text-gray-600">Verifying reset link...</p>
-        </div>
-      </div>
-    );
-  }
 
-  // Invalid token
-  if (tokenValid === false) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md mx-auto px-4 text-center">
-          <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-              <i className="fas fa-times text-red-600 text-2xl"></i>
-            </div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">
-              Invalid or Expired Link
-            </h2>
-            <p className="text-sm text-gray-600 mb-6">
-              This password reset link is invalid or has expired. Please request a new one.
-            </p>
-            <Link
-              href="/auth/forgot-password"
-              className="inline-block bg-emerald-700 hover:bg-emerald-800 text-white font-medium px-5 py-3 rounded-lg transition-colors"
-            >
-              Request New Link
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -243,7 +202,30 @@ const ResetPassword: React.FC = () => {
               {/* Reset Password Card */}
               <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-8">
                 <form onSubmit={handleSubmit} className="space-y-5">
-                  
+                  {/* Reset Code Field */}
+                  <div>
+                    <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Reset Code
+                    </label>
+                    <input
+                      type="text"
+                      id="code"
+                      name="code"
+                      value={formData.code}
+                      onChange={handleChange}
+                      disabled={loading}
+                      placeholder="Enter the code from your email"
+                      className={`w-full px-4 py-2.5 border rounded-lg text-base transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed ${
+                        errors.code ? 'border-red-500' : 'border-gray-200'
+                      }`}
+                    />
+                    {errors.code && (
+                      <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                        <i className="fas fa-exclamation-circle text-xs"></i> {errors.code}
+                      </p>
+                    )}
+                  </div>
+
                   {/* Password Field */}
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -266,7 +248,6 @@ const ResetPassword: React.FC = () => {
                         <i className="fas fa-exclamation-circle text-xs"></i> {errors.password}
                       </p>
                     )}
-                    
                     {/* Password Strength Indicator */}
                     {passwordStrength && (
                       <div className="mt-2">

@@ -110,9 +110,29 @@ const PaymentHistory: React.FC = () => {
     ? allTransactions
     : allTransactions.filter(t => t.status === filterStatus);
 
-  const handleDownloadReceipt = (invoiceId: string) => {
-    toast.success(`Receipt ${invoiceId} downloaded!`);
-    // In real app, this would trigger actual PDF download
+  const handleDownloadReceipt = async (invoiceId: string) => {
+    try {
+      const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+      if (!accessToken) throw new Error('Not authenticated');
+      const res = await fetch(`http://localhost:5000/api/invoice/${invoiceId}/download`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+      if (!res.ok) throw new Error('Failed to download receipt');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice_${invoiceId}.html`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(`Receipt ${invoiceId} downloaded!`);
+    } catch (err: any) {
+      toast.error(err.message || 'Download failed');
+    }
   };
 
   if (status === 'loading' || loading) {

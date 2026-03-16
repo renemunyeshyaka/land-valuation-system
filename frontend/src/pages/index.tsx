@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
+// ...existing code...
 
 declare global {
   interface Window {
@@ -9,7 +11,71 @@ declare global {
   }
 }
 
+interface ValuationResult {
+  upi: string;
+  property: {
+    district: string;
+    sector: string;
+    property_type: string;
+    area_sqm: number;
+  };
+  valuation: {
+    base_price_rwf: number;
+    total_value_rwf: number;
+    coefficient: number;
+  };
+}
+
 const Home: React.FC = () => {
+  const router = useRouter();
+  const [upi, setUpi] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [estimateResult, setEstimateResult] = useState<any | null>(null);
+
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUpi(e.target.value);
+  };
+
+  const handleEstimate = async () => {
+    // Always redirect to register page before allowing estimate
+    window.location.href = 'http://localhost:3000/auth/register';
+    return;
+    // --- The code below will not run due to the redirect above ---
+    // if (!upi.trim()) {
+    //   setError('Please enter a valid UPI code.');
+    //   return;
+    // }
+    // setLoading(true);
+    // setError('');
+    // setEstimateResult(null);
+    // try {
+    //   const payloadToSend = { upi: upi.trim() };
+    //   const response = await fetch('http://localhost:5000/api/v1/estimate-search', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify(payloadToSend),
+    //   });
+    //   const payload = await response.json().catch(() => null);
+    //   if (!response.ok) {
+    //     const apiError = payload?.error;
+    //     const errorMessage = typeof apiError === 'string' ? apiError : apiError?.message || payload?.message || 'Estimate not found.';
+    //     throw new Error(errorMessage);
+    //   }
+    //   setEstimateResult(payload?.data || payload);
+    // } catch (err: any) {
+    //   setError(err.message || 'Failed to fetch estimate. Please try again.');
+    // } finally {
+    //   setLoading(false);
+    // }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleEstimate();
+    }
+  };
   useEffect(() => {
     // Load Leaflet CSS and JS dynamically
     if (typeof window !== 'undefined' && !document.getElementById('leaflet-css')) {
@@ -109,7 +175,7 @@ const Home: React.FC = () => {
                 <Link href="/" className="hover:text-emerald-700 transition">Home</Link>
                 <Link href="/search" className="hover:text-emerald-700 transition">Valuation</Link>
                 <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
-                <a href="#" className="hover:text-emerald-700 transition">How it works</a>
+                <Link href="/how-it-works" className="hover:text-emerald-700 transition">How it works</Link>
                 <a href="#" className="hover:text-emerald-700 transition">Contact</a>
               </div>
 
@@ -142,22 +208,100 @@ const Home: React.FC = () => {
                 <p className="text-lg text-emerald-50 mt-5 max-w-lg">
                   Connect with verified buyers — diaspora & foreign investors. Get instant pricing based on zone coefficients, title verification, and market trends.
                 </p>
-                {/* search bar quick valuation */}
-                <div className="mt-8 flex flex-col sm:flex-row gap-3 max-w-xl">
-                  <div className="flex-1 relative">
-                    <i className="fas fa-search absolute left-4 top-3.5 text-gray-400 text-sm"></i>
-                    <input
-                      type="text"
-                      placeholder="Enter parcel number or location..."
-                      className="w-full pl-11 pr-4 py-3.5 rounded-2xl text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-emerald-400 outline-none"
-                    />
-                  </div>
-                  <button className="bg-amber-400 hover:bg-amber-500 text-emerald-950 font-semibold px-6 py-3.5 rounded-2xl shadow-md transition flex items-center justify-center gap-2">
-                    <i className="fas fa-calculator"></i> Estimate
+                {/* UPI-only estimate search form */}
+                <form
+                  className="mt-8 grid grid-cols-1 gap-4 max-w-xl"
+                  onSubmit={e => { e.preventDefault(); handleEstimate(); }}
+                >
+                  <input
+                    type="text"
+                    name="upi"
+                    placeholder="Enter UPI code (e.g., 1/01/01/01/1234)"
+                    value={upi}
+                    onChange={handleInputChange}
+                    className="w-full pl-4 pr-4 py-3.5 rounded-2xl text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-emerald-400 outline-none disabled:opacity-50"
+                    disabled={loading}
+                    required
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-amber-400 hover:bg-amber-500 text-emerald-950 font-semibold px-6 py-3.5 rounded-2xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin"></i> Loading...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-calculator"></i> Estimate
+                      </>
+                    )}
                   </button>
-                </div>
+                </form>
+                
+                {/* Error message */}
+                {error && (
+                  <div className="mt-4 bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-xl max-w-xl">
+                    <i className="fas fa-exclamation-circle mr-2"></i> {error}
+                  </div>
+                )}
+
+                {/* Estimate result */}
+                {estimateResult && (
+                  <div className="mt-4 bg-white/95 backdrop-blur-sm border-2 border-amber-300 text-gray-800 px-6 py-4 rounded-2xl max-w-xl shadow-xl">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-bold text-lg text-emerald-900">
+                        <i className="fas fa-check-circle text-emerald-600 mr-2"></i>
+                        Estimate Complete
+                      </h3>
+                      <span className="bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full font-semibold">
+                        UPI: {estimateResult.parcel?.upi}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-600">Location</p>
+                        <p className="font-semibold">{estimateResult.parcel?.district}, {estimateResult.parcel?.sector}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Area</p>
+                        <p className="font-semibold">{estimateResult.parcel?.land_size_sqm?.toLocaleString()} m²</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Zone Coefficient</p>
+                        <p className="font-semibold">{estimateResult.parcel?.zone_coefficient}x</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Base Price/sqm</p>
+                        <p className="font-semibold">RWF {estimateResult.parcel?.base_price_per_sqm?.toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <p className="text-gray-600 text-sm">Official Gazette Price Options</p>
+                      <ul className="mt-2 space-y-1">
+                        {estimateResult.prices?.map((price: number, idx: number) => (
+                          <li key={idx} className="text-lg font-bold text-emerald-700">
+                            Option {idx + 1}: RWF {price.toLocaleString()}
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-3">
+                        <p className="text-gray-600 text-xs mb-1">Gazette Considerations:</p>
+                        <ul className="flex flex-wrap gap-2 text-xs">
+                          {Object.entries(estimateResult.considerations || {}).map(([key, val]: [string, unknown]) => (
+                            <li key={key} className={Boolean(val) ? 'bg-emerald-100 text-emerald-800 px-2 py-1 rounded' : 'bg-gray-100 text-gray-500 px-2 py-1 rounded'}>
+                              {key.replace('_', ' ')}: {Boolean(val) ? 'Yes' : 'No'}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* quick stats */}
-                <div className="flex gap-6 mt-8 text-sm text-emerald-100">
+                <div className="flex gap-6 mt-6 text-sm text-emerald-100">
                   <div><i className="fas fa-check-circle text-amber-300 mr-1"></i> 12k+ properties</div>
                   <div><i className="fas fa-map-pin text-amber-300 mr-1"></i> All 30 districts</div>
                   <div><i className="fas fa-globe text-amber-300 mr-1"></i> diaspora ready</div>
@@ -354,7 +498,7 @@ const Home: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-gray-900">Plans for every need</h2>
-              <p className="text-gray-600 mt-2">Start with free valuation, upgrade for advanced analytics & buyer matching</p>
+              <p className="text-gray-600 mt-2">Start with free valuation, upgrade to advertise your land and unlock advanced buyer/seller features</p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-14">
               {/* free */}
@@ -364,7 +508,10 @@ const Home: React.FC = () => {
                 <ul className="text-sm text-gray-600 space-y-2 mt-4">
                   <li><i className="fas fa-check text-emerald-600 mr-2"></i> 3 valuations/month</li>
                   <li><i className="fas fa-check text-emerald-600 mr-2"></i> Basic gazette lookup</li>
-                  <li><i className="fas fa-times text-gray-300 mr-2"></i> No buyer contact</li>
+                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Advertise 1 land (basic location)</li>
+                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Basic land search (location only)</li>
+                  <li><i className="fas fa-times text-gray-300 mr-2"></i> Buyer contact</li>
+                  <li><i className="fas fa-times text-gray-300 mr-2"></i> Advanced filters</li>
                 </ul>
                 <button className="w-full mt-6 border border-emerald-700 text-emerald-800 rounded-xl py-2 text-sm font-medium hover:bg-emerald-50">Get started</button>
               </div>
@@ -375,7 +522,9 @@ const Home: React.FC = () => {
                 <p className="text-3xl font-bold mt-4">Rwf 29k<span className="text-sm font-normal text-gray-500">/mo</span></p>
                 <ul className="text-sm text-gray-600 space-y-2 mt-4">
                   <li><i className="fas fa-check text-emerald-600 mr-2"></i> 15 valuations</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Geolocation + map</li>
+                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Advertise up to 5 lands (with map)</li>
+                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Buyer contact (in-app)</li>
+                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Search by location, price, size</li>
                   <li><i className="fas fa-check text-emerald-600 mr-2"></i> Standard support</li>
                 </ul>
                 <button className="w-full mt-6 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl py-2 text-sm font-medium">Choose Basic</button>
@@ -386,8 +535,10 @@ const Home: React.FC = () => {
                 <p className="text-3xl font-bold mt-4">Rwf 79k<span className="text-sm font-normal text-gray-500">/mo</span></p>
                 <ul className="text-sm text-gray-600 space-y-2 mt-4">
                   <li><i className="fas fa-check text-emerald-600 mr-2"></i> Unlimited valuations</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> API access, trends</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Priority listing</li>
+                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Advertise unlimited lands</li>
+                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Priority listing & buyer matching</li>
+                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Advanced search (all filters)</li>
+                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Analytics dashboard</li>
                 </ul>
                 <button className="w-full mt-6 border border-emerald-700 text-emerald-800 rounded-xl py-2 text-sm font-medium">Upgrade</button>
               </div>
@@ -396,9 +547,11 @@ const Home: React.FC = () => {
                 <span className="text-xs font-semibold bg-purple-100 text-purple-800 px-3 py-1 rounded-full">Ultimate</span>
                 <p className="text-3xl font-bold mt-4">Rwf 199k<span className="text-sm font-normal text-gray-500">/mo</span></p>
                 <ul className="text-sm text-gray-600 space-y-2 mt-4">
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> White‑label</li>
+                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> All Professional features</li>
+                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> White‑label & bulk upload</li>
                   <li><i className="fas fa-check text-emerald-600 mr-2"></i> Dedicated account manager</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Bulk export</li>
+                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Buyer analytics & export</li>
+                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Custom integrations</li>
                 </ul>
                 <button className="w-full mt-6 border border-emerald-700 text-emerald-800 rounded-xl py-2 text-sm font-medium">Contact sales</button>
               </div>

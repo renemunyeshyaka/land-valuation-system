@@ -1,2 +1,2 @@
-import Analytics from '../src/pages/analytics/index';
-export default Analytics;
+import AnalyticsPage from '../src/pages/analytics/index';
+export default AnalyticsPage;

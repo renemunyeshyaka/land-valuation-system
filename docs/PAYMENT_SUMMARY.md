@@ -79,6 +79,14 @@ Your Rwanda Land Valuation System now supports **3 payment methods**:
 
 ---
 
+
+## 🗺️ Roadmap: Advanced Payment & Revenue Features (March 2026)
+
+- **Automated Subscription Management:** Recurring billing, plan enforcement, and auto-renewal for premium users.
+- **Featured Listings & Ad Boosts:** Paid options for users to promote their land ads for higher visibility.
+- **Invoice & Receipt Generation:** Automatic PDF/email receipts for all transactions, supporting compliance and user trust.
+
+---
 ## 🚀 Quick Start
 
 ### 1. Configure Environment

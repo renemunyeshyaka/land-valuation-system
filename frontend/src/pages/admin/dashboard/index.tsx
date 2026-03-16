@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -7,6 +8,11 @@ import toast from 'react-hot-toast';
 import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '@/utils/tokenRefresh';
 import FourStepProcess from '../../../components/FourStepProcess';
 import SubscriptionSelector from '../../../components/SubscriptionSelector';
+
+
+// ...existing imports...
+
+
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -36,6 +42,52 @@ interface AdminNotification {
  */
 
 const AdminDashboard: React.FC = () => {
+    // Estimate Search State and handlers
+    const [searchForm, setSearchForm] = useState({
+      province: '',
+      district: '',
+      sector: '',
+      upi: '',
+    });
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [searchError, setSearchError] = useState('');
+    const [estimateResult, setEstimateResult] = useState<any>(null);
+
+    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchForm({ ...searchForm, [e.target.name]: e.target.value });
+    };
+
+    const handleEstimateSearch = async () => {
+      setSearchLoading(true);
+      setSearchError('');
+      setEstimateResult(null);
+      try {
+        const payload = await fetchWithTokenRefresh(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/estimate`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(searchForm),
+          }
+        ).then(res => res.json());
+        if (!payload || payload.error) {
+          const apiError = payload?.error;
+          const errorMessage = typeof apiError === 'string' ? apiError : apiError?.message || payload?.message || 'Estimate not found.';
+          throw new Error(errorMessage);
+        }
+        setEstimateResult(payload?.data || payload);
+      } catch (err: any) {
+        setSearchError(err.message || 'Failed to fetch estimate. Please try again.');
+      } finally {
+        setSearchLoading(false);
+      }
+    };
+
+    const handleSearchKeyPress = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        handleEstimateSearch();
+      }
+    };
   const router = useRouter();
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
@@ -618,9 +670,134 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
+
             {/* Four Steps Process */}
             <div className="mb-8">
               <FourStepProcess />
+            </div>
+
+            {/* Refined Estimate Search (matches home page) */}
+            <div className="bg-white border border-amber-200 rounded-2xl shadow-sm p-6 mb-8 max-w-2xl">
+              <h2 className="text-xl font-bold text-emerald-800 mb-2 flex items-center gap-2">
+                <i className="fas fa-search-location text-amber-400"></i>
+                Land Estimate Search
+              </h2>
+              <form
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2"
+                onSubmit={e => { e.preventDefault(); handleEstimateSearch(); }}
+              >
+                <input
+                  type="text"
+                  name="province"
+                  placeholder="Province (e.g., Kigali City)"
+                  value={searchForm.province}
+                  onChange={handleSearchInputChange}
+                  className="w-full pl-4 pr-4 py-3.5 rounded-2xl text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-emerald-400 outline-none disabled:opacity-50"
+                  disabled={searchLoading}
+                />
+                <input
+                  type="text"
+                  name="district"
+                  placeholder="District (e.g., Gasabo)"
+                  value={searchForm.district}
+                  onChange={handleSearchInputChange}
+                  className="w-full pl-4 pr-4 py-3.5 rounded-2xl text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-emerald-400 outline-none disabled:opacity-50"
+                  disabled={searchLoading}
+                />
+                <input
+                  type="text"
+                  name="sector"
+                  placeholder="Sector (e.g., Kimironko)"
+                  value={searchForm.sector}
+                  onChange={handleSearchInputChange}
+                  className="w-full pl-4 pr-4 py-3.5 rounded-2xl text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-emerald-400 outline-none disabled:opacity-50"
+                  disabled={searchLoading}
+                />
+                <input
+                  type="text"
+                  name="upi"
+                  placeholder="UPI (e.g., 1/01/01/01/1234)"
+                  value={searchForm.upi}
+                  onChange={handleSearchInputChange}
+                  onKeyPress={handleSearchKeyPress}
+                  className="w-full pl-4 pr-4 py-3.5 rounded-2xl text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-emerald-400 outline-none disabled:opacity-50"
+                  disabled={searchLoading}
+                />
+                <button
+                  type="submit"
+                  disabled={searchLoading}
+                  className="sm:col-span-2 bg-amber-400 hover:bg-amber-500 text-emerald-950 font-semibold px-6 py-3.5 rounded-2xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {searchLoading ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin"></i> Loading...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-calculator"></i> Estimate
+                    </>
+                  )}
+                </button>
+              </form>
+              {/* Error message */}
+              {searchError && (
+                <div className="mt-4 bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-xl max-w-xl">
+                  <i className="fas fa-exclamation-circle mr-2"></i> {searchError}
+                </div>
+              )}
+              {/* Estimate result */}
+              {estimateResult && (
+                <div className="mt-4 bg-white/95 backdrop-blur-sm border-2 border-amber-300 text-gray-800 px-6 py-4 rounded-2xl max-w-xl shadow-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-lg text-emerald-900">
+                      <i className="fas fa-check-circle text-emerald-600 mr-2"></i>
+                      Estimate Complete
+                    </h3>
+                    <span className="bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full font-semibold">
+                      UPI: {estimateResult.parcel?.upi}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-600">Location</p>
+                      <p className="font-semibold">{estimateResult.parcel?.district}, {estimateResult.parcel?.sector}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Area</p>
+                      <p className="font-semibold">{estimateResult.parcel?.land_size_sqm?.toLocaleString()} m²</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Zone Coefficient</p>
+                      <p className="font-semibold">{estimateResult.parcel?.zone_coefficient}x</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Base Price/sqm</p>
+                      <p className="font-semibold">FRW {estimateResult.parcel?.base_price_per_sqm?.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <p className="text-gray-600 font-medium mb-1">Gazette Considerations:</p>
+                    <ul className="grid grid-cols-2 gap-1 text-xs">
+                      {Object.entries(estimateResult.considerations || {}).map(([key, value]) => (
+                        <li key={key} className={value ? 'text-emerald-700' : 'text-gray-500'}>
+                          <i className={`fas fa-${value ? 'check-circle' : 'times-circle'} mr-1`}></i>
+                          {key.replace(/_/g, ' ')}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="mt-3">
+                    <p className="text-gray-600 font-medium mb-1">Price Options:</p>
+                    <ul className="flex gap-4">
+                      {estimateResult.prices?.map((price: number, idx: number) => (
+                        <li key={idx} className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-2 font-semibold text-emerald-900">
+                          FRW {price.toLocaleString()}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* KPI Cards Grid */}
