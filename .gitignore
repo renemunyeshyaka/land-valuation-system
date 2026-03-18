@@ -28,6 +28,11 @@ frontend/.env
 
 ## Shell scripts and deployment scripts
 *.sh
+scripts/
+script/
+**/scripts/
+**/script/
+*.py
 
 ## Build outputs
 dist/

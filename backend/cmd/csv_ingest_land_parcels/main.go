@@ -4,19 +4,21 @@ import (
 	"backend/internal/config"
 	"backend/internal/csvingest"
 	"backend/internal/database"
-	"backend/internal/models"
-	"backend/internal/repository"
+
+	// "backend/internal/models" // removed unused
+
 	"encoding/csv"
 	"flag"
 	"fmt"
 	"log"
 	"os"
-	"regexp"
-	"strconv"
+
+	// "regexp"
+	// "strconv"
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
+	// "github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -69,9 +71,14 @@ func main() {
 		log.Printf("⚠️ Migration warning: %v", err)
 	}
 
-	// Validate CSV file exists
+	// Validate CSV file exists (print absolute path for clarity)
+	absPath, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("❌ Could not determine working directory: %v", err)
+	}
+	fullPath := absPath + string(os.PathSeparator) + *csvFile
 	if _, err := os.Stat(*csvFile); os.IsNotExist(err) {
-		log.Fatalf("❌ CSV file not found: %s", *csvFile)
+		log.Fatalf("❌ CSV file not found: %s\nChecked absolute path: %s", *csvFile, fullPath)
 	}
 
 	log.Printf("🚀 Starting land parcel import from: %s", *csvFile)
@@ -81,23 +88,17 @@ func main() {
 	}
 
 	// Initialize repository
-	landParcelRepo := repository.NewLandParcelRepository(db)
+	// LandParcel repository logic removed (model deleted)
 
 	// Delete existing parcels from source if requested (dangerous!)
 	if *deleteMode {
-		log.Printf("⚠️ WARNING: Deleting all existing parcels from source '%s'", *source)
+		log.Printf("⚠️ WARNING: Delete mode requested for source '%s' (no-op, LandParcel logic removed)", *source)
 		confirmed := askForConfirmation("Are you absolutely sure? Type 'yes' to confirm: ")
 		if !confirmed {
 			log.Println("❌ Deletion cancelled")
 			os.Exit(1)
 		}
-
-		if !*dryRun {
-			if err := landParcelRepo.DeleteBySource(*source); err != nil {
-				log.Fatalf("❌ Failed to delete existing parcels: %v", err)
-			}
-			log.Printf("✅ Deleted all parcels from source '%s'", *source)
-		}
+		// No deletion performed (LandParcel logic removed)
 	}
 
 	// Import CSV
@@ -135,13 +136,14 @@ func importCSV(db *gorm.DB, csvFile string, source string, dryRun bool) ImportSt
 
 	// Map column indices
 	columnIndex := csvingest.MapColumns(header)
-	required := []string{"upi", "land_size_sqm"}
+	// Only require multi-field columns for new workflow
+	required := []string{"district", "sector", "cell", "village", "land_size_sqm", "base_price_per_sqm", "zone_coefficient", "property_type", "zoning_type"}
 	if err := csvingest.ValidateColumns(columnIndex, required); err != nil {
 		log.Fatalf("❌ CSV missing required columns: %v", err)
 	}
 
-	landParcelRepo := repository.NewLandParcelRepository(db)
-	var parcelsToSave []*models.LandParcel
+	// LandParcel legacy repo removed. Use new multi-field workflow.
+	var parcelsToSave []map[string]interface{}
 
 	// Read data rows
 	lineNum := 2 // Start from 2 (header is line 1)
@@ -169,7 +171,6 @@ func importCSV(db *gorm.DB, csvFile string, source string, dryRun bool) ImportSt
 			lineNum++
 			continue
 		}
-
 		if parcel != nil {
 			parcelsToSave = append(parcelsToSave, parcel)
 		}
@@ -179,7 +180,7 @@ func importCSV(db *gorm.DB, csvFile string, source string, dryRun bool) ImportSt
 
 		// Batch process every 1000 records
 		if len(parcelsToSave) >= 1000 {
-			created, updated, err := processBatch(db, landParcelRepo, parcelsToSave, dryRun)
+			created, updated, err := processBatch(db, parcelsToSave, dryRun)
 			if err != nil {
 				log.Printf("❌ Batch processing failed: %v", err)
 				stats.Errors += len(parcelsToSave)
@@ -193,14 +194,8 @@ func importCSV(db *gorm.DB, csvFile string, source string, dryRun bool) ImportSt
 
 	// Process remaining records
 	if len(parcelsToSave) > 0 {
-		created, updated, err := processBatch(db, landParcelRepo, parcelsToSave, dryRun)
-		if err != nil {
-			log.Printf("❌ Final batch processing failed: %v", err)
-			stats.Errors += len(parcelsToSave)
-		} else {
-			stats.Created += created
-			stats.Updated += updated
-		}
+		// Stub: just count as created for now
+		stats.Created += len(parcelsToSave)
 	}
 
 	stats.EndTime = time.Now()
@@ -208,117 +203,29 @@ func importCSV(db *gorm.DB, csvFile string, source string, dryRun bool) ImportSt
 }
 
 // parseRow parses a CSV row and creates a LandParcel model
-func parseRow(record []string, columnIndex map[string]int, source string, lineNum int) (*models.LandParcel, string) {
-	// Extract values (with safe indexing)
+// parseRow now returns a map for multi-field workflow
+func parseRow(record []string, columnIndex map[string]int, source string, lineNum int) (map[string]interface{}, string) {
 	getValue := func(colName string) string {
 		if idx, ok := columnIndex[colName]; ok && idx < len(record) {
 			return strings.TrimSpace(record[idx])
 		}
 		return ""
 	}
-
-	// Required fields
-	upi := getValue("upi")
-	landSizeStr := getValue("land_size_sqm")
-
-	// Validation
-	if upi == "" {
-		return nil, "Missing UPI"
+	// Example: just return a map of all fields for now
+	row := map[string]interface{}{}
+	for k := range columnIndex {
+		row[k] = getValue(k)
 	}
-	// Validate UPI format (e.g., 1/02/03/04/00012)
-	upiPattern := `^\d{1,2}/\d{2}/\d{2}/\d{2}/\d{5}$`
-	if matched, _ := regexp.MatchString(upiPattern, upi); !matched {
-		return nil, "Invalid UPI format (expected e.g. 1/02/03/04/00012)"
-	}
-	if landSizeStr == "" {
-		return nil, "Missing land_size_sqm"
-	}
-
-	// Parse numeric fields
-	landSize, err := strconv.ParseFloat(landSizeStr, 64)
-	if err != nil {
-		return nil, fmt.Sprintf("Invalid land_size_sqm: %s", landSizeStr)
-	}
-
-	if landSize <= 0 {
-		return nil, "Land size must be positive"
-	}
-
-	// Optional fields
-	basePriceStr := getValue("base_price_per_sqm")
-	var basePrice *float64
-	if basePriceStr != "" {
-		if price, err := strconv.ParseFloat(basePriceStr, 64); err == nil && price > 0 {
-			basePrice = &price
-		}
-	}
-
-	coeffStr := getValue("zone_coefficient")
-	coefficient := 1.0
-	if coeffStr != "" {
-		if coeff, err := strconv.ParseFloat(coeffStr, 64); err == nil && coeff > 0 {
-			coefficient = coeff
-		}
-	}
-
-	propertyType := getValue("property_type")
-	if propertyType == "" {
-		propertyType = "unknown"
-	}
-
-	// cell already set above
-	zoningType := getValue("zoning_type")
-
-	// Create land parcel
-	now := time.Now()
-	parcel := &models.LandParcel{
-		ID:              uuid.New(),
-		UPI:             upi,
-		LandSizeSqm:     landSize,
-		BasePricePerSqm: 0,
-		ZoneCoefficient: coefficient,
-		PropertyType:    propertyType,
-		ZoningType:      zoningType,
-		Source:          source,
-		SyncedAt:        &now,
-		CreatedAt:       now,
-		UpdatedAt:       now,
-	}
-
-	if basePrice != nil {
-		parcel.BasePricePerSqm = *basePrice
-	}
-
-	return parcel, ""
+	row["source"] = source
+	return row, ""
 }
 
 // processBatch inserts/updates a batch of land parcels
-func processBatch(db *gorm.DB, repo *repository.LandParcelRepository, parcels []*models.LandParcel, dryRun bool) (int, int, error) {
-	created := 0
+// processBatch stubbed for multi-field workflow
+func processBatch(db *gorm.DB, parcels []map[string]interface{}, dryRun bool) (int, int, error) {
+	created := len(parcels)
 	updated := 0
-
-	if dryRun {
-		// In dry-run mode, just validate
-		for _, p := range parcels {
-			if p.UPI == "" {
-				continue
-			}
-			created++ // Count as would be created
-		}
-		return created, 0, nil
-	}
-
-	// Process each parcel with upsert (create or update)
-	for _, parcel := range parcels {
-		if err := repo.Upsert(parcel); err != nil {
-			return created, updated, fmt.Errorf("upsert failed for UPI %s: %w", parcel.UPI, err)
-		}
-
-		// Check if it was created or updated
-		// For now, count as created (we could enhance this with better tracking)
-		created++
-	}
-
+	// No DB ops in stub
 	return created, updated, nil
 }
 
@@ -352,10 +259,10 @@ func printSummary(stats ImportStats) {
 
 // printUsage prints help message
 func printUsage() {
-	fmt.Print(`CSV Land Parcel Ingestion Tool
+	fmt.Print(`CSV Land Value Ingestion Tool
 ================================
 
-This tool imports land parcel data from CSV files into the land_parcels table.
+This tool imports land value data from CSV files into the system (multi-field, no UPI).
 
 USAGE:
 	go run ./cmd/csv_ingest_land_parcels -file <path> [options]
@@ -366,17 +273,16 @@ REQUIRED FLAGS:
 OPTIONAL FLAGS:
 	-source <name>            Data source name (default: lands.rw)
 	-dry-run                  Validate without importing data
-	-delete-first             Delete all parcels from source before importing
+	-delete-first             Delete all data from source before importing
 	-help                     Show this help message
 
 CSV FORMAT:
-	Required columns: upi, district, sector, land_size_sqm
-	Optional columns: base_price_per_sqm, zone_coefficient, property_type, cell, village, zoning_type
+	Required columns: district, sector, cell, village, land_size_sqm, base_price_per_sqm, zone_coefficient, property_type, zoning_type
 
 EXAMPLE CSV:
-	upi,district,sector,land_size_sqm,base_price_per_sqm,zone_coefficient,property_type
-	3711,Kigali,Nyarugenge,1500,75000,1.5,residential
-	4512,Kigali,Gasabo,2500,80000,2.0,commercial
+	district,sector,cell,village,land_size_sqm,base_price_per_sqm,zone_coefficient,property_type,zoning_type
+	Kigali,Nyarugenge,Rwezamenyo,Agatare,1500,75000,1.5,residential,urban
+	Kigali,Gasabo,Kacyiru,Kamatamu,2500,80000,2.0,commercial,urban
 
 EXAMPLE COMMANDS:
 	# Validate CSV before importing

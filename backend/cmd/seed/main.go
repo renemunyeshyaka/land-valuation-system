@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -53,21 +52,7 @@ func main() {
 	}
 	log.Printf("✓ Seeded %d properties\n", len(properties))
 
-	// Ensure reference land parcels exist for local/dev seeding.
-	seededLandParcels, err := ensureSeedLandParcels(db, properties)
-	if err != nil {
-		log.Fatalf("failed to ensure land parcels: %v", err)
-	}
-	if seededLandParcels > 0 {
-		log.Printf("✓ Seeded %d land parcels (dev fallback)\n", seededLandParcels)
-	}
-
-	// Link properties to land parcels
-	linkedCount, err := linkPropertiesToLandParcels(db, properties)
-	if err != nil {
-		log.Fatalf("failed to link properties to land parcels: %v", err)
-	}
-	log.Printf("✓ Linked %d properties to land parcels\n", linkedCount)
+	// LandParcel/UPI logic removed. Seeder now only seeds users and properties.
 
 	// Verify gazette data
 	var gazetteCount int64
@@ -78,7 +63,6 @@ func main() {
 	log.Println("\nTest Data Summary:")
 	log.Printf("  Users: %d (across different subscription tiers)\n", len(users))
 	log.Printf("  Properties: %d (across Kigali, Musanze, Huye)\n", len(properties))
-	log.Printf("  Properties linked to Land Parcels: %d/%d\n", linkedCount, len(properties))
 	log.Printf("  Gazette Prices: %d entries\n", gazetteCount)
 	if gazetteCount == 0 {
 		log.Println("  Gazette note: import with `go run ./cmd/gazette_import/main.go -file <path-to-csv-or-json>`")
@@ -318,9 +302,7 @@ func clearTestData(db *gorm.DB) error {
 		return fmt.Errorf("failed to delete test properties: %w", err)
 	}
 
-	if err := db.Unscoped().Where("source = ?", "seed_mock").Delete(&models.LandParcel{}).Error; err != nil {
-		return fmt.Errorf("failed to delete seed mock land parcels: %w", err)
-	}
+	// LandParcel deletion removed (model deleted)
 
 	// Then delete test users (not admin in production) - hard delete to bypass unique constraint
 	testEmails := []string{
@@ -334,109 +316,6 @@ func clearTestData(db *gorm.DB) error {
 	}
 
 	return nil
-}
-
-// ensureSeedLandParcels inserts deterministic mock land parcels only when no reference data exists.
-func ensureSeedLandParcels(db *gorm.DB, properties []models.Property) (int, error) {
-	if len(properties) == 0 {
-		return 0, nil
-	}
-
-	upis := make([]string, 0, len(properties))
-	byUPI := make(map[string]models.Property, len(properties))
-	for _, prop := range properties {
-		if prop.UPI == "" {
-			continue
-		}
-		upis = append(upis, prop.UPI)
-		byUPI[prop.UPI] = prop
-	}
-
-	if len(upis) == 0 {
-		return 0, nil
-	}
-
-	var existing []models.LandParcel
-	if err := db.Select("upi").Where("upi IN ?", upis).Find(&existing).Error; err != nil {
-		return 0, fmt.Errorf("failed to fetch existing land parcels by UPI: %w", err)
-	}
-
-	existingSet := make(map[string]struct{}, len(existing))
-	for _, lp := range existing {
-		existingSet[lp.UPI] = struct{}{}
-	}
-
-	missing := make([]models.LandParcel, 0)
-	now := time.Now()
-	for _, upi := range upis {
-		if _, ok := existingSet[upi]; ok {
-			continue
-		}
-		prop := byUPI[upi]
-
-		basePricePerSqm := 0.0
-		if prop.LandSize > 0 {
-			basePricePerSqm = prop.Price / prop.LandSize
-		}
-
-		// For seeding, parse location from UPI if needed, or leave blank if not available
-		missing = append(missing, models.LandParcel{
-			UPI:             prop.UPI,
-			District:        "", // Not available in Property, should be set elsewhere if needed
-			Sector:          "",
-			Cell:            "",
-			LandSizeSqm:     prop.LandSize,
-			AreaSqm:         prop.AreaSqm,
-			PropertyType:    prop.PropertyType,
-			Latitude:        prop.Latitude,
-			Longitude:       prop.Longitude,
-			BasePricePerSqm: basePricePerSqm,
-			ZoneCoefficient: 1.0,
-			Source:          "seed_mock",
-			SyncedAt:        &now,
-		})
-	}
-
-	if len(missing) == 0 {
-		return 0, nil
-	}
-
-	if err := db.CreateInBatches(missing, 100).Error; err != nil {
-		return 0, fmt.Errorf("failed to seed fallback land parcels: %w", err)
-	}
-
-	return len(missing), nil
-}
-
-// linkPropertiesToLandParcels links seed properties to government land parcels based on location matching
-func linkPropertiesToLandParcels(db *gorm.DB, properties []models.Property) (int64, error) {
-	var linkedCount int64 = 0
-
-	for _, prop := range properties {
-		if prop.UPI == "" || prop.LandParcelID != nil {
-			continue
-		}
-
-		// Find matching land parcel by district and sector
-		var landParcel models.LandParcel
-		var emptyUUID uuid.UUID
-
-		// Option C: link where UPI matches.
-		if err := db.Where("upi = ?", prop.UPI).
-			First(&landParcel).Error; err != nil && err != gorm.ErrRecordNotFound {
-			return 0, fmt.Errorf("failed to search land parcels by UPI: %w", err)
-		}
-
-		// If we found a matching land parcel, link it
-		if landParcel.ID != emptyUUID {
-			if err := db.Model(&prop).Update("land_parcel_id", landParcel.ID).Error; err != nil {
-				return 0, fmt.Errorf("failed to update property: %w", err)
-			}
-			linkedCount++
-		}
-	}
-
-	return linkedCount, nil
 }
 
 // Helper functions

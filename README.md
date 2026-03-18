@@ -29,72 +29,116 @@
 # Navigate to project
 cd /home/sdragon/Desktop/GitHub/land-valuation-system
 
-# Start backend (terminal 1)
-cd backend && go build -o api cmd/api/main.go && ./api
 
-# Start frontend (terminal 2)  
-cd frontend && npm install && npm run dev
 
-# Test everything (terminal 3)
-./test-auth-debug.sh
-```
+### 🚩 Price Estimation Process (Strict Multi-Field Search)
 
-**Expected:** All ✅ checkmarks = you're good to go!
+**IMPORTANT: The only supported workflow for price estimation is a multi-field search using the following five fields:**
+
+- `province`
+- `district`
+- `sector`
+- `cell`
+- `village`
+
+`plot_size_sqm` is **only** used for calculating the total price, **not** for searching or filtering records.
+
+**UPI-based search is deprecated and must NOT be used for price estimation.**
+
+#### API Endpoint
+
+- **URL:** `/api/v1/estimate-search`
+- **Method:** `POST`
+- **Request Body:**
+   ```json
+   {
+      "province": "Kigali",
+      "district": "Gasabo",
+      "sector": "Kacyiru",
+      "cell": "Biryogo",
+      "village": "VillageName",
+      "plot_size_sqm": 500
+   }
+   ```
+- **Response Example:**
+   ```json
+   {
+      "success": true,
+      "message": "Estimate search successful",
+      "data": {
+         "province": "Kigali",
+         "district": "Gasabo",
+         "sector": "Kacyiru",
+         "cell": "Biryogo",
+         "village": "VillageName",
+         "land_use": "Residential",
+         "min_value_per_sqm": 10000,
+         "weighted_avg_value_per_sqm": 12000,
+         "max_value_per_sqm": 15000,
+         "total_min_value": 5000000,
+         "total_weighted_avg_value": 6000000,
+         "total_max_value": 7500000
+      }
+   }
+   ```
+
+**Authoritative Data Source:** All price lookups are performed using the `village_land_values` table (backed by `village_land_values_joined_clean.csv`).
+
+**Summary:**
+- Search is always performed using all five location fields (province, district, sector, cell, village).
+- `plot_size_sqm` is used only for multiplying the per-sqm values to get total prices.
+- UPI-based endpoints are not used for price estimation.
+- See [docs/LAND_VALUE_ESTIMATION.md](docs/LAND_VALUE_ESTIMATION.md) for the full workflow and rationale.
 
 ---
 
-## ✨ What's Working Right Now
+**User Flow:**
+- User must be registered and logged in to perform a search.
+- User provides: Province, District, Sector, Cell, Village, and Plot Size (sqm).
 
-| Component | Status | Details |
-|-----------|--------|---------|
-| Backend API | ✅ Working | Port 5000, all endpoints tested |
-| Authentication | ✅ 100% | User must be registered to search |
-| Referral System | ✅ Working | Unique 8-char codes, crypto/rand |
-| Payment Framework | ✅ Ready | MTN + Airtel integrated (credentials pending) |
-| Database | ✅ Operational | PostgreSQL with all migrations |
-| Frontend | 🔄 40% | Needs auth UI + payment form |
-| Deployment | 🔴 TBD | Scheduled for Week 4 |
+**Algorithm Steps:**
+1. **Registration Check:** Ensure the user is registered and authenticated. If not, prompt registration/login.
+2. **Multi-Field Search:** Query the `village_land_values` table using all provided fields (province, district, sector, cell, village).
+3. **Price Calculation:**
+   - Use the land value metrics (min, weighted avg, max per sqm) from the matched record.
+   - If plot size is provided, multiply each value per sqm by plot size to get total values.
+4. **Response Construction:** Return a response containing:
+   - The administrative location details
+   - Land use
+   - Land value metrics (per sqm and total)
+5. **Error Handling:**
+   - If any field is missing or no match is found, return a clear error message.
 
 
----
+**Note:** All price lookups are performed using the `village_land_values` table. UPI-based search is no longer supported for price estimation. Multi-field search is the only supported method.
 
-
-## 🗓️ Detailed Schedule Plan: Remaining Key Tasks
-
-| Task | Description | Owner | Target Completion |
-|------|-------------|-------|------------------|
-| **Frontend Auth UI** | Complete user registration, login, and verification flows | Solo Dev | Mar 14 |
-| **Payment Form & Integration** | Finalize payment UI, connect to MTN/Airtel APIs | Solo Dev | Mar 15 |
-| **Property Listing Management** | Polish Add Property form, dashboard listing management | Solo Dev | Mar 16 |
-| **Price Estimation UI** | Refine UPI-based price estimation flow for users | Solo Dev | Mar 17 |
-| **Testing & Bug Fixes** | End-to-end tests, fix critical bugs (backend & frontend) | Solo Dev | Mar 18-19 |
-| **Documentation Polish** | Finalize README, user guides, API docs | Solo Dev | Mar 19 |
-| **Deployment Automation** | Docker, CI/CD, production deploy scripts | Solo Dev | Mar 20 |
-| **Launch & Monitoring** | Go live, monitor logs, user feedback | Solo Dev | Apr 13 |
-
-**Notes:**
-- Adjust dates as needed based on progress and blockers.
-- Prioritize user registration, payment, and price estimation for MVP.
-- Revenue features (subscriptions, ad boosts, invoices) can be staged after core launch.
-
----
-
-## Core Products
-
-### 1. Land Price Estimate Search (Dashboard)
-- This feature allows authenticated users to search for land price estimates using UPI codes directly from their dashboard.
-- It is a critical workflow: users must be able to enter a UPI code and receive an instant, accurate valuation based on official gazette data and market trends.
-- **Note:** Registration is enforced before access; only logged-in users can use this feature from the dashboard.
-- The estimate search must always be reliable, fast, and accurate.
-
-### 2. Advertising Land/Properties
-- Users can list and advertise their land or properties for sale on the platform.
-- Listings are visible to buyers, including diaspora and foreign investors.
-- The advertising workflow must be seamless, allowing users to upload property details, images, and set pricing.
-- Listings should be discoverable and attract high-quality buyers.
-
-**Emphasis:**
 > These two features—Land Price Estimate Search (in dashboards) and Advertising Land/Properties—are the foundation of our platform. They must always work perfectly, with a focus on reliability, user experience, and accuracy. All development and QA efforts should prioritize these workflows.
+
+---
+
+## ⚠️ Troubleshooting Land Estimate Search
+
+If you see "Failed to fetch estimate" or a 404 error when searching for a land estimate:
+
+- The backend is searching for an exact match in the `village_land_values` table for all five fields: province, district, sector, cell, and village.
+- If no row matches **all** these values, the query returns 0 rows and the API returns a 404 or error.
+
+### How to Fix
+1. **Check your data:**
+   - Make sure a row exists in `village_land_values` with all fields matching exactly (no typos, correct spelling/capitalization).
+   - Try running a query like:
+     ```sql
+     SELECT * FROM village_land_values
+     WHERE province ILIKE '%kigali%'
+       AND district ILIKE '%nyarugenge%'
+       AND sector ILIKE '%gitega%'
+       AND cell ILIKE '%akabahizi%'
+       AND village ILIKE '%gihanga%';
+     ```
+2. **If you want fallback/partial match logic (e.g., ignore village if not found), update the backend to try less specific queries if the full match fails.**
+3. **Check for alternate spellings or trailing spaces in your data.**
+
+If you need help adding fallback logic or want to log available values for debugging, see the backend handler code or ask for support.
 
 ---
 
@@ -131,85 +175,20 @@ Registered users can advertise their land or property for sale on the platform:
 
 **Note:** Only registered and logged-in users can post land/property advertisements. This ensures trust and accountability on the platform.
 
+
+
 ### Friendly Price Estimation for Your Land/Property
 
-In addition to advertising, users have a simple and user-friendly way to estimate the value of their land or property:
+Users can estimate the value of their land or property by providing the five required location fields (province, district, sector, cell, village) and the plot size in square meters. UPI-based estimation is not supported for price estimation. All calculations use the authoritative `village_land_values` table. See [docs/LAND_VALUE_ESTIMATION.md](docs/LAND_VALUE_ESTIMATION.md) for the full workflow and rationale.
 
-- After logging in, navigate to the price estimation or search section (usually accessible from the main dashboard or navigation menu).
-- Enter your land's UPI (Unique Parcel Identifier) in the format: x/xx/xx/xx/xxxx (e.g., 1/03/01/04/3000).
-- The system will automatically validate the UPI format and extract the relevant administrative codes (province, district, sector, cell, plot).
-- Based on the official gazette data and the presence of key amenities (road, electricity, water, school, health facility, market), the platform will instantly calculate and display the estimated price for your land/property.
-- The estimation is transparent, showing which conditions are met and how the price is determined (maximum, weighted average, or minimum value per sqm).
-
-This feature empowers users to make informed decisions about their property, whether they are considering selling, buying, or simply want to know the current market value. The process is designed to be intuitive and accessible to all users.
+This workflow ensures LVS is robust, user-friendly, and fully independent.
 
 ---
 
-### API Endpoint
 
-- **URL:** `/api/v1/estimate-search`
-- **Method:** `POST`
-- **Request Body:**
-   ```json
-   {
-      "upi": "1/03/01/04/3000"
-   }
-   ```
-- **Response Example:**
-   ```json
-   {
-      "success": true,
-      "message": "Estimate search successful",
-      "data": {
-         "parcel": { /* parcel details */ },
-         "considerations": {
-            "road": true,
-            "electricity": true,
-            "water": false,
-            "school": true,
-            "health_facility": false,
-            "market": true
-         },
-         "price": 11000000,
-         "price_type": "Weighted Average Value Per Sqm"
-      }
-   }
-   ```
+### (Deprecated) UPI-Based Search
 
----
-
-**User Flow:**
-- User must be registered and logged in to perform a search.
-- User provides a UPI (Unique Parcel Identifier) code in the format: x/xx/xx/xx/xxxx
-  - x: Province
-  - xx: District
-  - xx: Sector
-  - xx: Cell
-  - xxxx: Plot (4 digits)
-
-**Algorithm Steps:**
-1. **Registration Check:** Ensure the user is registered and authenticated. If not, prompt registration/login.
-2. **UPI Format Validation:** Check that the UPI matches the required format and codes for Province, District, Sector, Cell, and Plot.
-3. **Gazette Pricing Conditions:** For the provided UPI, extract the administrative codes and evaluate the presence/absence of the six pricing conditions:
-   - Road access
-   - Electricity
-   - Water
-   - School nearby
-   - Health facility nearby
-   - Market nearby
-4. **Price Calculation:**
-   - If all 6 conditions are met, return **Maximum Value Per Sqm**
-   - If 3, 4, or 5 conditions are met, return **Weighted Average Value Per Sqm**
-   - If 0, 1, or 2 conditions are met, return **Minimum Value Per Sqm**
-5. **Response Construction:** Return a response containing:
-   - The administrative location details (from UPI)
-   - The status of each of the six conditions
-   - The calculated price and price type
-6. **Error Handling:**
-   - If the UPI is missing or has an invalid format, return a clear error message.
-   - If the administrative codes do not exist in the gazette_land_prices table, return a not found error.
-
-**Note:** All price lookups are performed using the `gazette_land_prices` table. Parcel lookup and the `collected_upis` table are no longer used. Multi-field search is not supported.
+> **Note:** UPI-based search and estimation logic is deprecated and must not be used for price estimation. All price estimation must use the multi-field search workflow described above. The `gazette_land_prices` and `collected_upis` tables are not used for price estimation. All logic is based on the `village_land_values` table.
             "price": 11000000,
             "price_type": "Weighted Average Value Per Sqm"
          }

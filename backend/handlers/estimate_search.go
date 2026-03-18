@@ -8,20 +8,34 @@ import (
 	"strings"
 )
 
-// EstimateSearchRequest matches your documented frontend payload
+// EstimateSearchRequest matches the documented multi-field payload
 type EstimateSearchRequest struct {
-	UPI string `json:"upi"`
+	Province    string  `json:"province"`
+	District    string  `json:"district"`
+	Sector      string  `json:"sector"`
+	Cell        string  `json:"cell"`
+	Village     string  `json:"village"`
+	PlotSizeSqm float64 `json:"plot_size_sqm"`
 }
 
-// EstimateSearchResponse matches your documented frontend response
+// EstimateSearchResponse matches the documented response
 type EstimateSearchResponse struct {
-	UPI       string `json:"upi"`
-	Price     string `json:"price"`
-	PriceType string `json:"price_type"`
-	Error     string `json:"error,omitempty"`
+	Province               string  `json:"province"`
+	District               string  `json:"district"`
+	Sector                 string  `json:"sector"`
+	Cell                   string  `json:"cell"`
+	Village                string  `json:"village"`
+	LandUse                string  `json:"land_use"`
+	MinValuePerSqm         float64 `json:"min_value_per_sqm"`
+	WeightedAvgValuePerSqm float64 `json:"weighted_avg_value_per_sqm"`
+	MaxValuePerSqm         float64 `json:"max_value_per_sqm"`
+	TotalMinValue          float64 `json:"total_min_value"`
+	TotalWeightedAvgValue  float64 `json:"total_weighted_avg_value"`
+	TotalMaxValue          float64 `json:"total_max_value"`
+	Error                  string  `json:"error,omitempty"`
 }
 
-// EstimateSearchHandler handles POST /api/v1/estimate-search
+// EstimateSearchHandler handles POST /api/v1/estimate-search (multi-field search only)
 func EstimateSearchHandler(w http.ResponseWriter, r *http.Request) {
 	var req EstimateSearchRequest
 	body, _ := ioutil.ReadAll(r.Body)
@@ -32,31 +46,46 @@ func EstimateSearchHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
-	if req.UPI == "" {
-		resp := EstimateSearchResponse{Error: "UPI is required."}
+	// Validate required fields
+	if req.Province == "" || req.District == "" || req.Sector == "" || req.Cell == "" || req.Village == "" {
+		resp := EstimateSearchResponse{Error: "All location fields (province, district, sector, cell, village) are required."}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
 		return
 	}
-	query := `SELECT upi FROM collected_upis WHERE upi = $1 LIMIT 1`
-	var upi string
-	err := db.QueryRow(query, req.UPI).Scan(&upi)
+
+	// Use injected GORM repository for strict multi-field search
+	ctx := r.Context()
+	value, err := LandValueRepo.GetByAllFields(ctx, req.Province, req.District, req.Sector, req.Cell, req.Village)
 	if err != nil {
-		log.Printf("EstimateSearchHandler: Parcel lookup failed: %v", err)
-		resp := EstimateSearchResponse{Error: "Parcel not found or inactive"}
+		log.Printf("EstimateSearchHandler: No match found: %v", err)
+		resp := EstimateSearchResponse{Error: "No land value data found for the provided location."}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
 		return
 	}
-	// Call priceTable.GetPriceByUPI or similar logic for UPI-based lookup
-	price, priceType, err := priceTable.GetPriceByUPI(upi)
+
+	// Calculate total values if plot_size_sqm is provided
+	var totalMin, totalWeighted, totalMax float64
+	if req.PlotSizeSqm > 0 {
+		totalMin = value.MinValuePerSqm * req.PlotSizeSqm
+		totalWeighted = value.WeightedAvgValuePerSqm * req.PlotSizeSqm
+		totalMax = value.MaxValuePerSqm * req.PlotSizeSqm
+	}
+
 	resp := EstimateSearchResponse{
-		UPI:       upi,
-		Price:     price,
-		PriceType: priceType,
-	}
-	if err != nil {
-		resp.Error = err.Error()
+		Province:               value.Province,
+		District:               value.District,
+		Sector:                 value.Sector,
+		Cell:                   value.Cell,
+		Village:                value.Village,
+		LandUse:                value.LandUse,
+		MinValuePerSqm:         value.MinValuePerSqm,
+		WeightedAvgValuePerSqm: value.WeightedAvgValuePerSqm,
+		MaxValuePerSqm:         value.MaxValuePerSqm,
+		TotalMinValue:          totalMin,
+		TotalWeightedAvgValue:  totalWeighted,
+		TotalMaxValue:          totalMax,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)

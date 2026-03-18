@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import LandEstimateForm, { LandEstimateRequest } from '../../components/LandEstimateForm';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -22,6 +23,29 @@ const Analytics: React.FC = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
+  const [estimateResult, setEstimateResult] = useState<any | null>(null);
+  const [estimateLoading, setEstimateLoading] = useState(false);
+  const [estimateError, setEstimateError] = useState<string | null>(null);
+
+  const handleEstimate = async (params: LandEstimateRequest) => {
+    setEstimateLoading(true);
+    setEstimateError(null);
+    setEstimateResult(null);
+    try {
+      const res = await fetch('http://localhost:5000/api/v1/land-value-estimate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+      });
+      if (!res.ok) throw new Error('Failed to fetch estimate');
+      const payload = await res.json();
+      setEstimateResult(payload.data || null);
+    } catch (err: any) {
+      setEstimateError(err.message || 'Unknown error');
+    } finally {
+      setEstimateLoading(false);
+    }
+  };
   const [dateRange, setDateRange] = useState('3months');
 
   // Mock valuation trend data
@@ -133,7 +157,45 @@ const Analytics: React.FC = () => {
         <main className="flex-grow">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
 
-            {/* Page Header with Filters */}
+            {/* Quick Land Value Estimate */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-8">
+              <h2 className="text-xl font-bold text-gray-800 mb-5">Quick Land Value Estimate</h2>
+              <LandEstimateForm onEstimate={handleEstimate} disabled={estimateLoading} />
+              {estimateError && <div className="text-red-600 mt-4">{estimateError}</div>}
+              {estimateResult && (
+                <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <h3 className="text-lg font-semibold text-emerald-700 mb-2">Land Value Estimate</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <span className="font-medium text-gray-700">Min Value per sqm:</span>
+                      <span className="ml-2 text-gray-900">{estimateResult.min_value_per_sqm}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Weighted Avg per sqm:</span>
+                      <span className="ml-2 text-gray-900">{estimateResult.weighted_avg_value_per_sqm}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Max Value per sqm:</span>
+                      <span className="ml-2 text-gray-900">{estimateResult.max_value_per_sqm}</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div>
+                      <span className="font-medium text-gray-700">Total Min Value:</span>
+                      <span className="ml-2 text-gray-900">{estimateResult.total_min_value}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Total Weighted Avg:</span>
+                      <span className="ml-2 text-gray-900">{estimateResult.total_weighted_avg_value}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Total Max Value:</span>
+                      <span className="ml-2 text-gray-900">{estimateResult.total_max_value}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-12">
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2">

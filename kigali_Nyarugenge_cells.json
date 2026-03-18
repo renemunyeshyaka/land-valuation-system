@@ -1,0 +1,4002 @@
+[
+    {
+        "label": "All",
+        "value": "All"
+    },
+    {
+        "label": "Biryogo",
+        "value": "Biryogo"
+    },
+    {
+        "label": "Kabuye",
+        "value": "Kabuye"
+    },
+    {
+        "label": "Kagomasi",
+        "value": "Kagomasi"
+    },
+    {
+        "label": "Mwendo",
+        "value": "Mwendo"
+    },
+    {
+        "label": "Ramiro",
+        "value": "Ramiro"
+    },
+    {
+        "label": "Juru",
+        "value": "Juru"
+    },
+    {
+        "label": "Kabukuba",
+        "value": "Kabukuba"
+    },
+    {
+        "label": "Mugorore",
+        "value": "Mugorore"
+    },
+    {
+        "label": "Musovu",
+        "value": "Musovu"
+    },
+    {
+        "label": "Rwinume",
+        "value": "Rwinume"
+    },
+    {
+        "label": "Biharagu",
+        "value": "Biharagu"
+    },
+    {
+        "label": "Burenge",
+        "value": "Burenge"
+    },
+    {
+        "label": "Kampeka",
+        "value": "Kampeka"
+    },
+    {
+        "label": "Nyakayaga",
+        "value": "Nyakayaga"
+    },
+    {
+        "label": "Tunda",
+        "value": "Tunda"
+    },
+    {
+        "label": "Bushenyi",
+        "value": "Bushenyi"
+    },
+    {
+        "label": "Gakomeye",
+        "value": "Gakomeye"
+    },
+    {
+        "label": "Nyamigina",
+        "value": "Nyamigina"
+    },
+    {
+        "label": "Rango",
+        "value": "Rango"
+    },
+    {
+        "label": "Rugarama",
+        "value": "Rugarama"
+    },
+    {
+        "label": "Gakamba",
+        "value": "Gakamba"
+    },
+    {
+        "label": "Kagenge",
+        "value": "Kagenge"
+    },
+    {
+        "label": "Kibenga",
+        "value": "Kibenga"
+    },
+    {
+        "label": "Kibirizi",
+        "value": "Kibirizi"
+    },
+    {
+        "label": "Mbyo",
+        "value": "Mbyo"
+    },
+    {
+        "label": "Gicaca",
+        "value": "Gicaca"
+    },
+    {
+        "label": "Musenyi",
+        "value": "Musenyi"
+    },
+    {
+        "label": "Nyagihunika",
+        "value": "Nyagihunika"
+    },
+    {
+        "label": "Rulindo",
+        "value": "Rulindo"
+    },
+    {
+        "label": "Bitaba",
+        "value": "Bitaba"
+    },
+    {
+        "label": "Kagasa",
+        "value": "Kagasa"
+    },
+    {
+        "label": "Rugunga",
+        "value": "Rugunga"
+    },
+    {
+        "label": "Rurenge",
+        "value": "Rurenge"
+    },
+    {
+        "label": "Gihembe",
+        "value": "Gihembe"
+    },
+    {
+        "label": "Murama",
+        "value": "Murama"
+    },
+    {
+        "label": "Ngeruka",
+        "value": "Ngeruka"
+    },
+    {
+        "label": "Nyakayenzi",
+        "value": "Nyakayenzi"
+    },
+    {
+        "label": "Rutonde",
+        "value": "Rutonde"
+    },
+    {
+        "label": "Cyugaro",
+        "value": "Cyugaro"
+    },
+    {
+        "label": "Kanzenze",
+        "value": "Kanzenze"
+    },
+    {
+        "label": "Kibungo",
+        "value": "Kibungo"
+    },
+    {
+        "label": "Kanazi",
+        "value": "Kanazi"
+    },
+    {
+        "label": "Kayumba",
+        "value": "Kayumba"
+    },
+    {
+        "label": "Maranyundo",
+        "value": "Maranyundo"
+    },
+    {
+        "label": "Nyamata Y' Umujyi",
+        "value": "Nyamata Y' Umujyi"
+    },
+    {
+        "label": "Gihinga",
+        "value": "Gihinga"
+    },
+    {
+        "label": "Murambi",
+        "value": "Murambi"
+    },
+    {
+        "label": "Ngenda",
+        "value": "Ngenda"
+    },
+    {
+        "label": "Rugando",
+        "value": "Rugando"
+    },
+    {
+        "label": "Kabeza",
+        "value": "Kabeza"
+    },
+    {
+        "label": "Karera",
+        "value": "Karera"
+    },
+    {
+        "label": "Kimaranzara",
+        "value": "Kimaranzara"
+    },
+    {
+        "label": "Ntarama",
+        "value": "Ntarama"
+    },
+    {
+        "label": "Nyabagendwa",
+        "value": "Nyabagendwa"
+    },
+    {
+        "label": "Bihari",
+        "value": "Bihari"
+    },
+    {
+        "label": "Gatanga",
+        "value": "Gatanga"
+    },
+    {
+        "label": "Gikundamvura",
+        "value": "Gikundamvura"
+    },
+    {
+        "label": "Kindama",
+        "value": "Kindama"
+    },
+    {
+        "label": "Ruhuha",
+        "value": "Ruhuha"
+    },
+    {
+        "label": "Batima",
+        "value": "Batima"
+    },
+    {
+        "label": "Kintambwe",
+        "value": "Kintambwe"
+    },
+    {
+        "label": "Mazane",
+        "value": "Mazane"
+    },
+    {
+        "label": "Nemba",
+        "value": "Nemba"
+    },
+    {
+        "label": "Nkanga",
+        "value": "Nkanga"
+    },
+    {
+        "label": "Sharita",
+        "value": "Sharita"
+    },
+    {
+        "label": "Kabagugu",
+        "value": "Kabagugu"
+    },
+    {
+        "label": "Kamabuye",
+        "value": "Kamabuye"
+    },
+    {
+        "label": "Nziranziza",
+        "value": "Nziranziza"
+    },
+    {
+        "label": "Rebero",
+        "value": "Rebero"
+    },
+    {
+        "label": "Rutare",
+        "value": "Rutare"
+    },
+    {
+        "label": "Kigabiro",
+        "value": "Kigabiro"
+    },
+    {
+        "label": "Kimana",
+        "value": "Kimana"
+    },
+    {
+        "label": "Teme",
+        "value": "Teme"
+    },
+    {
+        "label": "Viro",
+        "value": "Viro"
+    },
+    {
+        "label": "Gatsibo",
+        "value": "Gatsibo"
+    },
+    {
+        "label": "Manishya",
+        "value": "Manishya"
+    },
+    {
+        "label": "Mugera",
+        "value": "Mugera"
+    },
+    {
+        "label": "Nyabicwamba",
+        "value": "Nyabicwamba"
+    },
+    {
+        "label": "Nyagahanga",
+        "value": "Nyagahanga"
+    },
+    {
+        "label": "Bukomane",
+        "value": "Bukomane"
+    },
+    {
+        "label": "Cyabusheshe",
+        "value": "Cyabusheshe"
+    },
+    {
+        "label": "Karubungo",
+        "value": "Karubungo"
+    },
+    {
+        "label": "Mpondwa",
+        "value": "Mpondwa"
+    },
+    {
+        "label": "Nyamirama",
+        "value": "Nyamirama"
+    },
+    {
+        "label": "Rubira",
+        "value": "Rubira"
+    },
+    {
+        "label": "Kabarore",
+        "value": "Kabarore"
+    },
+    {
+        "label": "Karenge",
+        "value": "Karenge"
+    },
+    {
+        "label": "Marimba",
+        "value": "Marimba"
+    },
+    {
+        "label": "Nyabikiri",
+        "value": "Nyabikiri"
+    },
+    {
+        "label": "Simbwa",
+        "value": "Simbwa"
+    },
+    {
+        "label": "Busetsa",
+        "value": "Busetsa"
+    },
+    {
+        "label": "Gituza",
+        "value": "Gituza"
+    },
+    {
+        "label": "Kintu",
+        "value": "Kintu"
+    },
+    {
+        "label": "Nyagisozi",
+        "value": "Nyagisozi"
+    },
+    {
+        "label": "Akabuga",
+        "value": "Akabuga"
+    },
+    {
+        "label": "Gakenke",
+        "value": "Gakenke"
+    },
+    {
+        "label": "Gakoni",
+        "value": "Gakoni"
+    },
+    {
+        "label": "Nyabisindu",
+        "value": "Nyabisindu"
+    },
+    {
+        "label": "Agakomeye",
+        "value": "Agakomeye"
+    },
+    {
+        "label": "Mbogo",
+        "value": "Mbogo"
+    },
+    {
+        "label": "Ndatemwa",
+        "value": "Ndatemwa"
+    },
+    {
+        "label": "Rubona",
+        "value": "Rubona"
+    },
+    {
+        "label": "Bibare",
+        "value": "Bibare"
+    },
+    {
+        "label": "Gakorokombe",
+        "value": "Gakorokombe"
+    },
+    {
+        "label": "Mamfu",
+        "value": "Mamfu"
+    },
+    {
+        "label": "Rumuli",
+        "value": "Rumuli"
+    },
+    {
+        "label": "Taba",
+        "value": "Taba"
+    },
+    {
+        "label": "Nyamiyaga",
+        "value": "Nyamiyaga"
+    },
+    {
+        "label": "Rwankuba",
+        "value": "Rwankuba"
+    },
+    {
+        "label": "Rwimitereri",
+        "value": "Rwimitereri"
+    },
+    {
+        "label": "Bugamba",
+        "value": "Bugamba"
+    },
+    {
+        "label": "Karambi",
+        "value": "Karambi"
+    },
+    {
+        "label": "Kigasha",
+        "value": "Kigasha"
+    },
+    {
+        "label": "Ngarama",
+        "value": "Ngarama"
+    },
+    {
+        "label": "Nyarubungo",
+        "value": "Nyarubungo"
+    },
+    {
+        "label": "Gitinda",
+        "value": "Gitinda"
+    },
+    {
+        "label": "Kibare",
+        "value": "Kibare"
+    },
+    {
+        "label": "Mayange",
+        "value": "Mayange"
+    },
+    {
+        "label": "Nyagitabire",
+        "value": "Nyagitabire"
+    },
+    {
+        "label": "Bushobora",
+        "value": "Bushobora"
+    },
+    {
+        "label": "Butiruka",
+        "value": "Butiruka"
+    },
+    {
+        "label": "Nyagakombe",
+        "value": "Nyagakombe"
+    },
+    {
+        "label": "Rwarenga",
+        "value": "Rwarenga"
+    },
+    {
+        "label": "Bugarama",
+        "value": "Bugarama"
+    },
+    {
+        "label": "Gihuta",
+        "value": "Gihuta"
+    },
+    {
+        "label": "Kanyangese",
+        "value": "Kanyangese"
+    },
+    {
+        "label": "Matare",
+        "value": "Matare"
+    },
+    {
+        "label": "Matunguru",
+        "value": "Matunguru"
+    },
+    {
+        "label": "Remera",
+        "value": "Remera"
+    },
+    {
+        "label": "Kiburara",
+        "value": "Kiburara"
+    },
+    {
+        "label": "Munini",
+        "value": "Munini"
+    },
+    {
+        "label": "Nyamatete",
+        "value": "Nyamatete"
+    },
+    {
+        "label": "Rwikiniro",
+        "value": "Rwikiniro"
+    },
+    {
+        "label": "Kahi",
+        "value": "Kahi"
+    },
+    {
+        "label": "Kiyenzi",
+        "value": "Kiyenzi"
+    },
+    {
+        "label": "Urugarama",
+        "value": "Urugarama"
+    },
+    {
+        "label": "Cyarubare",
+        "value": "Cyarubare"
+    },
+    {
+        "label": "Gitara",
+        "value": "Gitara"
+    },
+    {
+        "label": "Kirehe",
+        "value": "Kirehe"
+    },
+    {
+        "label": "Rubimba",
+        "value": "Rubimba"
+    },
+    {
+        "label": "Rubumba",
+        "value": "Rubumba"
+    },
+    {
+        "label": "Cyabajwa",
+        "value": "Cyabajwa"
+    },
+    {
+        "label": "Cyinzovu",
+        "value": "Cyinzovu"
+    },
+    {
+        "label": "Kabura",
+        "value": "Kabura"
+    },
+    {
+        "label": "Rusera",
+        "value": "Rusera"
+    },
+    {
+        "label": "Bwiza",
+        "value": "Bwiza"
+    },
+    {
+        "label": "Kayonza",
+        "value": "Kayonza"
+    },
+    {
+        "label": "Mburabuturo",
+        "value": "Mburabuturo"
+    },
+    {
+        "label": "Nyagatovu",
+        "value": "Nyagatovu"
+    },
+    {
+        "label": "Rugendabari",
+        "value": "Rugendabari"
+    },
+    {
+        "label": "Bunyentongo",
+        "value": "Bunyentongo"
+    },
+    {
+        "label": "Muko",
+        "value": "Muko"
+    },
+    {
+        "label": "Nyakanazi",
+        "value": "Nyakanazi"
+    },
+    {
+        "label": "Rusave",
+        "value": "Rusave"
+    },
+    {
+        "label": "Buhabwa",
+        "value": "Buhabwa"
+    },
+    {
+        "label": "Murundi",
+        "value": "Murundi"
+    },
+    {
+        "label": "Ryamanyoni",
+        "value": "Ryamanyoni"
+    },
+    {
+        "label": "Kageyo",
+        "value": "Kageyo"
+    },
+    {
+        "label": "Migera",
+        "value": "Migera"
+    },
+    {
+        "label": "Nyamugari",
+        "value": "Nyamugari"
+    },
+    {
+        "label": "Nyawera",
+        "value": "Nyawera"
+    },
+    {
+        "label": "Byimana",
+        "value": "Byimana"
+    },
+    {
+        "label": "Isangano",
+        "value": "Isangano"
+    },
+    {
+        "label": "Kiyovu",
+        "value": "Kiyovu"
+    },
+    {
+        "label": "Gikaya",
+        "value": "Gikaya"
+    },
+    {
+        "label": "Musumba",
+        "value": "Musumba"
+    },
+    {
+        "label": "Rurambi",
+        "value": "Rurambi"
+    },
+    {
+        "label": "Shyogo",
+        "value": "Shyogo"
+    },
+    {
+        "label": "Kawangire",
+        "value": "Kawangire"
+    },
+    {
+        "label": "Rukara",
+        "value": "Rukara"
+    },
+    {
+        "label": "Rwimishinya",
+        "value": "Rwimishinya"
+    },
+    {
+        "label": "Bugambira",
+        "value": "Bugambira"
+    },
+    {
+        "label": "Nkamba",
+        "value": "Nkamba"
+    },
+    {
+        "label": "Ruyonza",
+        "value": "Ruyonza"
+    },
+    {
+        "label": "Umubuga",
+        "value": "Umubuga"
+    },
+    {
+        "label": "Mbarara",
+        "value": "Mbarara"
+    },
+    {
+        "label": "Mukoyoyo",
+        "value": "Mukoyoyo"
+    },
+    {
+        "label": "Nkondo",
+        "value": "Nkondo"
+    },
+    {
+        "label": "Butezi",
+        "value": "Butezi"
+    },
+    {
+        "label": "Muhamba",
+        "value": "Muhamba"
+    },
+    {
+        "label": "Murehe",
+        "value": "Murehe"
+    },
+    {
+        "label": "Nyagasenyi",
+        "value": "Nyagasenyi"
+    },
+    {
+        "label": "Nyakagezi",
+        "value": "Nyakagezi"
+    },
+    {
+        "label": "Curazo",
+        "value": "Curazo"
+    },
+    {
+        "label": "Cyunuzi",
+        "value": "Cyunuzi"
+    },
+    {
+        "label": "Muganza",
+        "value": "Muganza"
+    },
+    {
+        "label": "Nyamiryango",
+        "value": "Nyamiryango"
+    },
+    {
+        "label": "Rwabutazi",
+        "value": "Rwabutazi"
+    },
+    {
+        "label": "Rwantonde",
+        "value": "Rwantonde"
+    },
+    {
+        "label": "Cyanya",
+        "value": "Cyanya"
+    },
+    {
+        "label": "Kigarama",
+        "value": "Kigarama"
+    },
+    {
+        "label": "Kiremera",
+        "value": "Kiremera"
+    },
+    {
+        "label": "Nyakerera",
+        "value": "Nyakerera"
+    },
+    {
+        "label": "Nyankurazo",
+        "value": "Nyankurazo"
+    },
+    {
+        "label": "Gatarama",
+        "value": "Gatarama"
+    },
+    {
+        "label": "Ruhanga",
+        "value": "Ruhanga"
+    },
+    {
+        "label": "Rwanteru",
+        "value": "Rwanteru"
+    },
+    {
+        "label": "Gahama",
+        "value": "Gahama"
+    },
+    {
+        "label": "Nyabigega",
+        "value": "Nyabigega"
+    },
+    {
+        "label": "Nyabikokora",
+        "value": "Nyabikokora"
+    },
+    {
+        "label": "Rwesero",
+        "value": "Rwesero"
+    },
+    {
+        "label": "Kamombo",
+        "value": "Kamombo"
+    },
+    {
+        "label": "Mwoga",
+        "value": "Mwoga"
+    },
+    {
+        "label": "Saruhembe",
+        "value": "Saruhembe"
+    },
+    {
+        "label": "Bwiyorere",
+        "value": "Bwiyorere"
+    },
+    {
+        "label": "Kankobwa",
+        "value": "Kankobwa"
+    },
+    {
+        "label": "Mpanga",
+        "value": "Mpanga"
+    },
+    {
+        "label": "Mushongi",
+        "value": "Mushongi"
+    },
+    {
+        "label": "Nasho",
+        "value": "Nasho"
+    },
+    {
+        "label": "Nyakabungo",
+        "value": "Nyakabungo"
+    },
+    {
+        "label": "Rubaya",
+        "value": "Rubaya"
+    },
+    {
+        "label": "Gasarabwayi",
+        "value": "Gasarabwayi"
+    },
+    {
+        "label": "Kabuga",
+        "value": "Kabuga"
+    },
+    {
+        "label": "Mubuga",
+        "value": "Mubuga"
+    },
+    {
+        "label": "Musaza",
+        "value": "Musaza"
+    },
+    {
+        "label": "Nganda",
+        "value": "Nganda"
+    },
+    {
+        "label": "Bisagara",
+        "value": "Bisagara"
+    },
+    {
+        "label": "Cyamigurwa",
+        "value": "Cyamigurwa"
+    },
+    {
+        "label": "Rwanyamuhanga",
+        "value": "Rwanyamuhanga"
+    },
+    {
+        "label": "Rwayikona",
+        "value": "Rwayikona"
+    },
+    {
+        "label": "Cyambwe",
+        "value": "Cyambwe"
+    },
+    {
+        "label": "Kagese",
+        "value": "Kagese"
+    },
+    {
+        "label": "Ntaruka",
+        "value": "Ntaruka"
+    },
+    {
+        "label": "Rubirizi",
+        "value": "Rubirizi"
+    },
+    {
+        "label": "Rugoma",
+        "value": "Rugoma"
+    },
+    {
+        "label": "Bukora",
+        "value": "Bukora"
+    },
+    {
+        "label": "Kazizi",
+        "value": "Kazizi"
+    },
+    {
+        "label": "Kiyanzi",
+        "value": "Kiyanzi"
+    },
+    {
+        "label": "Mareba",
+        "value": "Mareba"
+    },
+    {
+        "label": "Nyabitare",
+        "value": "Nyabitare"
+    },
+    {
+        "label": "Nyarutunga",
+        "value": "Nyarutunga"
+    },
+    {
+        "label": "Cyerwa",
+        "value": "Cyerwa"
+    },
+    {
+        "label": "Giseri",
+        "value": "Giseri"
+    },
+    {
+        "label": "Munege",
+        "value": "Munege"
+    },
+    {
+        "label": "Mutsindo",
+        "value": "Mutsindo"
+    },
+    {
+        "label": "Ihanika",
+        "value": "Ihanika"
+    },
+    {
+        "label": "Jarama",
+        "value": "Jarama"
+    },
+    {
+        "label": "Kibimba",
+        "value": "Kibimba"
+    },
+    {
+        "label": "Kigoma",
+        "value": "Kigoma"
+    },
+    {
+        "label": "Akaziba",
+        "value": "Akaziba"
+    },
+    {
+        "label": "Karaba",
+        "value": "Karaba"
+    },
+    {
+        "label": "Nyamirambo",
+        "value": "Nyamirambo"
+    },
+    {
+        "label": "Birenga",
+        "value": "Birenga"
+    },
+    {
+        "label": "Gahurire",
+        "value": "Gahurire"
+    },
+    {
+        "label": "Karama",
+        "value": "Karama"
+    },
+    {
+        "label": "Kinyonzo",
+        "value": "Kinyonzo"
+    },
+    {
+        "label": "Umukamba",
+        "value": "Umukamba"
+    },
+    {
+        "label": "Cyasemakamba",
+        "value": "Cyasemakamba"
+    },
+    {
+        "label": "Gahima",
+        "value": "Gahima"
+    },
+    {
+        "label": "Gatonde",
+        "value": "Gatonde"
+    },
+    {
+        "label": "Mahango",
+        "value": "Mahango"
+    },
+    {
+        "label": "Akabungo",
+        "value": "Akabungo"
+    },
+    {
+        "label": "Mugatare",
+        "value": "Mugatare"
+    },
+    {
+        "label": "Ntanga",
+        "value": "Ntanga"
+    },
+    {
+        "label": "Nyange",
+        "value": "Nyange"
+    },
+    {
+        "label": "Gitaraga",
+        "value": "Gitaraga"
+    },
+    {
+        "label": "Mvumba",
+        "value": "Mvumba"
+    },
+    {
+        "label": "Sakara",
+        "value": "Sakara"
+    },
+    {
+        "label": "Karwema",
+        "value": "Karwema"
+    },
+    {
+        "label": "Mutenderi",
+        "value": "Mutenderi"
+    },
+    {
+        "label": "Muzingira",
+        "value": "Muzingira"
+    },
+    {
+        "label": "Nyagasozi",
+        "value": "Nyagasozi"
+    },
+    {
+        "label": "Bugera",
+        "value": "Bugera"
+    },
+    {
+        "label": "Kinunga",
+        "value": "Kinunga"
+    },
+    {
+        "label": "Ndekwe",
+        "value": "Ndekwe"
+    },
+    {
+        "label": "Nyamagana",
+        "value": "Nyamagana"
+    },
+    {
+        "label": "Buliba",
+        "value": "Buliba"
+    },
+    {
+        "label": "Kibatsi",
+        "value": "Kibatsi"
+    },
+    {
+        "label": "Nyaruvumu",
+        "value": "Nyaruvumu"
+    },
+    {
+        "label": "Nyinya",
+        "value": "Nyinya"
+    },
+    {
+        "label": "Ntovi",
+        "value": "Ntovi"
+    },
+    {
+        "label": "Rubago",
+        "value": "Rubago"
+    },
+    {
+        "label": "Rwintashya",
+        "value": "Rwintashya"
+    },
+    {
+        "label": "Akagarama",
+        "value": "Akagarama"
+    },
+    {
+        "label": "Muhurire",
+        "value": "Muhurire"
+    },
+    {
+        "label": "Musya",
+        "value": "Musya"
+    },
+    {
+        "label": "Rugese",
+        "value": "Rugese"
+    },
+    {
+        "label": "Rujambara",
+        "value": "Rujambara"
+    },
+    {
+        "label": "Rwikubo",
+        "value": "Rwikubo"
+    },
+    {
+        "label": "Gafunzo",
+        "value": "Gafunzo"
+    },
+    {
+        "label": "Kibonde",
+        "value": "Kibonde"
+    },
+    {
+        "label": "Rukoma",
+        "value": "Rukoma"
+    },
+    {
+        "label": "Nyagatugunda",
+        "value": "Nyagatugunda"
+    },
+    {
+        "label": "Ruhembe",
+        "value": "Ruhembe"
+    },
+    {
+        "label": "Ruhinga",
+        "value": "Ruhinga"
+    },
+    {
+        "label": "Cyagaju",
+        "value": "Cyagaju"
+    },
+    {
+        "label": "Nyamikamba",
+        "value": "Nyamikamba"
+    },
+    {
+        "label": "Nyamirembe",
+        "value": "Nyamirembe"
+    },
+    {
+        "label": "Nyangara",
+        "value": "Nyangara"
+    },
+    {
+        "label": "Nyarurema",
+        "value": "Nyarurema"
+    },
+    {
+        "label": "Rwensheke",
+        "value": "Rwensheke"
+    },
+    {
+        "label": "Bushara",
+        "value": "Bushara"
+    },
+    {
+        "label": "Cyenkwanzi",
+        "value": "Cyenkwanzi"
+    },
+    {
+        "label": "Gikagati",
+        "value": "Gikagati"
+    },
+    {
+        "label": "Ndego",
+        "value": "Ndego"
+    },
+    {
+        "label": "Nyakiga",
+        "value": "Nyakiga"
+    },
+    {
+        "label": "Kamate",
+        "value": "Kamate"
+    },
+    {
+        "label": "Kizirakome",
+        "value": "Kizirakome"
+    },
+    {
+        "label": "Mbare",
+        "value": "Mbare"
+    },
+    {
+        "label": "Ndama",
+        "value": "Ndama"
+    },
+    {
+        "label": "Nyagashanga",
+        "value": "Nyagashanga"
+    },
+    {
+        "label": "Rubagabaga",
+        "value": "Rubagabaga"
+    },
+    {
+        "label": "Rwenyemera",
+        "value": "Rwenyemera"
+    },
+    {
+        "label": "Rwisirabo",
+        "value": "Rwisirabo"
+    },
+    {
+        "label": "Bayigaburire",
+        "value": "Bayigaburire"
+    },
+    {
+        "label": "Kaduha",
+        "value": "Kaduha"
+    },
+    {
+        "label": "Kanyeganyege",
+        "value": "Kanyeganyege"
+    },
+    {
+        "label": "Katabagemu",
+        "value": "Katabagemu"
+    },
+    {
+        "label": "Nyakigando",
+        "value": "Nyakigando"
+    },
+    {
+        "label": "Rugazi",
+        "value": "Rugazi"
+    },
+    {
+        "label": "Rutoma",
+        "value": "Rutoma"
+    },
+    {
+        "label": "Gataba",
+        "value": "Gataba"
+    },
+    {
+        "label": "Gitenga",
+        "value": "Gitenga"
+    },
+    {
+        "label": "Kabungo",
+        "value": "Kabungo"
+    },
+    {
+        "label": "Karambo",
+        "value": "Karambo"
+    },
+    {
+        "label": "Karujumba",
+        "value": "Karujumba"
+    },
+    {
+        "label": "Tovu",
+        "value": "Tovu"
+    },
+    {
+        "label": "Bwera",
+        "value": "Bwera"
+    },
+    {
+        "label": "Cyembogo",
+        "value": "Cyembogo"
+    },
+    {
+        "label": "Kagitumba",
+        "value": "Kagitumba"
+    },
+    {
+        "label": "Kanyonza",
+        "value": "Kanyonza"
+    },
+    {
+        "label": "Matimba",
+        "value": "Matimba"
+    },
+    {
+        "label": "Nyabwishongwezi",
+        "value": "Nyabwishongwezi"
+    },
+    {
+        "label": "Rwentanga",
+        "value": "Rwentanga"
+    },
+    {
+        "label": "Gakoma",
+        "value": "Gakoma"
+    },
+    {
+        "label": "Mahoro",
+        "value": "Mahoro"
+    },
+    {
+        "label": "Mimuri",
+        "value": "Mimuri"
+    },
+    {
+        "label": "Rugari",
+        "value": "Rugari"
+    },
+    {
+        "label": "Bufunda",
+        "value": "Bufunda"
+    },
+    {
+        "label": "Gatete",
+        "value": "Gatete"
+    },
+    {
+        "label": "Gihengeri",
+        "value": "Gihengeri"
+    },
+    {
+        "label": "Gishororo",
+        "value": "Gishororo"
+    },
+    {
+        "label": "Kagina",
+        "value": "Kagina"
+    },
+    {
+        "label": "Kijojo",
+        "value": "Kijojo"
+    },
+    {
+        "label": "Musheri",
+        "value": "Musheri"
+    },
+    {
+        "label": "Ntoma",
+        "value": "Ntoma"
+    },
+    {
+        "label": "Nyagatabire",
+        "value": "Nyagatabire"
+    },
+    {
+        "label": "Nyamiyonga",
+        "value": "Nyamiyonga"
+    },
+    {
+        "label": "Rugarama I",
+        "value": "Rugarama I"
+    },
+    {
+        "label": "Rugarama Ii",
+        "value": "Rugarama Ii"
+    },
+    {
+        "label": "Barija",
+        "value": "Barija"
+    },
+    {
+        "label": "Bushoga",
+        "value": "Bushoga"
+    },
+    {
+        "label": "Cyabayaga",
+        "value": "Cyabayaga"
+    },
+    {
+        "label": "Gakirage",
+        "value": "Gakirage"
+    },
+    {
+        "label": "Kamagiri",
+        "value": "Kamagiri"
+    },
+    {
+        "label": "Nsheke",
+        "value": "Nsheke"
+    },
+    {
+        "label": "Nyagatare",
+        "value": "Nyagatare"
+    },
+    {
+        "label": "Rutaraka",
+        "value": "Rutaraka"
+    },
+    {
+        "label": "Ryabega",
+        "value": "Ryabega"
+    },
+    {
+        "label": "Gahurura",
+        "value": "Gahurura"
+    },
+    {
+        "label": "Gashenyi",
+        "value": "Gashenyi"
+    },
+    {
+        "label": "Nyakagarama",
+        "value": "Nyakagarama"
+    },
+    {
+        "label": "Rukomo Ii",
+        "value": "Rukomo Ii"
+    },
+    {
+        "label": "Cyenjonjo",
+        "value": "Cyenjonjo"
+    },
+    {
+        "label": "Gasinga",
+        "value": "Gasinga"
+    },
+    {
+        "label": "Kabare",
+        "value": "Kabare"
+    },
+    {
+        "label": "Kazaza",
+        "value": "Kazaza"
+    },
+    {
+        "label": "Mishenyi",
+        "value": "Mishenyi"
+    },
+    {
+        "label": "Rukorota",
+        "value": "Rukorota"
+    },
+    {
+        "label": "Rwempasha",
+        "value": "Rwempasha"
+    },
+    {
+        "label": "Ryeru",
+        "value": "Ryeru"
+    },
+    {
+        "label": "Gacundezi",
+        "value": "Gacundezi"
+    },
+    {
+        "label": "Kirebe",
+        "value": "Kirebe"
+    },
+    {
+        "label": "Nyarupfubire",
+        "value": "Nyarupfubire"
+    },
+    {
+        "label": "Nyendo",
+        "value": "Nyendo"
+    },
+    {
+        "label": "Rutungu",
+        "value": "Rutungu"
+    },
+    {
+        "label": "Rwimiyaga",
+        "value": "Rwimiyaga"
+    },
+    {
+        "label": "Gishuro",
+        "value": "Gishuro"
+    },
+    {
+        "label": "Gitengure",
+        "value": "Gitengure"
+    },
+    {
+        "label": "Nkoma",
+        "value": "Nkoma"
+    },
+    {
+        "label": "Nyabitekeri",
+        "value": "Nyabitekeri"
+    },
+    {
+        "label": "Nyagatoma",
+        "value": "Nyagatoma"
+    },
+    {
+        "label": "Shonga",
+        "value": "Shonga"
+    },
+    {
+        "label": "Tabagwe",
+        "value": "Tabagwe"
+    },
+    {
+        "label": "Mununu",
+        "value": "Mununu"
+    },
+    {
+        "label": "Nyagasambu",
+        "value": "Nyagasambu"
+    },
+    {
+        "label": "Nyakagunga",
+        "value": "Nyakagunga"
+    },
+    {
+        "label": "Nyarubuye",
+        "value": "Nyarubuye"
+    },
+    {
+        "label": "Sasabirago",
+        "value": "Sasabirago"
+    },
+    {
+        "label": "Gihumuza",
+        "value": "Gihumuza"
+    },
+    {
+        "label": "Kagezi",
+        "value": "Kagezi"
+    },
+    {
+        "label": "Mutamwa",
+        "value": "Mutamwa"
+    },
+    {
+        "label": "Runyinya",
+        "value": "Runyinya"
+    },
+    {
+        "label": "Rweri",
+        "value": "Rweri"
+    },
+    {
+        "label": "Binunga",
+        "value": "Binunga"
+    },
+    {
+        "label": "Bwinsanga",
+        "value": "Bwinsanga"
+    },
+    {
+        "label": "Cyinyana",
+        "value": "Cyinyana"
+    },
+    {
+        "label": "Gati",
+        "value": "Gati"
+    },
+    {
+        "label": "Kavumu",
+        "value": "Kavumu"
+    },
+    {
+        "label": "Ruhimbi",
+        "value": "Ruhimbi"
+    },
+    {
+        "label": "Ruhunda",
+        "value": "Ruhunda"
+    },
+    {
+        "label": "Bicaca",
+        "value": "Bicaca"
+    },
+    {
+        "label": "Kabasore",
+        "value": "Kabasore"
+    },
+    {
+        "label": "Kangamba",
+        "value": "Kangamba"
+    },
+    {
+        "label": "Nyabubare",
+        "value": "Nyabubare"
+    },
+    {
+        "label": "Sibagire",
+        "value": "Sibagire"
+    },
+    {
+        "label": "Sovu",
+        "value": "Sovu"
+    },
+    {
+        "label": "Byeza",
+        "value": "Byeza"
+    },
+    {
+        "label": "Karitutu",
+        "value": "Karitutu"
+    },
+    {
+        "label": "Kitazigurwa",
+        "value": "Kitazigurwa"
+    },
+    {
+        "label": "Nsinda",
+        "value": "Nsinda"
+    },
+    {
+        "label": "Ntebe",
+        "value": "Ntebe"
+    },
+    {
+        "label": "Nyarusange",
+        "value": "Nyarusange"
+    },
+    {
+        "label": "Nkungu",
+        "value": "Nkungu"
+    },
+    {
+        "label": "Rweru",
+        "value": "Rweru"
+    },
+    {
+        "label": "Zinga",
+        "value": "Zinga"
+    },
+    {
+        "label": "Bwana",
+        "value": "Bwana"
+    },
+    {
+        "label": "Cyarukamba",
+        "value": "Cyarukamba"
+    },
+    {
+        "label": "Cyimbazi",
+        "value": "Cyimbazi"
+    },
+    {
+        "label": "Nkomangwa",
+        "value": "Nkomangwa"
+    },
+    {
+        "label": "Akabare",
+        "value": "Akabare"
+    },
+    {
+        "label": "Budahanda",
+        "value": "Budahanda"
+    },
+    {
+        "label": "Kagarama",
+        "value": "Kagarama"
+    },
+    {
+        "label": "Musha",
+        "value": "Musha"
+    },
+    {
+        "label": "Nyakabanda",
+        "value": "Nyakabanda"
+    },
+    {
+        "label": "Akinyambo",
+        "value": "Akinyambo"
+    },
+    {
+        "label": "Bujyujyu",
+        "value": "Bujyujyu"
+    },
+    {
+        "label": "Nyarukombe",
+        "value": "Nyarukombe"
+    },
+    {
+        "label": "Bicumbi",
+        "value": "Bicumbi"
+    },
+    {
+        "label": "Mwulire",
+        "value": "Mwulire"
+    },
+    {
+        "label": "Ntunga",
+        "value": "Ntunga"
+    },
+    {
+        "label": "Bihembe",
+        "value": "Bihembe"
+    },
+    {
+        "label": "Gatare",
+        "value": "Gatare"
+    },
+    {
+        "label": "Gishore",
+        "value": "Gishore"
+    },
+    {
+        "label": "Rwimbogo",
+        "value": "Rwimbogo"
+    },
+    {
+        "label": "Akanzu",
+        "value": "Akanzu"
+    },
+    {
+        "label": "Byinza",
+        "value": "Byinza"
+    },
+    {
+        "label": "Kabatasi",
+        "value": "Kabatasi"
+    },
+    {
+        "label": "Mabare",
+        "value": "Mabare"
+    },
+    {
+        "label": "Nawe",
+        "value": "Nawe"
+    },
+    {
+        "label": "Kinyaga",
+        "value": "Kinyaga"
+    },
+    {
+        "label": "Musave",
+        "value": "Musave"
+    },
+    {
+        "label": "Mvuzo",
+        "value": "Mvuzo"
+    },
+    {
+        "label": "Ngara",
+        "value": "Ngara"
+    },
+    {
+        "label": "Nkuzuzu",
+        "value": "Nkuzuzu"
+    },
+    {
+        "label": "Nyabikenke",
+        "value": "Nyabikenke"
+    },
+    {
+        "label": "Karuruma",
+        "value": "Karuruma"
+    },
+    {
+        "label": "Nyamabuye",
+        "value": "Nyamabuye"
+    },
+    {
+        "label": "Gasagara",
+        "value": "Gasagara"
+    },
+    {
+        "label": "Kibara",
+        "value": "Kibara"
+    },
+    {
+        "label": "Musezero",
+        "value": "Musezero"
+    },
+    {
+        "label": "Ruhango",
+        "value": "Ruhango"
+    },
+    {
+        "label": "Akamatamu",
+        "value": "Akamatamu"
+    },
+    {
+        "label": "Bweramvura",
+        "value": "Bweramvura"
+    },
+    {
+        "label": "Kidashya",
+        "value": "Kidashya"
+    },
+    {
+        "label": "Ngiryi",
+        "value": "Ngiryi"
+    },
+    {
+        "label": "Agateko",
+        "value": "Agateko"
+    },
+    {
+        "label": "Buhiza",
+        "value": "Buhiza"
+    },
+    {
+        "label": "Nkusi",
+        "value": "Nkusi"
+    },
+    {
+        "label": "Nyabuliba",
+        "value": "Nyabuliba"
+    },
+    {
+        "label": "Nyamitanga",
+        "value": "Nyamitanga"
+    },
+    {
+        "label": "Kamatamu",
+        "value": "Kamatamu"
+    },
+    {
+        "label": "Kamutwa",
+        "value": "Kamutwa"
+    },
+    {
+        "label": "Kibaza",
+        "value": "Kibaza"
+    },
+    {
+        "label": "Kamukina",
+        "value": "Kamukina"
+    },
+    {
+        "label": "Kimihurura",
+        "value": "Kimihurura"
+    },
+    {
+        "label": "Kibagabaga",
+        "value": "Kibagabaga"
+    },
+    {
+        "label": "Gacuriro",
+        "value": "Gacuriro"
+    },
+    {
+        "label": "Gasharu",
+        "value": "Gasharu"
+    },
+    {
+        "label": "Kagugu",
+        "value": "Kagugu"
+    },
+    {
+        "label": "Cyaruzinge",
+        "value": "Cyaruzinge"
+    },
+    {
+        "label": "Masoro",
+        "value": "Masoro"
+    },
+    {
+        "label": "Mukuyu",
+        "value": "Mukuyu"
+    },
+    {
+        "label": "Rudashya",
+        "value": "Rudashya"
+    },
+    {
+        "label": "Butare",
+        "value": "Butare"
+    },
+    {
+        "label": "Gasanze",
+        "value": "Gasanze"
+    },
+    {
+        "label": "Gasura",
+        "value": "Gasura"
+    },
+    {
+        "label": "Gatunga",
+        "value": "Gatunga"
+    },
+    {
+        "label": "Muremure",
+        "value": "Muremure"
+    },
+    {
+        "label": "Sha",
+        "value": "Sha"
+    },
+    {
+        "label": "Shango",
+        "value": "Shango"
+    },
+    {
+        "label": "Nyarutarama",
+        "value": "Nyarutarama"
+    },
+    {
+        "label": "Rukiri I",
+        "value": "Rukiri I"
+    },
+    {
+        "label": "Rukiri Ii",
+        "value": "Rukiri Ii"
+    },
+    {
+        "label": "Bisenga",
+        "value": "Bisenga"
+    },
+    {
+        "label": "Kabuga I",
+        "value": "Kabuga I"
+    },
+    {
+        "label": "Kabuga Ii",
+        "value": "Kabuga Ii"
+    },
+    {
+        "label": "Kinyana",
+        "value": "Kinyana"
+    },
+    {
+        "label": "Mbandazi",
+        "value": "Mbandazi"
+    },
+    {
+        "label": "Nyagahinga",
+        "value": "Nyagahinga"
+    },
+    {
+        "label": "Gasabo",
+        "value": "Gasabo"
+    },
+    {
+        "label": "Indatemwa",
+        "value": "Indatemwa"
+    },
+    {
+        "label": "Kabaliza",
+        "value": "Kabaliza"
+    },
+    {
+        "label": "Kacyatwa",
+        "value": "Kacyatwa"
+    },
+    {
+        "label": "Gahanga",
+        "value": "Gahanga"
+    },
+    {
+        "label": "Karembure",
+        "value": "Karembure"
+    },
+    {
+        "label": "Murinja",
+        "value": "Murinja"
+    },
+    {
+        "label": "Nunga",
+        "value": "Nunga"
+    },
+    {
+        "label": "Rwabutenge",
+        "value": "Rwabutenge"
+    },
+    {
+        "label": "Gatenga",
+        "value": "Gatenga"
+    },
+    {
+        "label": "Nyanza",
+        "value": "Nyanza"
+    },
+    {
+        "label": "Nyarurama",
+        "value": "Nyarurama"
+    },
+    {
+        "label": "Kagunga",
+        "value": "Kagunga"
+    },
+    {
+        "label": "Kanserege",
+        "value": "Kanserege"
+    },
+    {
+        "label": "Muyange",
+        "value": "Muyange"
+    },
+    {
+        "label": "Rukatsa",
+        "value": "Rukatsa"
+    },
+    {
+        "label": "Busanza",
+        "value": "Busanza"
+    },
+    {
+        "label": "Kicukiro",
+        "value": "Kicukiro"
+    },
+    {
+        "label": "Ngoma",
+        "value": "Ngoma"
+    },
+    {
+        "label": "Bwerankori",
+        "value": "Bwerankori"
+    },
+    {
+        "label": "Karugira",
+        "value": "Karugira"
+    },
+    {
+        "label": "Rwampara",
+        "value": "Rwampara"
+    },
+    {
+        "label": "Ayabaraya",
+        "value": "Ayabaraya"
+    },
+    {
+        "label": "Cyimo",
+        "value": "Cyimo"
+    },
+    {
+        "label": "Gako",
+        "value": "Gako"
+    },
+    {
+        "label": "Mbabe",
+        "value": "Mbabe"
+    },
+    {
+        "label": "Rusheshe",
+        "value": "Rusheshe"
+    },
+    {
+        "label": "Niboye",
+        "value": "Niboye"
+    },
+    {
+        "label": "Kamashashi",
+        "value": "Kamashashi"
+    },
+    {
+        "label": "Nonko",
+        "value": "Nonko"
+    },
+    {
+        "label": "Akabahizi",
+        "value": "Akabahizi"
+    },
+    {
+        "label": "Akabeza",
+        "value": "Akabeza"
+    },
+    {
+        "label": "Gacyamo",
+        "value": "Gacyamo"
+    },
+    {
+        "label": "Kinyange",
+        "value": "Kinyange"
+    },
+    {
+        "label": "Kora",
+        "value": "Kora"
+    },
+    {
+        "label": "Nyamweru",
+        "value": "Nyamweru"
+    },
+    {
+        "label": "Nzove",
+        "value": "Nzove"
+    },
+    {
+        "label": "Kigali",
+        "value": "Kigali"
+    },
+    {
+        "label": "Nyabugogo",
+        "value": "Nyabugogo"
+    },
+    {
+        "label": "Ruriba",
+        "value": "Ruriba"
+    },
+    {
+        "label": "Kamuhoza",
+        "value": "Kamuhoza"
+    },
+    {
+        "label": "Katabaro",
+        "value": "Katabaro"
+    },
+    {
+        "label": "Kimisagara",
+        "value": "Kimisagara"
+    },
+    {
+        "label": "Kankuba",
+        "value": "Kankuba"
+    },
+    {
+        "label": "Mataba",
+        "value": "Mataba"
+    },
+    {
+        "label": "Ntungamo",
+        "value": "Ntungamo"
+    },
+    {
+        "label": "Nyarufunzo",
+        "value": "Nyarufunzo"
+    },
+    {
+        "label": "Nyarurenzi",
+        "value": "Nyarurenzi"
+    },
+    {
+        "label": "Runzenze",
+        "value": "Runzenze"
+    },
+    {
+        "label": "Amahoro",
+        "value": "Amahoro"
+    },
+    {
+        "label": "Kabasengerezi",
+        "value": "Kabasengerezi"
+    },
+    {
+        "label": "Rugenge",
+        "value": "Rugenge"
+    },
+    {
+        "label": "Tetero",
+        "value": "Tetero"
+    },
+    {
+        "label": "Ubumwe",
+        "value": "Ubumwe"
+    },
+    {
+        "label": "Munanira I",
+        "value": "Munanira I"
+    },
+    {
+        "label": "Munanira Ii",
+        "value": "Munanira Ii"
+    },
+    {
+        "label": "Nyakabanda I",
+        "value": "Nyakabanda I"
+    },
+    {
+        "label": "Nyakabanda Ii",
+        "value": "Nyakabanda Ii"
+    },
+    {
+        "label": "Cyivugiza",
+        "value": "Cyivugiza"
+    },
+    {
+        "label": "Mumena",
+        "value": "Mumena"
+    },
+    {
+        "label": "Agatare",
+        "value": "Agatare"
+    },
+    {
+        "label": "Kabuguru I",
+        "value": "Kabuguru I"
+    },
+    {
+        "label": "Kabuguru Ii",
+        "value": "Kabuguru Ii"
+    },
+    {
+        "label": "Rwezamenyo I",
+        "value": "Rwezamenyo I"
+    },
+    {
+        "label": "Rwezamenyo Ii",
+        "value": "Rwezamenyo Ii"
+    },
+    {
+        "label": "Bungwe",
+        "value": "Bungwe"
+    },
+    {
+        "label": "Bushenya",
+        "value": "Bushenya"
+    },
+    {
+        "label": "Mudugari",
+        "value": "Mudugari"
+    },
+    {
+        "label": "Tumba",
+        "value": "Tumba"
+    },
+    {
+        "label": "Muhotora",
+        "value": "Muhotora"
+    },
+    {
+        "label": "Nyamicucu",
+        "value": "Nyamicucu"
+    },
+    {
+        "label": "Rusumo",
+        "value": "Rusumo"
+    },
+    {
+        "label": "Gasiza",
+        "value": "Gasiza"
+    },
+    {
+        "label": "Gisovu",
+        "value": "Gisovu"
+    },
+    {
+        "label": "Kabyiniro",
+        "value": "Kabyiniro"
+    },
+    {
+        "label": "Kagitega",
+        "value": "Kagitega"
+    },
+    {
+        "label": "Kamanyana",
+        "value": "Kamanyana"
+    },
+    {
+        "label": "Ndongozi",
+        "value": "Ndongozi"
+    },
+    {
+        "label": "Ruyange",
+        "value": "Ruyange"
+    },
+    {
+        "label": "Buramba",
+        "value": "Buramba"
+    },
+    {
+        "label": "Gisizi",
+        "value": "Gisizi"
+    },
+    {
+        "label": "Kidakama",
+        "value": "Kidakama"
+    },
+    {
+        "label": "Nyangwe",
+        "value": "Nyangwe"
+    },
+    {
+        "label": "Rwasa",
+        "value": "Rwasa"
+    },
+    {
+        "label": "Gabiro",
+        "value": "Gabiro"
+    },
+    {
+        "label": "Musenda",
+        "value": "Musenda"
+    },
+    {
+        "label": "Rwambogo",
+        "value": "Rwambogo"
+    },
+    {
+        "label": "Mariba",
+        "value": "Mariba"
+    },
+    {
+        "label": "Musasa",
+        "value": "Musasa"
+    },
+    {
+        "label": "Runoga",
+        "value": "Runoga"
+    },
+    {
+        "label": "Kabaya",
+        "value": "Kabaya"
+    },
+    {
+        "label": "Kayenzi",
+        "value": "Kayenzi"
+    },
+    {
+        "label": "Kiringa",
+        "value": "Kiringa"
+    },
+    {
+        "label": "Gafuka",
+        "value": "Gafuka"
+    },
+    {
+        "label": "Nkenke",
+        "value": "Nkenke"
+    },
+    {
+        "label": "Nkumba",
+        "value": "Nkumba"
+    },
+    {
+        "label": "Kaganda",
+        "value": "Kaganda"
+    },
+    {
+        "label": "Rutovu",
+        "value": "Rutovu"
+    },
+    {
+        "label": "Bukwashuri",
+        "value": "Bukwashuri"
+    },
+    {
+        "label": "Gashanje",
+        "value": "Gashanje"
+    },
+    {
+        "label": "Murwa",
+        "value": "Murwa"
+    },
+    {
+        "label": "Nyirataba",
+        "value": "Nyirataba"
+    },
+    {
+        "label": "Kivumu",
+        "value": "Kivumu"
+    },
+    {
+        "label": "Rushara",
+        "value": "Rushara"
+    },
+    {
+        "label": "Cyahi",
+        "value": "Cyahi"
+    },
+    {
+        "label": "Gafumba",
+        "value": "Gafumba"
+    },
+    {
+        "label": "Karangara",
+        "value": "Karangara"
+    },
+    {
+        "label": "Rurembo",
+        "value": "Rurembo"
+    },
+    {
+        "label": "Kilibata",
+        "value": "Kilibata"
+    },
+    {
+        "label": "Mucaca",
+        "value": "Mucaca"
+    },
+    {
+        "label": "Nyanamo",
+        "value": "Nyanamo"
+    },
+    {
+        "label": "Rukandabyuma",
+        "value": "Rukandabyuma"
+    },
+    {
+        "label": "Gaseke",
+        "value": "Gaseke"
+    },
+    {
+        "label": "Gitovu",
+        "value": "Gitovu"
+    },
+    {
+        "label": "Rusekera",
+        "value": "Rusekera"
+    },
+    {
+        "label": "Kabona",
+        "value": "Kabona"
+    },
+    {
+        "label": "Ndago",
+        "value": "Ndago"
+    },
+    {
+        "label": "Gacundura",
+        "value": "Gacundura"
+    },
+    {
+        "label": "Gashoro",
+        "value": "Gashoro"
+    },
+    {
+        "label": "Ruconsho",
+        "value": "Ruconsho"
+    },
+    {
+        "label": "Birambo",
+        "value": "Birambo"
+    },
+    {
+        "label": "Butereri",
+        "value": "Butereri"
+    },
+    {
+        "label": "Byibuhiro",
+        "value": "Byibuhiro"
+    },
+    {
+        "label": "Kamina",
+        "value": "Kamina"
+    },
+    {
+        "label": "Kirabo",
+        "value": "Kirabo"
+    },
+    {
+        "label": "Mwumba",
+        "value": "Mwumba"
+    },
+    {
+        "label": "Kiruku",
+        "value": "Kiruku"
+    },
+    {
+        "label": "Mbirima",
+        "value": "Mbirima"
+    },
+    {
+        "label": "Muhaza",
+        "value": "Muhaza"
+    },
+    {
+        "label": "Muhororo",
+        "value": "Muhororo"
+    },
+    {
+        "label": "Muramba",
+        "value": "Muramba"
+    },
+    {
+        "label": "Mutanda",
+        "value": "Mutanda"
+    },
+    {
+        "label": "Rukore",
+        "value": "Rukore"
+    },
+    {
+        "label": "Buheta",
+        "value": "Buheta"
+    },
+    {
+        "label": "Kagoma",
+        "value": "Kagoma"
+    },
+    {
+        "label": "Nganzo",
+        "value": "Nganzo"
+    },
+    {
+        "label": "Rusagara",
+        "value": "Rusagara"
+    },
+    {
+        "label": "Nyacyina",
+        "value": "Nyacyina"
+    },
+    {
+        "label": "Rukura",
+        "value": "Rukura"
+    },
+    {
+        "label": "Rutabo",
+        "value": "Rutabo"
+    },
+    {
+        "label": "Rutenderi",
+        "value": "Rutenderi"
+    },
+    {
+        "label": "Gakindo",
+        "value": "Gakindo"
+    },
+    {
+        "label": "Gashyamba",
+        "value": "Gashyamba"
+    },
+    {
+        "label": "Gatwa",
+        "value": "Gatwa"
+    },
+    {
+        "label": "Karukungu",
+        "value": "Karukungu"
+    },
+    {
+        "label": "Kamubuga",
+        "value": "Kamubuga"
+    },
+    {
+        "label": "Kidomo",
+        "value": "Kidomo"
+    },
+    {
+        "label": "Mbatabata",
+        "value": "Mbatabata"
+    },
+    {
+        "label": "Kanyanza",
+        "value": "Kanyanza"
+    },
+    {
+        "label": "Cyintare",
+        "value": "Cyintare"
+    },
+    {
+        "label": "Rugimbu",
+        "value": "Rugimbu"
+    },
+    {
+        "label": "Sereri",
+        "value": "Sereri"
+    },
+    {
+        "label": "Buyange",
+        "value": "Buyange"
+    },
+    {
+        "label": "Gikombe",
+        "value": "Gikombe"
+    },
+    {
+        "label": "Nyundo",
+        "value": "Nyundo"
+    },
+    {
+        "label": "Gasiho",
+        "value": "Gasiho"
+    },
+    {
+        "label": "Munyana",
+        "value": "Munyana"
+    },
+    {
+        "label": "Raba",
+        "value": "Raba"
+    },
+    {
+        "label": "Gahinga",
+        "value": "Gahinga"
+    },
+    {
+        "label": "Mutego",
+        "value": "Mutego"
+    },
+    {
+        "label": "Nkomane",
+        "value": "Nkomane"
+    },
+    {
+        "label": "Rwamambe",
+        "value": "Rwamambe"
+    },
+    {
+        "label": "Busake",
+        "value": "Busake"
+    },
+    {
+        "label": "Bwenda",
+        "value": "Bwenda"
+    },
+    {
+        "label": "Huro",
+        "value": "Huro"
+    },
+    {
+        "label": "Musagara",
+        "value": "Musagara"
+    },
+    {
+        "label": "Ruganda",
+        "value": "Ruganda"
+    },
+    {
+        "label": "Rwinkuba",
+        "value": "Rwinkuba"
+    },
+    {
+        "label": "Bumba",
+        "value": "Bumba"
+    },
+    {
+        "label": "Gisiza",
+        "value": "Gisiza"
+    },
+    {
+        "label": "Karyango",
+        "value": "Karyango"
+    },
+    {
+        "label": "Va",
+        "value": "Va"
+    },
+    {
+        "label": "Kabatezi",
+        "value": "Kabatezi"
+    },
+    {
+        "label": "Kiryamo",
+        "value": "Kiryamo"
+    },
+    {
+        "label": "Mwiyando",
+        "value": "Mwiyando"
+    },
+    {
+        "label": "Rwa",
+        "value": "Rwa"
+    },
+    {
+        "label": "Buranga",
+        "value": "Buranga"
+    },
+    {
+        "label": "Gisozi",
+        "value": "Gisozi"
+    },
+    {
+        "label": "Busoro",
+        "value": "Busoro"
+    },
+    {
+        "label": "Gikingo",
+        "value": "Gikingo"
+    },
+    {
+        "label": "Jango",
+        "value": "Jango"
+    },
+    {
+        "label": "Ruli",
+        "value": "Ruli"
+    },
+    {
+        "label": "Kamonyi",
+        "value": "Kamonyi"
+    },
+    {
+        "label": "Rumbi",
+        "value": "Rumbi"
+    },
+    {
+        "label": "Burimba",
+        "value": "Burimba"
+    },
+    {
+        "label": "Busanane",
+        "value": "Busanane"
+    },
+    {
+        "label": "Joma",
+        "value": "Joma"
+    },
+    {
+        "label": "Razi",
+        "value": "Razi"
+    },
+    {
+        "label": "Shyombwe",
+        "value": "Shyombwe"
+    },
+    {
+        "label": "Bwisige",
+        "value": "Bwisige"
+    },
+    {
+        "label": "Gihuke",
+        "value": "Gihuke"
+    },
+    {
+        "label": "Mukono",
+        "value": "Mukono"
+    },
+    {
+        "label": "Nyabushingitwa",
+        "value": "Nyabushingitwa"
+    },
+    {
+        "label": "Gacurabwenge",
+        "value": "Gacurabwenge"
+    },
+    {
+        "label": "Gisuna",
+        "value": "Gisuna"
+    },
+    {
+        "label": "Kibali",
+        "value": "Kibali"
+    },
+    {
+        "label": "Kivugiza",
+        "value": "Kivugiza"
+    },
+    {
+        "label": "Ngondore",
+        "value": "Ngondore"
+    },
+    {
+        "label": "Gasunzu",
+        "value": "Gasunzu"
+    },
+    {
+        "label": "Muhambo",
+        "value": "Muhambo"
+    },
+    {
+        "label": "Nyambare",
+        "value": "Nyambare"
+    },
+    {
+        "label": "Nyaruka",
+        "value": "Nyaruka"
+    },
+    {
+        "label": "Rwankonjo",
+        "value": "Rwankonjo"
+    },
+    {
+        "label": "Gatobotobo",
+        "value": "Gatobotobo"
+    },
+    {
+        "label": "Tanda",
+        "value": "Tanda"
+    },
+    {
+        "label": "Horezo",
+        "value": "Horezo"
+    },
+    {
+        "label": "Muhondo",
+        "value": "Muhondo"
+    },
+    {
+        "label": "Bugomba",
+        "value": "Bugomba"
+    },
+    {
+        "label": "Gatoma",
+        "value": "Gatoma"
+    },
+    {
+        "label": "Mulindi",
+        "value": "Mulindi"
+    },
+    {
+        "label": "Nyarwambu",
+        "value": "Nyarwambu"
+    },
+    {
+        "label": "Rukurura",
+        "value": "Rukurura"
+    },
+    {
+        "label": "Nyiragifumba",
+        "value": "Nyiragifumba"
+    },
+    {
+        "label": "Nyiravugiza",
+        "value": "Nyiravugiza"
+    },
+    {
+        "label": "Ryaruyumba",
+        "value": "Ryaruyumba"
+    },
+    {
+        "label": "Miyove",
+        "value": "Miyove"
+    },
+    {
+        "label": "Cyamuganga",
+        "value": "Cyamuganga"
+    },
+    {
+        "label": "Kiruhura",
+        "value": "Kiruhura"
+    },
+    {
+        "label": "Mutarama",
+        "value": "Mutarama"
+    },
+    {
+        "label": "Rugerero",
+        "value": "Rugerero"
+    },
+    {
+        "label": "Rusambya",
+        "value": "Rusambya"
+    },
+    {
+        "label": "Cyamuhinda",
+        "value": "Cyamuhinda"
+    },
+    {
+        "label": "Ngange",
+        "value": "Ngange"
+    },
+    {
+        "label": "Mutandi",
+        "value": "Mutandi"
+    },
+    {
+        "label": "Gahumuliza",
+        "value": "Gahumuliza"
+    },
+    {
+        "label": "Jamba",
+        "value": "Jamba"
+    },
+    {
+        "label": "Kiziba",
+        "value": "Kiziba"
+    },
+    {
+        "label": "Kigogo",
+        "value": "Kigogo"
+    },
+    {
+        "label": "Kinishya",
+        "value": "Kinishya"
+    },
+    {
+        "label": "Rusasa",
+        "value": "Rusasa"
+    },
+    {
+        "label": "Rutete",
+        "value": "Rutete"
+    },
+    {
+        "label": "Rwagihura",
+        "value": "Rwagihura"
+    },
+    {
+        "label": "Yaramba",
+        "value": "Yaramba"
+    },
+    {
+        "label": "Gihanga",
+        "value": "Gihanga"
+    },
+    {
+        "label": "Gishambashayo",
+        "value": "Gishambashayo"
+    },
+    {
+        "label": "Gishari",
+        "value": "Gishari"
+    },
+    {
+        "label": "Muguramo",
+        "value": "Muguramo"
+    },
+    {
+        "label": "Cyeya",
+        "value": "Cyeya"
+    },
+    {
+        "label": "Cyuru",
+        "value": "Cyuru"
+    },
+    {
+        "label": "Kinyami",
+        "value": "Kinyami"
+    },
+    {
+        "label": "Munyinya",
+        "value": "Munyinya"
+    },
+    {
+        "label": "Gitega",
+        "value": "Gitega"
+    },
+    {
+        "label": "Kamutora",
+        "value": "Kamutora"
+    },
+    {
+        "label": "Karurama",
+        "value": "Karurama"
+    },
+    {
+        "label": "Bikumba",
+        "value": "Bikumba"
+    },
+    {
+        "label": "Gatwaro",
+        "value": "Gatwaro"
+    },
+    {
+        "label": "Munanira",
+        "value": "Munanira"
+    },
+    {
+        "label": "Nkoto",
+        "value": "Nkoto"
+    },
+    {
+        "label": "Cyandaro",
+        "value": "Cyandaro"
+    },
+    {
+        "label": "Gasambya",
+        "value": "Gasambya"
+    },
+    {
+        "label": "Gashirira",
+        "value": "Gashirira"
+    },
+    {
+        "label": "Ruhondo",
+        "value": "Ruhondo"
+    },
+    {
+        "label": "Cyeru",
+        "value": "Cyeru"
+    },
+    {
+        "label": "Nyabishambi",
+        "value": "Nyabishambi"
+    },
+    {
+        "label": "Shangasha",
+        "value": "Shangasha"
+    },
+    {
+        "label": "Gisesero",
+        "value": "Gisesero"
+    },
+    {
+        "label": "Sahara",
+        "value": "Sahara"
+    },
+    {
+        "label": "Bukinanyana",
+        "value": "Bukinanyana"
+    },
+    {
+        "label": "Buruba",
+        "value": "Buruba"
+    },
+    {
+        "label": "Migeshi",
+        "value": "Migeshi"
+    },
+    {
+        "label": "Rwebeya",
+        "value": "Rwebeya"
+    },
+    {
+        "label": "Gakoro",
+        "value": "Gakoro"
+    },
+    {
+        "label": "Gasakuza",
+        "value": "Gasakuza"
+    },
+    {
+        "label": "Kabirizi",
+        "value": "Kabirizi"
+    },
+    {
+        "label": "Karwasa",
+        "value": "Karwasa"
+    },
+    {
+        "label": "Mbwe",
+        "value": "Mbwe"
+    },
+    {
+        "label": "Muharuro",
+        "value": "Muharuro"
+    },
+    {
+        "label": "Mudakama",
+        "value": "Mudakama"
+    },
+    {
+        "label": "Murago",
+        "value": "Murago"
+    },
+    {
+        "label": "Rubindi",
+        "value": "Rubindi"
+    },
+    {
+        "label": "Rungu",
+        "value": "Rungu"
+    },
+    {
+        "label": "Birira",
+        "value": "Birira"
+    },
+    {
+        "label": "Buramira",
+        "value": "Buramira"
+    },
+    {
+        "label": "Mbizi",
+        "value": "Mbizi"
+    },
+    {
+        "label": "Bisoke",
+        "value": "Bisoke"
+    },
+    {
+        "label": "Kaguhu",
+        "value": "Kaguhu"
+    },
+    {
+        "label": "Kampanga",
+        "value": "Kampanga"
+    },
+    {
+        "label": "Nyabigoma",
+        "value": "Nyabigoma"
+    },
+    {
+        "label": "Nyonirima",
+        "value": "Nyonirima"
+    },
+    {
+        "label": "Cyabararika",
+        "value": "Cyabararika"
+    },
+    {
+        "label": "Kigombe",
+        "value": "Kigombe"
+    },
+    {
+        "label": "Mpenge",
+        "value": "Mpenge"
+    },
+    {
+        "label": "Ruhengeri",
+        "value": "Ruhengeri"
+    },
+    {
+        "label": "Cyogo",
+        "value": "Cyogo"
+    },
+    {
+        "label": "Songa",
+        "value": "Songa"
+    },
+    {
+        "label": "Cyabagarura",
+        "value": "Cyabagarura"
+    },
+    {
+        "label": "Garuka",
+        "value": "Garuka"
+    },
+    {
+        "label": "Kabazungu",
+        "value": "Kabazungu"
+    },
+    {
+        "label": "Bikara",
+        "value": "Bikara"
+    },
+    {
+        "label": "Gashinga",
+        "value": "Gashinga"
+    },
+    {
+        "label": "Mubago",
+        "value": "Mubago"
+    },
+    {
+        "label": "Rugeshi",
+        "value": "Rugeshi"
+    },
+    {
+        "label": "Ruyumba",
+        "value": "Ruyumba"
+    },
+    {
+        "label": "Kamwumba",
+        "value": "Kamwumba"
+    },
+    {
+        "label": "Muhabura",
+        "value": "Muhabura"
+    },
+    {
+        "label": "Ninda",
+        "value": "Ninda"
+    },
+    {
+        "label": "Gasongero",
+        "value": "Gasongero"
+    },
+    {
+        "label": "Kamisave",
+        "value": "Kamisave"
+    },
+    {
+        "label": "Murandi",
+        "value": "Murandi"
+    },
+    {
+        "label": "Rurambo",
+        "value": "Rurambo"
+    },
+    {
+        "label": "Bumara",
+        "value": "Bumara"
+    },
+    {
+        "label": "Kabushinge",
+        "value": "Kabushinge"
+    },
+    {
+        "label": "Nturo",
+        "value": "Nturo"
+    },
+    {
+        "label": "Gakingo",
+        "value": "Gakingo"
+    },
+    {
+        "label": "Kibuguzo",
+        "value": "Kibuguzo"
+    },
+    {
+        "label": "Mudende",
+        "value": "Mudende"
+    },
+    {
+        "label": "Mugari",
+        "value": "Mugari"
+    },
+    {
+        "label": "Cyohoha",
+        "value": "Cyohoha"
+    },
+    {
+        "label": "Gitare",
+        "value": "Gitare"
+    },
+    {
+        "label": "Rwamahwa",
+        "value": "Rwamahwa"
+    },
+    {
+        "label": "Butangampundu",
+        "value": "Butangampundu"
+    },
+    {
+        "label": "Karengeri",
+        "value": "Karengeri"
+    },
+    {
+        "label": "Giko",
+        "value": "Giko"
+    },
+    {
+        "label": "Mukoto",
+        "value": "Mukoto"
+    },
+    {
+        "label": "Nyirangarama",
+        "value": "Nyirangarama"
+    },
+    {
+        "label": "Gahororo",
+        "value": "Gahororo"
+    },
+    {
+        "label": "Gitumba",
+        "value": "Gitumba"
+    },
+    {
+        "label": "Ndarage",
+        "value": "Ndarage"
+    },
+    {
+        "label": "Budakiranya",
+        "value": "Budakiranya"
+    },
+    {
+        "label": "Migendezo",
+        "value": "Migendezo"
+    },
+    {
+        "label": "Rudogo",
+        "value": "Rudogo"
+    },
+    {
+        "label": "Burehe",
+        "value": "Burehe"
+    },
+    {
+        "label": "Marembo",
+        "value": "Marembo"
+    },
+    {
+        "label": "Rwili",
+        "value": "Rwili"
+    },
+    {
+        "label": "Butunzi",
+        "value": "Butunzi"
+    },
+    {
+        "label": "Karegamazi",
+        "value": "Karegamazi"
+    },
+    {
+        "label": "Gitatsa",
+        "value": "Gitatsa"
+    },
+    {
+        "label": "Kamushenyi",
+        "value": "Kamushenyi"
+    },
+    {
+        "label": "Sayo",
+        "value": "Sayo"
+    },
+    {
+        "label": "Nyamyumba",
+        "value": "Nyamyumba"
+    },
+    {
+        "label": "Shengampuli",
+        "value": "Shengampuli"
+    },
+    {
+        "label": "Bukoro",
+        "value": "Bukoro"
+    },
+    {
+        "label": "Mushari",
+        "value": "Mushari"
+    },
+    {
+        "label": "Ngiramazi",
+        "value": "Ngiramazi"
+    },
+    {
+        "label": "Bubangu",
+        "value": "Bubangu"
+    },
+    {
+        "label": "Mugambazi",
+        "value": "Mugambazi"
+    },
+    {
+        "label": "Mugote",
+        "value": "Mugote"
+    },
+    {
+        "label": "Munyarwanda",
+        "value": "Munyarwanda"
+    },
+    {
+        "label": "Kajevuba",
+        "value": "Kajevuba"
+    },
+    {
+        "label": "Kiyanza",
+        "value": "Kiyanza"
+    },
+    {
+        "label": "Mahaza",
+        "value": "Mahaza"
+    },
+    {
+        "label": "Buraro",
+        "value": "Buraro"
+    },
+    {
+        "label": "Bwimo",
+        "value": "Bwimo"
+    },
+    {
+        "label": "Mberuka",
+        "value": "Mberuka"
+    },
+    {
+        "label": "Mbuye",
+        "value": "Mbuye"
+    },
+    {
+        "label": "Kirenge",
+        "value": "Kirenge"
+    },
+    {
+        "label": "Bugaragara",
+        "value": "Bugaragara"
+    },
+    {
+        "label": "Kijabagwe",
+        "value": "Kijabagwe"
+    },
+    {
+        "label": "Muvumu",
+        "value": "Muvumu"
+    },
+    {
+        "label": "Barari",
+        "value": "Barari"
+    },
+    {
+        "label": "Gahabwa",
+        "value": "Gahabwa"
+    },
+    {
+        "label": "Misezero",
+        "value": "Misezero"
+    },
+    {
+        "label": "Nyirabirori",
+        "value": "Nyirabirori"
+    },
+    {
+        "label": "Cyiri",
+        "value": "Cyiri"
+    },
+    {
+        "label": "Gikonko",
+        "value": "Gikonko"
+    },
+    {
+        "label": "Nyakibungo",
+        "value": "Nyakibungo"
+    },
+    {
+        "label": "Nyeranzi",
+        "value": "Nyeranzi"
+    },
+    {
+        "label": "Akaboti",
+        "value": "Akaboti"
+    },
+    {
+        "label": "Sabusaro",
+        "value": "Sabusaro"
+    },
+    {
+        "label": "Umunini",
+        "value": "Umunini"
+    },
+    {
+        "label": "Duwani",
+        "value": "Duwani"
+    },
+    {
+        "label": "Muyira",
+        "value": "Muyira"
+    },
+    {
+        "label": "Ruturo",
+        "value": "Ruturo"
+    },
+    {
+        "label": "Agahabwa",
+        "value": "Agahabwa"
+    },
+    {
+        "label": "Gatovu",
+        "value": "Gatovu"
+    },
+    {
+        "label": "Impinga",
+        "value": "Impinga"
+    },
+    {
+        "label": "Kabumbwe",
+        "value": "Kabumbwe"
+    },
+    {
+        "label": "Mamba",
+        "value": "Mamba"
+    },
+    {
+        "label": "Muyaga",
+        "value": "Muyaga"
+    },
+    {
+        "label": "Ramba",
+        "value": "Ramba"
+    },
+    {
+        "label": "Cyumba",
+        "value": "Cyumba"
+    },
+    {
+        "label": "Rwamiko",
+        "value": "Rwamiko"
+    },
+    {
+        "label": "Saga",
+        "value": "Saga"
+    },
+    {
+        "label": "Baziro",
+        "value": "Baziro"
+    },
+    {
+        "label": "Kibayi",
+        "value": "Kibayi"
+    },
+    {
+        "label": "Kibu",
+        "value": "Kibu"
+    },
+    {
+        "label": "Mugombwa",
+        "value": "Mugombwa"
+    },
+    {
+        "label": "Mukomacara",
+        "value": "Mukomacara"
+    },
+    {
+        "label": "Mukiza",
+        "value": "Mukiza"
+    },
+    {
+        "label": "Nyabisagara",
+        "value": "Nyabisagara"
+    },
+    {
+        "label": "Bweya",
+        "value": "Bweya"
+    },
+    {
+        "label": "Cyamukuza",
+        "value": "Cyamukuza"
+    },
+    {
+        "label": "Dahwe",
+        "value": "Dahwe"
+    },
+    {
+        "label": "Gisagara",
+        "value": "Gisagara"
+    },
+    {
+        "label": "Mukande",
+        "value": "Mukande"
+    },
+    {
+        "label": "Higiro",
+        "value": "Higiro"
+    },
+    {
+        "label": "Nyaruteja",
+        "value": "Nyaruteja"
+    },
+    {
+        "label": "Umubanga",
+        "value": "Umubanga"
+    },
+    {
+        "label": "Gatoki",
+        "value": "Gatoki"
+    },
+    {
+        "label": "Munazi",
+        "value": "Munazi"
+    },
+    {
+        "label": "Rwanza",
+        "value": "Rwanza"
+    },
+    {
+        "label": "Shyanda",
+        "value": "Shyanda"
+    },
+    {
+        "label": "Zivu",
+        "value": "Zivu"
+    },
+    {
+        "label": "Nyakibanda",
+        "value": "Nyakibanda"
+    },
+    {
+        "label": "Nyumba",
+        "value": "Nyumba"
+    },
+    {
+        "label": "Ryakibogo",
+        "value": "Ryakibogo"
+    },
+    {
+        "label": "Shori",
+        "value": "Shori"
+    },
+    {
+        "label": "Muyogoro",
+        "value": "Muyogoro"
+    },
+    {
+        "label": "Rukira",
+        "value": "Rukira"
+    },
+    {
+        "label": "Buhoro",
+        "value": "Buhoro"
+    },
+    {
+        "label": "Bunazi",
+        "value": "Bunazi"
+    },
+    {
+        "label": "Kibingo",
+        "value": "Kibingo"
+    },
+    {
+        "label": "Muhembe",
+        "value": "Muhembe"
+    },
+    {
+        "label": "Gishihe",
+        "value": "Gishihe"
+    },
+    {
+        "label": "Kabatwa",
+        "value": "Kabatwa"
+    },
+    {
+        "label": "Musebeya",
+        "value": "Musebeya"
+    },
+    {
+        "label": "Shanga",
+        "value": "Shanga"
+    },
+    {
+        "label": "Gahana",
+        "value": "Gahana"
+    },
+    {
+        "label": "Sazange",
+        "value": "Sazange"
+    },
+    {
+        "label": "Buremera",
+        "value": "Buremera"
+    },
+    {
+        "label": "Gasumba",
+        "value": "Gasumba"
+    },
+    {
+        "label": "Kanyinya",
+        "value": "Kanyinya"
+    },
+    {
+        "label": "Shyembe",
+        "value": "Shyembe"
+    },
+    {
+        "label": "Mutunda",
+        "value": "Mutunda"
+    },
+    {
+        "label": "Rugango",
+        "value": "Rugango"
+    },
+    {
+        "label": "Tare",
+        "value": "Tare"
+    },
+    {
+        "label": "Bukomeye",
+        "value": "Bukomeye"
+    },
+    {
+        "label": "Buvumu",
+        "value": "Buvumu"
+    },
+    {
+        "label": "Icyeru",
+        "value": "Icyeru"
+    },
+    {
+        "label": "Rango A",
+        "value": "Rango A"
+    },
+    {
+        "label": "Kaburemera",
+        "value": "Kaburemera"
+    },
+    {
+        "label": "Matyazo",
+        "value": "Matyazo"
+    },
+    {
+        "label": "Busheshi",
+        "value": "Busheshi"
+    },
+    {
+        "label": "Mara",
+        "value": "Mara"
+    },
+    {
+        "label": "Rugogwe",
+        "value": "Rugogwe"
+    },
+    {
+        "label": "Ruhashya",
+        "value": "Ruhashya"
+    },
+    {
+        "label": "Buhimba",
+        "value": "Buhimba"
+    },
+    {
+        "label": "Kimirehe",
+        "value": "Kimirehe"
+    },
+    {
+        "label": "Kimuna",
+        "value": "Kimuna"
+    },
+    {
+        "label": "Mugogwe",
+        "value": "Mugogwe"
+    },
+    {
+        "label": "Kamwambi",
+        "value": "Kamwambi"
+    },
+    {
+        "label": "Kibiraro",
+        "value": "Kibiraro"
+    },
+    {
+        "label": "Nyaruhombo",
+        "value": "Nyaruhombo"
+    },
+    {
+        "label": "Shyunga",
+        "value": "Shyunga"
+    },
+    {
+        "label": "Cyendajuru",
+        "value": "Cyendajuru"
+    },
+    {
+        "label": "Gisakura",
+        "value": "Gisakura"
+    },
+    {
+        "label": "Kabusanza",
+        "value": "Kabusanza"
+    },
+    {
+        "label": "Mugobore",
+        "value": "Mugobore"
+    },
+    {
+        "label": "Nyangazi",
+        "value": "Nyangazi"
+    },
+    {
+        "label": "Cyarwa",
+        "value": "Cyarwa"
+    },
+    {
+        "label": "Cyimana",
+        "value": "Cyimana"
+    },
+    {
+        "label": "Gitwa",
+        "value": "Gitwa"
+    },
+    {
+        "label": "Mpare",
+        "value": "Mpare"
+    },
+    {
+        "label": "Rango B",
+        "value": "Rango B"
+    },
+    {
+        "label": "Gihira",
+        "value": "Gihira"
+    },
+    {
+        "label": "Kigembe",
+        "value": "Kigembe"
+    },
+    {
+        "label": "Nkingo",
+        "value": "Nkingo"
+    },
+    {
+        "label": "Bitare",
+        "value": "Bitare"
+    },
+    {
+        "label": "Bunyonga",
+        "value": "Bunyonga"
+    },
+    {
+        "label": "Cubi",
+        "value": "Cubi"
+    },
+    {
+        "label": "Kirwa",
+        "value": "Kirwa"
+    },
+    {
+        "label": "Jenda",
+        "value": "Jenda"
+    },
+    {
+        "label": "Kabugondo",
+        "value": "Kabugondo"
+    },
+    {
+        "label": "Mbati",
+        "value": "Mbati"
+    },
+    {
+        "label": "Mugina",
+        "value": "Mugina"
+    },
+    {
+        "label": "Nteko",
+        "value": "Nteko"
+    },
+    {
+        "label": "Karengera",
+        "value": "Karengera"
+    },
+    {
+        "label": "Mpushi",
+        "value": "Mpushi"
+    },
+    {
+        "label": "Rukambura",
+        "value": "Rukambura"
+    },
+    {
+        "label": "Kazirabonde",
+        "value": "Kazirabonde"
+    },
+    {
+        "label": "Bibungo",
+        "value": "Bibungo"
+    },
+    {
+        "label": "Kabashumba",
+        "value": "Kabashumba"
+    },
+    {
+        "label": "Kidahwe",
+        "value": "Kidahwe"
+    },
+    {
+        "label": "Mukinga",
+        "value": "Mukinga"
+    },
+    {
+        "label": "Kambyeyi",
+        "value": "Kambyeyi"
+    },
+    {
+        "label": "Kigusa",
+        "value": "Kigusa"
+    },
+    {
+        "label": "Nyagishubi",
+        "value": "Nyagishubi"
+    },
+    {
+        "label": "Ruyanza",
+        "value": "Ruyanza"
+    },
+    {
+        "label": "Kigese",
+        "value": "Kigese"
+    },
+    {
+        "label": "Masaka",
+        "value": "Masaka"
+    },
+    {
+        "label": "Sheli",
+        "value": "Sheli"
+    },
+    {
+        "label": "Bugoba",
+        "value": "Bugoba"
+    },
+    {
+        "label": "Buguri",
+        "value": "Buguri"
+    },
+    {
+        "label": "Gishyeshye",
+        "value": "Gishyeshye"
+    },
+    {
+        "label": "Mwirute",
+        "value": "Mwirute"
+    },
+    {
+        "label": "Gihara",
+        "value": "Gihara"
+    },
+    {
+        "label": "Kabagesera",
+        "value": "Kabagesera"
+    },
+    {
+        "label": "Ruyenzi",
+        "value": "Ruyenzi"
+    },
+    {
+        "label": "Biringaga",
+        "value": "Biringaga"
+    },
+    {
+        "label": "Makera",
+        "value": "Makera"
+    },
+    {
+        "label": "Nyarunyinya",
+        "value": "Nyarunyinya"
+    },
+    {
+        "label": "Kibyimba",
+        "value": "Kibyimba"
+    },
+    {
+        "label": "Sholi",
+        "value": "Sholi"
+    },
+    {
+        "label": "Gisharu",
+        "value": "Gisharu"
+    },
+    {
+        "label": "Jurwe",
+        "value": "Jurwe"
+    },
+    {
+        "label": "Rubyiniro",
+        "value": "Rubyiniro"
+    },
+    {
+        "label": "Ryakanimba",
+        "value": "Ryakanimba"
+    },
+    {
+        "label": "Budende",
+        "value": "Budende"
+    },
+    {
+        "label": "Ruhina",
+        "value": "Ruhina"
+    },
+    {
+        "label": "Rukeri",
+        "value": "Rukeri"
+    },
+    {
+        "label": "Tyazo",
+        "value": "Tyazo"
+    },
+    {
+        "label": "Rukaragata",
+        "value": "Rukaragata"
+    },
+    {
+        "label": "Rwasare",
+        "value": "Rwasare"
+    },
+    {
+        "label": "Rwigerero",
+        "value": "Rwigerero"
+    },
+    {
+        "label": "Gashorera",
+        "value": "Gashorera"
+    },
+    {
+        "label": "Masangano",
+        "value": "Masangano"
+    },
+    {
+        "label": "Mbuga",
+        "value": "Mbuga"
+    },
+    {
+        "label": "Muvumba",
+        "value": "Muvumba"
+    },
+    {
+        "label": "Nyarusozi",
+        "value": "Nyarusozi"
+    },
+    {
+        "label": "Gahogo",
+        "value": "Gahogo"
+    },
+    {
+        "label": "Gifumba",
+        "value": "Gifumba"
+    },
+    {
+        "label": "Gitarama",
+        "value": "Gitarama"
+    },
+    {
+        "label": "Mbiriri",
+        "value": "Mbiriri"
+    },
+    {
+        "label": "Musongati",
+        "value": "Musongati"
+    },
+    {
+        "label": "Ngaru",
+        "value": "Ngaru"
+    },
+    {
+        "label": "Rusovu",
+        "value": "Rusovu"
+    },
+    {
+        "label": "Gasave",
+        "value": "Gasave"
+    },
+    {
+        "label": "Kanyana",
+        "value": "Kanyana"
+    },
+    {
+        "label": "Kibaga",
+        "value": "Kibaga"
+    },
+    {
+        "label": "Mpinga",
+        "value": "Mpinga"
+    },
+    {
+        "label": "Nsanga",
+        "value": "Nsanga"
+    },
+    {
+        "label": "Kinini",
+        "value": "Kinini"
+    },
+    {
+        "label": "Bushigishigi",
+        "value": "Bushigishigi"
+    },
+    {
+        "label": "Gifurwe",
+        "value": "Gifurwe"
+    },
+    {
+        "label": "Kizimyamuriro",
+        "value": "Kizimyamuriro"
+    },
+    {
+        "label": "Rambya",
+        "value": "Rambya"
+    },
+    {
+        "label": "Kiyumba",
+        "value": "Kiyumba"
+    },
+    {
+        "label": "Nyanzoga",
+        "value": "Nyanzoga"
+    },
+    {
+        "label": "Kigeme",
+        "value": "Kigeme"
+    }
+]

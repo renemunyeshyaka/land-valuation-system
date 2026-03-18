@@ -3,7 +3,6 @@ package models
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
@@ -59,8 +58,7 @@ type Property struct {
 	GazetteReference string  `gorm:"size:100;index" json:"gazette_reference"`
 
 	// Land Parcel Reference - Links to official government land data
-	LandParcelID *uuid.UUID  `gorm:"type:uuid;index" json:"land_parcel_id,omitempty"` // Optional reference to official land parcel
-	LandParcel   *LandParcel `gorm:"foreignKey:LandParcelID" json:"land_parcel,omitempty"`
+	// LandParcel references removed
 
 	// Pricing
 	Price       float64 `gorm:"not null" json:"price"`

@@ -37,6 +37,11 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client) 
 	setupReferralRoutes(router, db)
 	setupHealthRoutes(router, db)
 
+	// Land Value Estimation endpoint
+	villageLandValueRepo := repository.NewVillageLandValueRepository(db)
+	landValueEstimationService := services.NewLandValueEstimationService(villageLandValueRepo)
+	router.POST("/api/v1/land-value-estimate", handlers.LandValueEstimateHandler(landValueEstimationService))
+
 	// Invoice/Receipt download endpoint
 	invoiceService := services.NewInvoiceService()
 	userService := services.NewUserService(db)
@@ -134,41 +139,8 @@ func setupPropertyRoutes(router *gin.Engine, db *gorm.DB) {
 }
 
 func setupValuationRoutes(router *gin.Engine, db *gorm.DB) {
-	// Initialize repositories and services
-	propertyRepo := repository.NewPropertyRepository(db)
-	landParcelRepo := repository.NewLandParcelRepository(db)
-	valuationRepo := repository.NewValuationRepository(db)
-	gazetteService := &services.GazetteService{}
-	valuationService := services.NewValuationService(propertyRepo, landParcelRepo, valuationRepo, gazetteService)
-	valuationHandler := handlers.NewValuationHandler(valuationService)
-
-	// Register refined Estimate Search endpoint
-	router.POST("/api/v1/estimate-search", handlers.EstimateSearchHandler(valuationService))
-
-	valuations := router.Group("/api/v1/valuations")
-	{
-		// Public endpoint - anyone can request a valuation estimate
-		valuations.POST("", valuationHandler.CreateValuation)
-		// UPI-based automatic valuation
-		valuations.GET("/by-upi/:upi", valuationHandler.GetValuationByUPI)
-		valuations.GET("/:id", valuationHandler.GetValuationByID)
-
-		// Protected routes - user's own valuations
-		protected := valuations.Group("")
-		protected.Use(middleware.AuthRequired())
-		{
-			protected.GET("", valuationHandler.ListValuations)
-			protected.GET("/history", valuationHandler.GetValuationHistory)
-		}
-	}
-
-	// Admin routes for valuation approval workflow
-	adminValuations := router.Group("/api/v1/admin/valuations")
-	adminValuations.Use(middleware.AuthRequired(), middleware.AdminRequired())
-	{
-		adminValuations.POST("/:id/approve", valuationHandler.ApproveValuation)
-		adminValuations.POST("/:id/reject", valuationHandler.RejectValuation)
-	}
+	// Register only the strict multi-field estimate search endpoint (CSV-backed, no legacy logic)
+	router.POST("/api/v1/estimate-search", handlers.EstimateSearchHandler())
 }
 
 func setupSubscriptionRoutes(router *gin.Engine, db *gorm.DB) {

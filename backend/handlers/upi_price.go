@@ -7,6 +7,23 @@ import (
 	"net/http"
 )
 
+// Adapter to allow *sql.DB to be used as DBIface
+type SQLDBAdapter struct {
+	DB *sql.DB
+}
+
+func (a *SQLDBAdapter) QueryRow(query string, args ...interface{}) RowIface {
+	return &SQLRowAdapter{row: a.DB.QueryRow(query, args...)}
+}
+
+type SQLRowAdapter struct {
+	row *sql.Row
+}
+
+func (r *SQLRowAdapter) Scan(dest ...interface{}) error {
+	return r.row.Scan(dest...)
+}
+
 type UPIPriceRequest struct {
 	UPI        string `json:"upi"`
 	Conditions []bool `json:"conditions"` // 6 booleans
@@ -19,8 +36,20 @@ type UPIPriceResponse struct {
 	Error     string `json:"error,omitempty"`
 }
 
-var priceTable *pricing.PriceTable
-var db *sql.DB
+type PriceTableIface interface {
+	GetPriceByUPI(upi string) (string, string, error)
+}
+
+var priceTable PriceTableIface
+
+type DBIface interface {
+	QueryRow(query string, args ...interface{}) RowIface
+}
+type RowIface interface {
+	Scan(dest ...interface{}) error
+}
+
+var db DBIface
 
 func InitPriceTable(csvPath string) error {
 	pt, err := pricing.LoadPriceTable(csvPath)
@@ -31,7 +60,7 @@ func InitPriceTable(csvPath string) error {
 	return nil
 }
 
-func SetDB(database *sql.DB) {
+func SetDB(database DBIface) {
 	db = database
 }
 
