@@ -1,3 +1,4 @@
+import LandEstimateResultCard from '../../components/LandEstimateResultCard';
 
 import React, { useState, useEffect } from 'react';
 import LandEstimateForm, { LandEstimateRequest } from '../../components/LandEstimateForm';
@@ -668,50 +669,31 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             )}
-            <div className="bg-white border border-amber-200 rounded-2xl shadow-sm p-6 mb-8 max-w-2xl">
-              <h2 className="text-xl font-bold text-emerald-800 mb-2 flex items-center gap-2">
-                <i className="fas fa-search-location text-amber-400"></i>
-                Land Estimate Search
-              </h2>
-              <LandEstimateForm onEstimate={handleEstimate} disabled={estimateLoading} />
-              {estimateError && (
-                <div className="mt-4 bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-xl max-w-xl">
-                  <i className="fas fa-exclamation-circle mr-2"></i> {estimateError}
-                </div>
-              )}
-              {estimateResult && (
-                <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-                  <h3 className="text-lg font-semibold text-emerald-700 mb-2">Land Value Estimate</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <span className="font-medium text-gray-700">Min Value per sqm:</span>
-                      <span className="ml-2 text-gray-900">{estimateResult.min_value_per_sqm}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Weighted Avg per sqm:</span>
-                      <span className="ml-2 text-gray-900">{estimateResult.weighted_avg_value_per_sqm}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Max Value per sqm:</span>
-                      <span className="ml-2 text-gray-900">{estimateResult.max_value_per_sqm}</span>
-                    </div>
+            {/* Two-column layout for Land Estimate Search and Result */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Left: Land Estimate Search */}
+              <div className="bg-white border border-amber-200 rounded-2xl shadow-sm p-6">
+                <h2 className="text-xl font-bold text-emerald-800 mb-2 flex items-center gap-2">
+                  <i className="fas fa-search-location text-amber-400"></i>
+                  Land Estimate Search
+                </h2>
+                <LandEstimateForm onEstimate={handleEstimate} disabled={estimateLoading} />
+                {estimateError && (
+                  <div className="mt-4 bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-xl max-w-xl">
+                    <i className="fas fa-exclamation-circle mr-2"></i> {estimateError}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <div>
-                      <span className="font-medium text-gray-700">Total Min Value:</span>
-                      <span className="ml-2 text-gray-900">{estimateResult.total_min_value}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Total Weighted Avg:</span>
-                      <span className="ml-2 text-gray-900">{estimateResult.total_weighted_avg_value}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Total Max Value:</span>
-                      <span className="ml-2 text-gray-900">{estimateResult.total_max_value}</span>
-                    </div>
+                )}
+              </div>
+              {/* Right: Land Value Estimate Result */}
+              <div className="flex items-start justify-center">
+                {estimateResult ? (
+                  <LandEstimateResultCard estimateResult={estimateResult} />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 italic p-8">
+                    <span>No estimate result yet.</span>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Quick Navigation */}

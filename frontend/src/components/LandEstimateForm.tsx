@@ -182,7 +182,7 @@ const LandEstimateForm: React.FC<LandEstimateFormProps> = ({ onEstimate, disable
           type="text"
           placeholder="Enter plot number"
           required
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-emerald-400"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-emerald-400 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
         />
       </div>
       {/* Estimate button (outside form, triggers form submit) */}
@@ -191,7 +191,7 @@ const LandEstimateForm: React.FC<LandEstimateFormProps> = ({ onEstimate, disable
         form={undefined}
         onClick={() => document.querySelector('form')?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))}
         disabled={disabled}
-        className="w-full bg-emerald-600 text-white font-semibold py-2 rounded-lg mt-2 hover:bg-emerald-700 transition-colors"
+        className="w-full bg-emerald-600 text-white font-semibold py-2 rounded-lg mt-2 transition-colors hover:bg-emerald-100 hover:text-emerald-700"
       >
         Estimate
       </button>

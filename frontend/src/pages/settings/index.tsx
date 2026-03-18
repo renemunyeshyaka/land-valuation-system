@@ -1,3 +1,4 @@
+import LandEstimateResultCard from '../../components/LandEstimateResultCard';
 import React, { useState } from 'react';
 import LandEstimateForm, { LandEstimateRequest } from '../../components/LandEstimateForm';
 import Head from 'next/head';
@@ -80,37 +81,7 @@ const SettingsPage: React.FC = () => {
                 <LandEstimateForm onEstimate={handleEstimate} disabled={loading} />
                 {error && <div className="text-red-600 mt-4">{error}</div>}
                 {estimateResult && (
-                  <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-                    <h3 className="text-lg font-semibold text-emerald-700 mb-2">Land Value Estimate</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <span className="font-medium text-gray-700">Min Value per sqm:</span>
-                        <span className="ml-2 text-gray-900">{estimateResult.min_value_per_sqm}</span>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-700">Weighted Avg per sqm:</span>
-                        <span className="ml-2 text-gray-900">{estimateResult.weighted_avg_value_per_sqm}</span>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-700">Max Value per sqm:</span>
-                        <span className="ml-2 text-gray-900">{estimateResult.max_value_per_sqm}</span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                      <div>
-                        <span className="font-medium text-gray-700">Total Min Value:</span>
-                        <span className="ml-2 text-gray-900">{estimateResult.total_min_value}</span>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-700">Total Weighted Avg:</span>
-                        <span className="ml-2 text-gray-900">{estimateResult.total_weighted_avg_value}</span>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-700">Total Max Value:</span>
-                        <span className="ml-2 text-gray-900">{estimateResult.total_max_value}</span>
-                      </div>
-                    </div>
-                  </div>
+                  <LandEstimateResultCard estimateResult={estimateResult} />
                 )}
               </div>
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
