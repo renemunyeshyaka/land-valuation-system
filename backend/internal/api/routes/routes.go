@@ -23,6 +23,8 @@ func Setup(router *gin.Engine, db interface{}, redisClient *redis.Client) {
 
 // RegisterRoutes registers all API routes
 func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
+	// Contact form endpoint (public)
+	router.POST("/api/v1/contact", handlers.ContactFormHandler())
 	// Initialize services and handlers
 	setupAuthRoutes(router, db)
 	setupUserRoutes(router, db)

@@ -106,3 +106,11 @@ NAMECHEAP_DEPLOYMENT.md
 PROFILE_MEDIA_IMPROVEMENTS.md
 UPDATE_SUMMARY.md
 backend/uploads/
+
+# copyright
+copyright/
+copyright/copyright_docs.txt
+copyright/*.md
+copyright/*.txt
+copyright/*.docx
+copyright/*.pdf

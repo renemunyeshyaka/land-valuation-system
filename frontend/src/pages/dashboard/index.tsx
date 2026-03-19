@@ -1058,7 +1058,7 @@ const Dashboard: React.FC = () => {
                 <h3 className="text-white font-semibold mb-4">Company</h3>
                 <ul className="space-y-2.5 text-sm">
                   <li><a href="#" className="hover:text-emerald-400 transition-colors cursor-not-allowed">About</a></li>
-                  <li><a href="#" className="hover:text-emerald-400 transition-colors cursor-not-allowed">Contact</a></li>
+                  <li><Link href="/contact" className="hover:text-emerald-400 transition-colors">Contact</Link></li>
                   <li><a href="#" className="hover:text-emerald-400 transition-colors cursor-not-allowed">Careers</a></li>
                   <li><a href="#" className="hover:text-emerald-400 transition-colors cursor-not-allowed">Partners</a></li>
                 </ul>

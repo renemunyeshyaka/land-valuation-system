@@ -15,7 +15,7 @@ interface SubscriptionPlan {
   limits: {
     valuations: number | string;
     properties: number | string;
-    storage: string;
+    adverts: string;
     support: string;
   };
   cta: string;
@@ -40,7 +40,7 @@ const subscriptionPlans: SubscriptionPlan[] = [
     limits: {
       valuations: '3/month',
       properties: '1',
-      storage: '100 MB',
+      adverts: '1',
       support: 'Community'
     },
     cta: 'Get started',
@@ -63,7 +63,7 @@ const subscriptionPlans: SubscriptionPlan[] = [
     limits: {
       valuations: '15/month',
       properties: '5',
-      storage: '2 GB',
+      adverts: '5',
       support: 'Standard'
     },
     cta: 'Choose Basic',
@@ -86,7 +86,7 @@ const subscriptionPlans: SubscriptionPlan[] = [
     limits: {
       valuations: 'Unlimited',
       properties: '10',
-      storage: '5 GB',
+      adverts: '15',
       support: 'Email (24h)'
     },
     cta: 'Upgrade',
@@ -109,7 +109,7 @@ const subscriptionPlans: SubscriptionPlan[] = [
     limits: {
       valuations: 'Unlimited',
       properties: 'Unlimited',
-      storage: '50 GB',
+      adverts: 'Unlimited',
       support: 'Phone + Email (2h)'
     },
     cta: 'Contact sales',
@@ -304,8 +304,8 @@ export default function SubscriptionSelector({
                       <span className="font-semibold text-gray-900">{plan.limits.properties}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Storage:</span>
-                      <span className="font-semibold text-gray-900">{plan.limits.storage}</span>
+                      <span className="text-gray-600">Adverts:</span>
+                      <span className="font-semibold text-gray-900">{plan.limits.adverts}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Support:</span>

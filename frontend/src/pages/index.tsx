@@ -176,7 +176,7 @@ const Home: React.FC = () => {
                 <Link href="/search" className="hover:text-emerald-700 transition">Valuation</Link>
                 <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
                 <Link href="/how-it-works" className="hover:text-emerald-700 transition">How it works</Link>
-                <a href="#" className="hover:text-emerald-700 transition">Contact</a>
+                <Link href="/contact" className="hover:text-emerald-700 transition">Contact</Link>
               </div>
 
               {/* language & auth */}

@@ -209,7 +209,7 @@ This workflow ensures LVS is robust, user-friendly, and fully independent.
    ```
 
 2. **Run Tests**
-   - Backend: `cd backend && go test ./... -v` | go run ./cmd/api/main.go
-   - Frontend: `cd frontend && npm run test`
+   - Backend: `cd backend && go test ./... -v` | go run ./cmd/api/main.go | go build ./cmd/api
+   - Frontend: `cd frontend && npm run test` | rm -rf .next && npm run dev | npm run build && npm run dev
    - Mobile: `cd mobile && npm run test`
 
