@@ -210,7 +210,7 @@ const Home: React.FC = () => {
                 </p>
                 {/* UPI-only estimate search form */}
                 <form
-                  className="mt-8 grid grid-cols-1 gap-4 max-w-xl"
+                  className="mt-8 max-w-xl"
                   onSubmit={e => { e.preventDefault(); handleEstimate(); }}
                 >
                   <input
@@ -223,21 +223,29 @@ const Home: React.FC = () => {
                     disabled={loading}
                     required
                   />
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-amber-400 hover:bg-amber-500 text-emerald-950 font-semibold px-6 py-3.5 rounded-2xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin"></i> Loading...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-calculator"></i> Estimate
-                      </>
-                    )}
-                  </button>
+                  <div className="flex flex-row gap-4 mt-2">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 bg-amber-400 hover:bg-amber-500 text-emerald-950 font-semibold px-6 py-3.5 rounded-2xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <>
+                          <i className="fas fa-spinner fa-spin"></i> Loading...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-calculator"></i> Estimate
+                        </>
+                      )}
+                    </button>
+                    <Link
+                      href="/auth/register"
+                      className="flex-1 bg-sky-400 hover:bg-emerald-600 text-white font-semibold px-6 py-3.5 rounded-2xl shadow-md transition flex items-center justify-center gap-2"
+                    >
+                      <i className="fas fa-play-circle"></i> Get Started
+                    </Link>
+                  </div>
                 </form>
                 
                 {/* Error message */}
@@ -370,14 +378,14 @@ const Home: React.FC = () => {
                 <h3 className="text-2xl font-bold mt-2">Any location, instant classification</h3>
                 <p className="text-gray-700 mt-3">Click on the map or type your address. Our engine cross-references the Rwanda gazette zones (urban, rural, agricultural, marshland) and computes the base coefficient.</p>
                 <div className="flex flex-wrap gap-4 mt-6">
-                  <span className="bg-white px-4 py-2 rounded-full text-sm shadow-sm">
-                    <i className="fas fa-check-circle text-emerald-600 mr-1"></i> Kigali urban
+                  <span className="px-4 py-2 rounded-full text-sm shadow-sm" style={{ backgroundColor: '#33A852', color: 'white' }}>
+                    <i className="fas fa-check-circle text-white mr-1"></i> Kigali urban
                   </span>
-                  <span className="bg-white px-4 py-2 rounded-full text-sm shadow-sm">
-                    <i className="fas fa-check-circle text-emerald-600 mr-1"></i> Eastern Province
+                  <span className="px-4 py-2 rounded-full text-sm shadow-sm" style={{ backgroundColor: '#FFD100', color: '#333' }}>
+                    <i className="fas fa-check-circle text-emerald-700 mr-1"></i> Eastern Province
                   </span>
-                  <span className="bg-white px-4 py-2 rounded-full text-sm shadow-sm">
-                    <i className="fas fa-check-circle text-emerald-600 mr-1"></i> Agricultural zones
+                  <span className="px-4 py-2 rounded-full text-sm shadow-sm" style={{ backgroundColor: '#00AEEF', color: 'white' }}>
+                    <i className="fas fa-check-circle text-white mr-1"></i> Agricultural zones
                   </span>
                 </div>
               </div>
@@ -493,72 +501,6 @@ const Home: React.FC = () => {
           </div>
         </section>
 
-        {/* SUBSCRIPTION tiers preview */}
-        <section className="py-16 bg-gradient-to-b from-white to-emerald-50/40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-gray-900">Plans for every need</h2>
-              <p className="text-gray-600 mt-2">Start with free valuation, upgrade to advertise your land and unlock advanced buyer/seller features</p>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-14">
-              {/* free */}
-              <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
-                <span className="text-xs font-semibold bg-gray-200 text-gray-700 px-3 py-1 rounded-full">Free</span>
-                <p className="text-3xl font-bold mt-4">Rwf 0</p>
-                <ul className="text-sm text-gray-600 space-y-2 mt-4">
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> 3 valuations/month</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Basic gazette lookup</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Advertise 1 land (basic location)</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Basic land search (location only)</li>
-                  <li><i className="fas fa-times text-gray-300 mr-2"></i> Buyer contact</li>
-                  <li><i className="fas fa-times text-gray-300 mr-2"></i> Advanced filters</li>
-                </ul>
-                <button className="w-full mt-6 border border-emerald-700 text-emerald-800 rounded-xl py-2 text-sm font-medium hover:bg-emerald-50">Get started</button>
-              </div>
-              {/* basic */}
-              <div className="bg-white p-6 rounded-3xl border border-emerald-200 shadow-md relative">
-                <div className="absolute top-0 right-6 bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-b-lg">popular</div>
-                <span className="text-xs font-semibold bg-emerald-200 text-emerald-800 px-3 py-1 rounded-full">Basic</span>
-                <p className="text-3xl font-bold mt-4">Rwf 29k<span className="text-sm font-normal text-gray-500">/mo</span></p>
-                <ul className="text-sm text-gray-600 space-y-2 mt-4">
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> 15 valuations</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Advertise up to 5 lands (with map)</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Buyer contact (in-app)</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Search by location, price, size</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Standard support</li>
-                </ul>
-                <button className="w-full mt-6 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl py-2 text-sm font-medium">Choose Basic</button>
-              </div>
-              {/* professional */}
-              <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
-                <span className="text-xs font-semibold bg-amber-100 text-amber-800 px-3 py-1 rounded-full">Professional</span>
-                <p className="text-3xl font-bold mt-4">Rwf 79k<span className="text-sm font-normal text-gray-500">/mo</span></p>
-                <ul className="text-sm text-gray-600 space-y-2 mt-4">
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Unlimited valuations</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Advertise unlimited lands</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Priority listing & buyer matching</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Advanced search (all filters)</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Analytics dashboard</li>
-                </ul>
-                <button className="w-full mt-6 border border-emerald-700 text-emerald-800 rounded-xl py-2 text-sm font-medium">Upgrade</button>
-              </div>
-              {/* ultimate */}
-              <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
-                <span className="text-xs font-semibold bg-purple-100 text-purple-800 px-3 py-1 rounded-full">Ultimate</span>
-                <p className="text-3xl font-bold mt-4">Rwf 199k<span className="text-sm font-normal text-gray-500">/mo</span></p>
-                <ul className="text-sm text-gray-600 space-y-2 mt-4">
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> All Professional features</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> White‑label & bulk upload</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Dedicated account manager</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Buyer analytics & export</li>
-                  <li><i className="fas fa-check text-emerald-600 mr-2"></i> Custom integrations</li>
-                </ul>
-                <button className="w-full mt-6 border border-emerald-700 text-emerald-800 rounded-xl py-2 text-sm font-medium">Contact sales</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* TESTIMONIAL + STATS */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -588,15 +530,20 @@ const Home: React.FC = () => {
             <h2 className="text-3xl md:text-4xl font-bold">Ready to value or sell your land?</h2>
             <p className="text-emerald-100 mt-3 text-lg">Join thousands of Rwandans and global investors using the most trusted platform.</p>
             <div className="flex flex-wrap justify-center gap-4 mt-8">
-              <button className="bg-white text-emerald-900 hover:bg-amber-50 font-semibold px-8 py-4 rounded-2xl shadow-xl text-lg flex items-center gap-2">
+              <a
+                href="/auth/register"
+                className="bg-amber-400 text-emerald-900 hover:bg-white font-semibold px-8 py-4 rounded-2xl shadow-xl text-lg flex items-center gap-2 transition-colors duration-200"
+              >
                 <i className="fas fa-crown"></i> Start free trial
-              </button>
-              <button className="border-2 border-white/50 hover:bg-white/10 px-8 py-4 rounded-2xl font-semibold text-lg flex items-center gap-2">
+              </a>
+              <a
+                href="/contact"
+                className="bg-sky-500 text-white hover:bg-sky-600 px-8 py-4 rounded-2xl font-semibold text-lg flex items-center gap-2 transition-colors duration-200"
+              >
                 <i className="fas fa-phone-alt"></i> Talk to expert
-              </button>
+              </a>
             </div>
             <div className="mt-8 text-sm text-emerald-200 flex items-center justify-center gap-6">
-              <span><i className="fas fa-check-circle"></i> RDB registered</span>
               <span><i className="fas fa-lock"></i> secure & verified</span>
             </div>
           </div>
@@ -610,7 +557,7 @@ const Home: React.FC = () => {
                 <i className="fas fa-map-marked-alt text-2xl"></i>
                 <span className="font-bold text-xl">LandVal</span>
               </div>
-              <p className="text-sm mt-3">Accredited by Rwanda Development Board (RDB). All gazette data sourced from official publications.</p>
+              <p className="text-sm mt-3">The most trusted land valuation and land marketplace in Rwanda. All gazette data sourced from official publications.</p>
               <div className="flex gap-4 mt-5">
                 <i className="fab fa-twitter hover:text-white text-xl"></i>
                 <i className="fab fa-linkedin hover:text-white text-xl"></i>
@@ -645,7 +592,7 @@ const Home: React.FC = () => {
             </div>
           </div>
           <div className="border-t border-emerald-800 mt-10 pt-6 text-center text-xs text-emerald-400">
-            © 2025 Land Valuation System Ltd. All rights reserved. Registered with RDB Rwanda.
+            © 2026 Land Valuation System Ltd. All rights reserved.
           </div>
         </footer>
       </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 
 export default function Contact() {
   const [name, setName] = useState('');
@@ -64,6 +65,9 @@ export default function Contact() {
             <button type="submit" className="bg-emerald-600 text-white px-6 py-2 rounded font-bold hover:bg-emerald-700">Send Message</button>
           </form>
         )}
+        <div className="mt-8 text-center">
+          <Link href="/" className="text-emerald-700 hover:underline font-semibold">&larr; Go Back Home</Link>
+        </div>
       </div>
     </>
   );
