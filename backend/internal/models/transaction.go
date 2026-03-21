@@ -58,6 +58,9 @@ type Transaction struct {
 	Notes string `gorm:"type:text" json:"notes"`
 	Terms JSON   `gorm:"type:jsonb" json:"terms"`
 
+	// Invoice email tracking
+	InvoiceEmailed bool `gorm:"default:false" json:"invoice_emailed"`
+
 	// Audit
 	CreatedBy  uint       `json:"created_by"`
 	ApprovedBy *uint      `json:"approved_by,omitempty"`

@@ -173,8 +173,8 @@ func (h *MultiPaymentHandler) GetAvailablePaymentMethods(c *gin.Context) {
 	methods := map[string]interface{}{
 		"mobile_money": map[string]interface{}{
 			"enabled":     true,
-			"providers":   []string{"MTN MoMo", "Airtel Money"},
-			"currency":    "RWF",
+			"providers":   []string{"MTN MoMo"},
+			"currency":    "EUR",
 			"description": "Instant mobile money transfer",
 		},
 		"bank_transfer": map[string]interface{}{
@@ -187,7 +187,7 @@ func (h *MultiPaymentHandler) GetAvailablePaymentMethods(c *gin.Context) {
 					"swift":          "EQBLRWRWXXX",
 				},
 			},
-			"currency":    []string{"RWF", "USD"},
+			"currency":    []string{"EUR", "USD"},
 			"description": "Deferred for future implementation",
 		},
 		"cryptocurrency": map[string]interface{}{
@@ -195,7 +195,7 @@ func (h *MultiPaymentHandler) GetAvailablePaymentMethods(c *gin.Context) {
 			"status":      "disabled",
 			"chain":       "BNB Smart Chain (BEP20)",
 			"tokens":      []string{"USDT", "USDC", "BNB"},
-			"currency":    []string{"RWF", "USD"},
+			"currency":    []string{"EUR", "USD"},
 			"description": "Disabled per deployment policy",
 		},
 	}

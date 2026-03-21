@@ -29,6 +29,35 @@
 # Navigate to project
 cd /home/sdragon/Desktop/GitHub/land-valuation-system
 
+## 🤝 Partners & Integrations
+
+Potential and target partners for the Land Valuation System include:
+
+- **Banks & Mortgage Providers:** Bank of Kigali, Equity Bank, and others
+- **Real Estate Agencies:** Vibe House, Century Real Estate, etc.
+- **Land Surveyors & Valuation Firms**
+- **Government Agencies:** Rwanda Land Management and Use Authority (RLMUA), Rwanda Development Board (RDB, for data only)
+- **Payment Providers:** MTN Mobile Money, Airtel Money, Paystack
+- **Legal Firms:** For land transfer and legal advice
+- **Technology Providers:** Cloud, mapping, and AI/ML services
+- **NGOs & International Development Orgs:** For land transparency and open data
+- **Data Providers:** Satellite imagery, gazette publishers
+- **Insurance Companies:** Property insurance partners
+
+We are open to new partnerships that enhance transparency, trust, and value for Rwandan landowners and buyers.
+
+## 🚧 Future Features & Planned Integrations
+
+- Direct mortgage offers from partner banks
+- Real estate agency listings and syndication
+- Payment gateway expansion (more mobile money, card, and digital payment options)
+- Legal and insurance service integrations
+- Advanced mapping and satellite data partners
+- Automated valuation models (AI/ML)
+- API integrations for partner platforms
+
+If you are interested in partnering or integrating with LVS, please contact us via the support channels listed in this repository.
+
 
 
 ### 🚩 Price Estimation Process (Strict Multi-Field Search)
@@ -161,6 +190,20 @@ Users can easily register for an account using the registration page:
 - After registering, verify your email and log in to access all features.
 
 
+### How it works
+
+
+The Land Valuation System guides users through a seamless process for land price estimation, property advertisement, and secure transactions:
+
+1. **User Registration:** Sign up and verify your account to access all features.
+2. **Land Price Estimation:** Use the dashboard to estimate your land/property value by providing province, district, sector, cell, village, and plot size. The system uses official gazette data for accurate results.
+3. **Advertise Property:** Registered users can list properties for sale by filling out the Add Property form. Listings are managed from the user dashboard.
+4. **Marketplace Browsing:** All advertised properties appear in the Marketplace, where buyers can browse, search, and filter listings.
+5. **Secure Transactions:** The platform supports secure payments and transaction tracking (coming soon).
+
+For a detailed walkthrough of each feature and system flow, visit our [online documentation](docs/START_HERE.md).
+
+
 ### Advertise Your Land/Property
 
 
@@ -175,7 +218,16 @@ Registered users can advertise their land or property for sale on the platform:
 
 **Note:** Only registered and logged-in users can post land/property advertisements. This ensures trust and accountability on the platform.
 
+### Marketplace
 
+
+All properties listed by users are displayed on the `/marketplace` page.
+
+- The Marketplace shows 12 properties per page, with pagination controls (Previous, page numbers, Next) for easy navigation.
+- Properties are displayed in a responsive grid (4 columns on large screens, 3 on medium, 2 on small, 1 on mobile).
+- Users can browse, search, and view property details directly from the Marketplace.
+
+Only registered and logged-in users can add or manage property listings. The Marketplace is open for all users to browse available properties.
 
 ### Friendly Price Estimation for Your Land/Property
 
@@ -209,7 +261,7 @@ This workflow ensures LVS is robust, user-friendly, and fully independent.
    ```
 
 2. **Run Tests**
-   - Backend: `cd backend && go test ./... -v` | go run ./cmd/api/main.go | go build ./cmd/api
+   - Backend: `cd backend && go test ./... -v` | go run ./cmd/api/main.go | go build ./cmd/api && go run ./cmd/api/main.go
    - Frontend: `cd frontend && npm run test` | rm -rf .next && npm run dev | npm run build && npm run dev
    - Mobile: `cd mobile && npm run test`
 

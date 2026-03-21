@@ -17,89 +17,69 @@ import toast from 'react-hot-toast';
  */
 
 const Login: React.FC = () => {
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+    // Validate form before submission
+    const validateForm = (): boolean => {
+      const newErrors: { [key: string]: string } = {};
+
+      // Email validation
+      if (!formData.email.trim()) {
+        newErrors.email = 'Email is required';
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email address';
+      }
+
+      // Password validation
+      if (!formData.password) {
+        newErrors.password = 'Password is required';
+      }
+
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
+
+    // Handle input changes for all fields
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value, type, checked } = e.target;
+      const fieldName = name as string;
+      setFormData(prev => ({
+        ...prev,
+        [fieldName]: type === 'checkbox' ? checked : value,
+      }));
+      if (errors[fieldName]) {
+        setErrors(prev => ({ ...prev, [fieldName]: '' }));
+      }
+    };
+
+    // Handle form submission
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!validateForm()) {
+        toast.error('Please fix the errors in the form');
+        return;
+      }
+      setLoading(true);
+      try {
+        // TODO: Implement login API call here
+        toast.success('OTP sent to your email! Redirecting...');
+        setTimeout(() => {
+          router.push(`/auth/verify-otp?email=${encodeURIComponent(formData.email)}`);
+        }, 1500);
+      } catch (error: any) {
+        toast.error(error.message || 'Login failed. Please check your credentials.');
+      } finally {
+        setLoading(false);
+      }
+    };
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: false,
   });
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-  // Validate form before submission
-  const validateForm = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
-
-    // Email validation
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    // Password validation
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      toast.error('Please fix the errors in the form');
-      return;
-    }
-    
-    setLoading(true);
-    
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-      
-      toast.success('OTP sent to your email! Redirecting...');
-      
-      // Redirect to OTP verification page
-      setTimeout(() => {
-        router.push(`/auth/verify-otp?email=${encodeURIComponent(formData.email)}`);
-      }, 1500);
-      
-    } catch (error: any) {
-      toast.error(error.message || 'Login failed. Please check your credentials.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-    
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
 
   return (
     <>
@@ -132,12 +112,21 @@ const Login: React.FC = () => {
 
               {/* Navigation Menu - Right Side */}
               <div className="flex items-center gap-2 sm:gap-4">
+                {/* Main Navigation Menu */}
+                <div className="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
+                  <Link href="/" className="hover:text-emerald-700 transition">Home</Link>
+                  <Link href="/how-it-works" className="hover:text-emerald-700 transition">How it works</Link>
+                  <Link href="/benefits" className="hover:text-emerald-700 transition">Benefits</Link>
+                  <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
+                  <Link href="/contact" className="hover:text-emerald-700 transition">Contact</Link>
+                </div>
+
                 {/* Language Selector */}
-                <button className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-700 hover:text-emerald-700 transition-colors">
-                  <i className="fas fa-globe text-base"></i>
-                  <span className="hidden sm:inline">EN</span>
-                  <i className="fas fa-chevron-down text-xs"></i>
-                </button>
+                <div className="hidden sm:flex items-center border border-gray-200 rounded-full px-3 py-1.5 text-sm bg-white/80">
+                  <i className="fas fa-globe text-emerald-600 mr-1 text-xs"></i>
+                  <span className="font-medium">RW</span>
+                  <i className="fas fa-chevron-down ml-1 text-gray-400 text-xs"></i>
+                </div>
 
                 {/* Register Link */}
                 <Link 

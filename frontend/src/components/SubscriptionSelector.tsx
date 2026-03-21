@@ -50,8 +50,8 @@ const subscriptionPlans: SubscriptionPlan[] = [
     id: 'basic',
     name: 'Basic',
     description: 'Popular choice for growing users',
-    monthlyPrice: 29000,
-    yearlyPrice: 348000,
+    monthlyPrice: 29,
+    yearlyPrice: 348,
     savings: 0,
     icon: '📍',
     color: 'from-emerald-500 to-emerald-600',
@@ -73,8 +73,8 @@ const subscriptionPlans: SubscriptionPlan[] = [
     id: 'professional',
     name: 'Professional',
     description: 'Advanced analytics and matching',
-    monthlyPrice: 79000,
-    yearlyPrice: 948000,
+    monthlyPrice: 79,
+    yearlyPrice: 948,
     savings: 0,
     icon: '⭐',
     color: 'from-blue-500 to-blue-600',
@@ -96,8 +96,8 @@ const subscriptionPlans: SubscriptionPlan[] = [
     id: 'ultimate',
     name: 'Ultimate',
     description: 'Enterprise-grade capabilities',
-    monthlyPrice: 199000,
-    yearlyPrice: 2388000,
+    monthlyPrice: 199,
+    yearlyPrice: 2388,
     savings: 0,
     icon: '👑',
     color: 'from-amber-500 to-amber-600',
@@ -154,14 +154,9 @@ export default function SubscriptionSelector({
 
   const formatPrice = (price: number) => {
     if (price === 0) {
-      return 'Rwf 0';
+      return 'EUR 0';
     }
-
-    if (price % 1000 === 0) {
-      return `Rwf ${price / 1000}k`;
-    }
-
-    return `Rwf ${price.toLocaleString()}`;
+    return `EUR ${price}`;
   };
 
   return (

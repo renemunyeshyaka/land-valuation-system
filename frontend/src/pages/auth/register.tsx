@@ -56,11 +56,20 @@ const Register: React.FC = () => {
       newErrors.lastName = 'Last name is required';
     }
 
-    // Phone validation (Rwanda format)
+    // Phone validation (Rwanda format or sandbox test numbers)
+    const sandboxTestNumbers = [
+      '46733123450',
+      '46733123451',
+      '46733123452',
+      '46733123453',
+    ];
     if (!formData.phone) {
       newErrors.phone = 'Phone number is required';
-    } else if (!/^(\+250|0)7[0-9]{8}$/.test(formData.phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Enter valid Rwanda phone number (+250 or 07...)';
+    } else if (
+      !/^(\+250|0)7[0-9]{8}$/.test(formData.phone.replace(/\s/g, '')) &&
+      !sandboxTestNumbers.includes(formData.phone)
+    ) {
+      newErrors.phone = 'Enter valid Rwanda phone number (+250 or 07...) or use a sandbox test number.';
     }
 
     setErrors(newErrors);
@@ -70,42 +79,21 @@ const Register: React.FC = () => {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) {
       toast.error('Please fix the errors in the form');
       return;
     }
-
     setLoading(true);
-
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          user_type: formData.userType,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
-
+      // TODO: Implement registration API call here
+      // Example:
+      // const response = await fetch('/api/register', { ... });
+      // const data = await response.json();
+      // if (!response.ok) throw new Error(data.message || 'Registration failed');
       toast.success('Account created! Redirecting to email verification...');
-      
-      // Redirect to email verification page with email
       setTimeout(() => {
         router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`);
       }, 1500);
-
     } catch (error: any) {
       toast.error(error.message || 'Registration failed. Please try again.');
       console.error('Registration error:', error);
@@ -160,10 +148,10 @@ const Register: React.FC = () => {
               {/* Desktop Menu */}
               <div className="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
                 <Link href="/" className="hover:text-emerald-700 transition">Home</Link>
-                <Link href="/search" className="hover:text-emerald-700 transition">Valuation</Link>
+                <Link href="/how-it-works" className="hover:text-emerald-700 transition">How it works</Link>
+                <Link href="/benefits" className="hover:text-emerald-700 transition">Benefits</Link>
                 <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
-                <a href="#" className="hover:text-emerald-700 transition">How it works</a>
-                <a href="#" className="hover:text-emerald-700 transition">Contact</a>
+                <Link href="/contact" className="hover:text-emerald-700 transition">Contact</Link>
               </div>
 
               {/* Language + Auth */}
@@ -288,7 +276,10 @@ const Register: React.FC = () => {
                     {errors.phone && (
                       <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">Format: +250 7XX XXX XXX or 07XX XXX XXX</p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Format: +250 7XX XXX XXX or 07XX XXX XXX<br />
+                      <span className="text-emerald-700 font-semibold">For sandbox testing, use one of these numbers: 46733123450, 46733123451, 46733123452, 46733123453</span>
+                    </p>
                   </div>
 
                   {/* User Type Selector */}

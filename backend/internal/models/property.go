@@ -63,7 +63,7 @@ type Property struct {
 	// Pricing
 	Price       float64 `gorm:"not null" json:"price"`
 	PricePerSqm float64 `gorm:"-" json:"price_per_sqm"` // computed
-	Currency    string  `gorm:"size:3;default:RWF" json:"currency"`
+	Currency    string  `gorm:"size:3;default:EUR" json:"currency"`
 
 	// Features
 	Features  pq.StringArray `gorm:"type:text[]" json:"features"`

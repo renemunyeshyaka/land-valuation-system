@@ -12,7 +12,7 @@ import {
   MessageCircle,
   Search
 } from 'lucide-react'
-import { formatPrice, formatSize } from '../../utils/formatters.js'
+import { formatPrice, formatSize } from '../../utils/formatters'
 
 interface PropertyCardProps {
   property: any
@@ -26,7 +26,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
-      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all group"
+      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all group hover:border-blue-500 hover:bg-blue-50"
     >
       <div className="relative h-48 bg-gray-200">
         {/* Property Image */}

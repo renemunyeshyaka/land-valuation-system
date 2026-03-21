@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -16,11 +17,11 @@ import (
 
 	"backend/internal/models"
 	"backend/internal/repository"
+	"backend/internal/utils"
 
 	"gorm.io/gorm"
 )
 
-// PaymentService handles mobile money payments for MTN MoMo and Airtel Money
 type PaymentService struct {
 	db                   *gorm.DB
 	transactionRepo      *repository.TransactionRepository
@@ -34,12 +35,148 @@ type PaymentService struct {
 	airtelBaseURL        string
 	airtelWebhookSecret  string
 	httpClient           *http.Client
-	airtelToken          string
-	airtelTokenExpiry    time.Time
-	replayMutex          sync.Mutex
-	callbackReplayCache  map[string]time.Time
-	callbackReplayTTL    time.Duration
-	callbackMaxSkew      time.Duration
+	// MTN MoMo token caching
+	mtnToken            string
+	mtnTokenExpiry      time.Time
+	airtelToken         string
+	airtelTokenExpiry   time.Time
+	replayMutex         sync.Mutex
+	callbackReplayCache map[string]time.Time
+	callbackReplayTTL   time.Duration
+	callbackMaxSkew     time.Duration
+}
+
+// processMTNMoMoPayment handles MTN Mobile Money payment processing
+func (s *PaymentService) processMTNMoMoPayment(ctx context.Context, req *PaymentRequest, txn *models.Transaction) (*PaymentResponse, error) {
+	// MTN MoMo API Collection Request
+	// Endpoint: POST /collection/v1_0/requesttopay
+
+	if s.mtnAPIKey == "" || s.mtnSubscriptionKey == "" || s.mtnBaseURL == "" {
+		return nil, errors.New("MTN MoMo API credentials not configured")
+	}
+
+	// Force EUR for MTN MoMo sandbox payments
+	if s.getEnvironment() == "sandbox" {
+		req.Currency = "EUR"
+	}
+	requestBody := map[string]interface{}{
+		"amount":     fmt.Sprintf("%.2f", req.Amount),
+		"currency":   req.Currency,
+		"externalId": fmt.Sprintf("%d", txn.ID),
+		"payer": map[string]string{
+			"partyIdType": "MSISDN",
+			"partyId":     s.formatPhoneNumber(req.PhoneNumber),
+		},
+		"payerMessage": req.Description,
+		"payeeNote":    "Land Valuation System",
+	}
+
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	referenceID := s.generateReferenceID()
+	apiURL := fmt.Sprintf("%s/collection/v1_0/requesttopay", s.mtnBaseURL)
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	accessToken, err := s.getMTNMoMoAccessToken(ctx)
+	if err != nil {
+		fmt.Printf("[ERROR] Failed to get MTN MoMo access token: %v\n", err)
+		return nil, fmt.Errorf("failed to get MTN MoMo access token: %w", err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+accessToken)
+	httpReq.Header.Set("X-Reference-Id", referenceID)
+	httpReq.Header.Set("X-Target-Environment", s.getEnvironment())
+	httpReq.Header.Set("Ocp-Apim-Subscription-Key", s.mtnSubscriptionKey)
+
+	fmt.Printf("[DEBUG] MTN MoMo payment request: url=%s, referenceID=%s, headers={Authorization=Bearer %s..., X-Reference-Id=%s, X-Target-Environment=%s, Ocp-Apim-Subscription-Key=%s}, body=%s\n", apiURL, referenceID, mask(accessToken), referenceID, s.getEnvironment(), mask(s.mtnSubscriptionKey), string(jsonData))
+
+	resp, err := s.httpClient.Do(httpReq)
+	if err != nil {
+		fmt.Printf("[ERROR] MTN MoMo API request failed: %v\n", err)
+		return nil, fmt.Errorf("MTN MoMo API request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Printf("[DEBUG] MTN MoMo payment response: status=%d, body=%s\n", resp.StatusCode, string(body))
+
+	if resp.StatusCode != http.StatusAccepted {
+		return nil, fmt.Errorf("MTN MoMo payment failed: status %d, body: %s", resp.StatusCode, string(body))
+	}
+
+	return &PaymentResponse{
+		Status:      "pending",
+		Message:     "Payment request sent to MTN MoMo. Please approve on your phone.",
+		ReferenceID: referenceID,
+	}, nil
+}
+
+// mask returns a masked version of a sensitive string for debug logging
+func mask(s string) string {
+	if len(s) <= 4 {
+		return "****"
+	}
+	return s[:2] + strings.Repeat("*", len(s)-4) + s[len(s)-2:]
+}
+
+// getMTNMoMoAccessToken obtains and caches the MTN MoMo access token for Collection API
+func (s *PaymentService) getMTNMoMoAccessToken(ctx context.Context) (string, error) {
+	// Simple in-memory cache (add expiry if needed)
+	if s.mtnToken != "" && time.Now().Before(s.mtnTokenExpiry.Add(-60*time.Second)) {
+		fmt.Println("[DEBUG] Using cached MTN MoMo access token (expires:", s.mtnTokenExpiry, ")")
+		return s.mtnToken, nil
+	}
+	apiUser := getEnvAny("MTN_MOMO_API_USER", "MTN_API_USER")
+	apiKey := s.mtnAPIKey
+	if apiUser == "" || apiKey == "" || s.mtnBaseURL == "" {
+		fmt.Printf("[ERROR] MTN MoMo API_USER, API_KEY, or BASE_URL not configured: apiUser=%s, apiKey=%s, baseURL=%s\n", mask(apiUser), mask(apiKey), s.mtnBaseURL)
+		return "", errors.New("MTN MoMo API_USER, API_KEY, or BASE_URL not configured")
+	}
+	tokenURL := fmt.Sprintf("%s/collection/token/", s.mtnBaseURL)
+	req, err := http.NewRequestWithContext(ctx, "POST", tokenURL, nil)
+	if err != nil {
+		return "", err
+	}
+	req.SetBasicAuth(apiUser, apiKey)
+	req.Header.Set("Ocp-Apim-Subscription-Key", s.mtnSubscriptionKey)
+	req.Header.Set("Content-Type", "application/json")
+	fmt.Printf("[DEBUG] Requesting MTN MoMo access token: url=%s, apiUser=%s, subscriptionKey=%s\n", tokenURL, mask(apiUser), mask(s.mtnSubscriptionKey))
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		fmt.Printf("[ERROR] MTN MoMo token request failed: %v\n", err)
+		return "", fmt.Errorf("MTN MoMo token request failed: %w", err)
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Printf("[DEBUG] MTN MoMo token response: status=%d, body=%s\n", resp.StatusCode, string(body))
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("MTN MoMo token failed: status %d, body: %s", resp.StatusCode, string(body))
+	}
+	var tokenResp struct {
+		AccessToken string `json:"access_token"`
+		ExpiresIn   int    `json:"expires_in"`
+		TokenType   string `json:"token_type"`
+	}
+	if err := json.Unmarshal(body, &tokenResp); err != nil {
+		fmt.Printf("[ERROR] Failed to parse MTN MoMo token response: %v\n", err)
+		return "", fmt.Errorf("failed to parse MTN MoMo token response: %w", err)
+	}
+	s.mtnToken = tokenResp.AccessToken
+	// Set expiry if provided
+	if tokenResp.ExpiresIn > 0 {
+		s.mtnTokenExpiry = time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second)
+	} else {
+		s.mtnTokenExpiry = time.Now().Add(5 * time.Minute)
+	}
+	fmt.Printf("[DEBUG] MTN MoMo access token acquired, expires at %s\n", s.mtnTokenExpiry.Format(time.RFC3339))
+	return s.mtnToken, nil
 }
 
 func NewPaymentService(db *gorm.DB) *PaymentService {
@@ -68,7 +205,10 @@ func NewPaymentService(db *gorm.DB) *PaymentService {
 		},
 		callbackReplayCache: make(map[string]time.Time),
 		callbackReplayTTL:   time.Duration(getEnvInt("WEBHOOK_REPLAY_TTL_SECONDS", 900)) * time.Second,
-		callbackMaxSkew:     time.Duration(getEnvInt("WEBHOOK_MAX_SKEW_SECONDS", 600)) * time.Second,
+		// MTN MoMo API Collection Request
+		// Endpoint: POST /collection/v1_0/requesttopay
+
+		callbackMaxSkew: time.Duration(getEnvInt("WEBHOOK_MAX_SKEW_SECONDS", 600)) * time.Second,
 	}
 }
 
@@ -115,7 +255,7 @@ func (s *PaymentService) InitiatePayment(ctx context.Context, req *PaymentReques
 		BuyerID:         req.UserID,
 		TransactionType: "subscription",
 		Amount:          req.Amount,
-		AmountRWF:       req.Amount,
+		AmountRWF:       0, // Deprecated, always 0
 		PaymentProvider: req.PaymentProvider,
 		Description:     req.Description,
 		Status:          "pending",
@@ -133,16 +273,11 @@ func (s *PaymentService) InitiatePayment(ctx context.Context, req *PaymentReques
 	var resp *PaymentResponse
 	var err error
 
-	switch provider {
-	case "mtn":
-		transaction.PaymentProvider = "mtn_momo"
-		resp, err = s.processMTNMoMoPayment(ctx, req, transaction)
-	case "airtel":
-		transaction.PaymentProvider = "airtel_money"
-		resp, err = s.processAirtelMoneyPayment(ctx, req, transaction)
-	default:
-		return nil, errors.New("unsupported payment provider")
+	if provider != "mtn" {
+		return nil, errors.New("Only MTN MoMo is supported at this time.")
 	}
+	transaction.PaymentProvider = "mtn_momo"
+	resp, err = s.processMTNMoMoPayment(ctx, req, transaction)
 
 	if err != nil {
 		// Update transaction status to failed
@@ -159,150 +294,6 @@ func (s *PaymentService) InitiatePayment(ctx context.Context, req *PaymentReques
 
 	resp.TransactionID = fmt.Sprintf("%d", transaction.ID)
 	return resp, nil
-}
-
-// processMTNMoMoPayment handles MTN Mobile Money payment processing
-func (s *PaymentService) processMTNMoMoPayment(ctx context.Context, req *PaymentRequest, txn *models.Transaction) (*PaymentResponse, error) {
-	// MTN MoMo API Collection Request
-	// Endpoint: POST /collection/v1_0/requesttopay
-
-	if s.mtnAPIKey == "" || s.mtnSubscriptionKey == "" || s.mtnBaseURL == "" {
-		return nil, errors.New("MTN MoMo API credentials not configured")
-	}
-
-	requestBody := map[string]interface{}{
-		"amount":     fmt.Sprintf("%.2f", req.Amount),
-		"currency":   req.Currency,
-		"externalId": fmt.Sprintf("%d", txn.ID),
-		"payer": map[string]string{
-			"partyIdType": "MSISDN",
-			"partyId":     s.formatPhoneNumber(req.PhoneNumber),
-		},
-		"payerMessage": req.Description,
-		"payeeNote":    "Land Valuation System",
-	}
-
-	jsonData, err := json.Marshal(requestBody)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	// Generate unique reference ID for MTN
-	referenceID := s.generateReferenceID()
-
-	apiURL := fmt.Sprintf("%s/collection/v1_0/requesttopay", s.mtnBaseURL)
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, err
-	}
-
-	// Set required headers for MTN MoMo API
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", "Bearer "+s.mtnAPIKey)
-	httpReq.Header.Set("X-Reference-Id", referenceID)
-	httpReq.Header.Set("X-Target-Environment", s.getEnvironment())
-	httpReq.Header.Set("Ocp-Apim-Subscription-Key", s.mtnSubscriptionKey)
-
-	resp, err := s.httpClient.Do(httpReq)
-	if err != nil {
-		return nil, fmt.Errorf("MTN MoMo API request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-
-	if resp.StatusCode != http.StatusAccepted {
-		return nil, fmt.Errorf("MTN MoMo payment failed: status %d, body: %s", resp.StatusCode, string(body))
-	}
-
-	return &PaymentResponse{
-		Status:      "pending",
-		Message:     "Payment request sent to MTN MoMo. Please approve on your phone.",
-		ReferenceID: referenceID,
-	}, nil
-}
-
-// processAirtelMoneyPayment handles Airtel Money payment processing
-func (s *PaymentService) processAirtelMoneyPayment(ctx context.Context, req *PaymentRequest, txn *models.Transaction) (*PaymentResponse, error) {
-	// Airtel Money API Push Payment Request
-	// Endpoint: POST /merchant/v1/payments/
-
-	if s.airtelAPIKey == "" || s.airtelBaseURL == "" {
-		return nil, errors.New("Airtel Money API credentials not configured")
-	}
-
-	requestBody := map[string]interface{}{
-		"reference": fmt.Sprintf("TXN%d", txn.ID),
-		"subscriber": map[string]string{
-			"country":  "RW",
-			"currency": req.Currency,
-			"msisdn":   s.formatPhoneNumber(req.PhoneNumber),
-		},
-		"transaction": map[string]interface{}{
-			"amount":   req.Amount,
-			"country":  "RW",
-			"currency": req.Currency,
-			"id":       fmt.Sprintf("%d", txn.ID),
-		},
-	}
-
-	jsonData, err := json.Marshal(requestBody)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	apiURL := fmt.Sprintf("%s/merchant/v1/payments/", s.airtelBaseURL)
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, err
-	}
-
-	// Get Airtel OAuth token
-	token, err := s.getAirtelAuthToken(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get Airtel auth token: %w", err)
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", "Bearer "+token)
-	httpReq.Header.Set("X-Country", "RW")
-	httpReq.Header.Set("X-Currency", req.Currency)
-
-	resp, err := s.httpClient.Do(httpReq)
-	if err != nil {
-		return nil, fmt.Errorf("Airtel Money API request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-
-	var airtelResp struct {
-		Status struct {
-			Code       string `json:"code"`
-			Message    string `json:"message"`
-			ResultCode string `json:"result_code"`
-		} `json:"status"`
-		Data struct {
-			Transaction struct {
-				ID     string `json:"id"`
-				Status string `json:"status"`
-			} `json:"transaction"`
-		} `json:"data"`
-	}
-
-	if err := json.Unmarshal(body, &airtelResp); err != nil {
-		return nil, fmt.Errorf("failed to parse Airtel response: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("Airtel Money payment failed: %s", airtelResp.Status.Message)
-	}
-
-	return &PaymentResponse{
-		Status:      "pending",
-		Message:     "Payment request sent to Airtel Money. Please approve on your phone.",
-		ReferenceID: airtelResp.Data.Transaction.ID,
-	}, nil
 }
 
 // CheckPaymentStatus checks the status of a payment and syncs to DB
@@ -534,17 +525,50 @@ func (s *PaymentService) validatePaymentRequest(req *PaymentRequest) error {
 	if req.Amount <= 0 {
 		return errors.New("amount must be greater than zero")
 	}
+	// Debug log: print provider and phone number
+	fmt.Printf("[DEBUG] validatePaymentRequest: provider=%s, phone=%s\n", req.PaymentProvider, req.PhoneNumber)
 	if req.PhoneNumber == "" {
 		return errors.New("phone number is required")
 	}
 	if req.PaymentProvider == "" {
 		return errors.New("payment provider is required")
 	}
-	if normalizeProvider(req.PaymentProvider) == "" {
+	provider := normalizeProvider(req.PaymentProvider)
+	if provider == "" {
 		return errors.New("unsupported payment provider")
 	}
-	if req.Currency == "" {
-		req.Currency = "RWF"
+	// Phone validation logic
+	if provider == "mtn" {
+		env := s.getEnvironment()
+		testNumbers := map[string]bool{
+			"46733123450": true,
+			"46733123451": true,
+			"46733123452": true,
+			"46733123453": true,
+		}
+		if env == "sandbox" {
+			if testNumbers[req.PhoneNumber] {
+				// Allow test numbers in sandbox
+				return nil
+			}
+		}
+		// Allow E.164 international format for MTN MoMo (e.g., +[country code][number])
+		e164Pattern := `^\+?[1-9]\d{7,14}$`
+		match, _ := regexp.MatchString(e164Pattern, req.PhoneNumber)
+		if !match {
+			return errors.New("please enter a valid international phone number (E.164 format) for MTN MoMo")
+		}
+	} else {
+		// Strict Rwanda validation for other providers
+		if !utils.ValidatePhoneNumber(req.PhoneNumber) {
+			return errors.New("please enter a valid Rwandan phone number")
+		}
+	}
+	// Force EUR for MTN MoMo sandbox
+	if provider == "mtn" && s.getEnvironment() == "sandbox" {
+		req.Currency = "EUR"
+	} else if req.Currency == "" {
+		req.Currency = "EUR"
 	}
 	return nil
 }
@@ -644,8 +668,6 @@ func (s *PaymentService) preventReplay(provider string, payload map[string]inter
 			return errors.New("duplicate callback detected")
 		}
 	}
-
-	s.callbackReplayCache[fingerprint] = now
 	return nil
 }
 
@@ -726,7 +748,7 @@ func (s *PaymentService) resolvePaymentPropertyID(ctx context.Context, userID ui
 		Status:       "available",
 		LandSize:     1,
 		Price:        1,
-		Currency:     "RWF",
+		Currency:     "EUR",
 		OwnerID:      userID,
 	}
 	if createErr := s.db.WithContext(ctx).Create(placeholder).Error; createErr != nil {

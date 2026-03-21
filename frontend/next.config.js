@@ -3,8 +3,10 @@ const nextConfig = {
   turbopack: {},
   images: {
     remotePatterns: [
-      // Add your image remote patterns here instead of domains
-      // Example: { protocol: 'https', hostname: '**.example.com' }
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
     ],
   },
 };

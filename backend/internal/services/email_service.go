@@ -26,6 +26,55 @@ func NewEmailService() *EmailService {
 	}
 }
 
+// SendInvoiceEmail sends an invoice HTML to the user
+func (s *EmailService) SendInvoiceEmail(toEmail, userName, invoiceHTML string) error {
+	subject := "Your Payment Invoice - Land Valuation System"
+	body := s.buildInvoiceEmailBody(userName, invoiceHTML)
+	return s.sendEmail(toEmail, subject, body)
+}
+
+// buildInvoiceEmailBody wraps the invoice HTML in a styled email
+func (s *EmailService) buildInvoiceEmailBody(userName, invoiceHTML string) string {
+	return fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f4f4f4;">
+    <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;padding:20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#667eea 0%%,#764ba2 100%%);padding:30px;text-align:center;border-radius:8px 8px 0 0;">
+                            <h1 style="color:#fff;margin:0;font-size:28px;">Land Valuation System</h1>
+                            <p style="color:#fff;margin:10px 0 0 0;font-size:14px;">Rwanda</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:40px 30px;">
+                            <h2 style="color:#333;margin:0 0 20px 0;">Hello, %s!</h2>
+                            <p style="color:#666;font-size:16px;line-height:1.6;margin:0 0 20px 0;">Thank you for your payment. Please find your invoice below:</p>
+                            <div style="margin:30px 0;">%s</div>
+                            <p style="color:#666;font-size:14px;line-height:1.6;margin:20px 0;">If you have any questions, reply to this email.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#f4f4f4;padding:20px;text-align:center;border-radius:0 0 8px 8px;color:#999;font-size:12px;">
+                            &copy; 2024 Land Valuation System. All rights reserved.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+`, userName, invoiceHTML)
+}
+
 // GenerateOTP generates a 6-digit OTP code
 func GenerateOTP() (string, error) {
 	max := big.NewInt(1000000)

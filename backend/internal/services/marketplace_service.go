@@ -22,7 +22,25 @@ func (s *MarketplaceService) SyncPropertyWithMarketplaces(ctx context.Context, p
 }
 
 func (s *MarketplaceService) GetAllPropertiesOnSale(ctx context.Context, page, limit int) ([]interface{}, int, error) {
-	return []interface{}{}, 0, nil
+	var properties []models.Property
+	var total int64
+	offset := (page - 1) * limit
+	err := s.db.Model(&models.Property{}).
+		Where("status = ?", "available").
+		Count(&total).
+		Limit(limit).
+		Offset(offset).
+		Order("created_at DESC").
+		Find(&properties).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	// Convert to []interface{} for compatibility
+	listings := make([]interface{}, len(properties))
+	for i, p := range properties {
+		listings[i] = p
+	}
+	return listings, int(total), nil
 }
 
 func NewMarketplaceService(db *gorm.DB) *MarketplaceService {

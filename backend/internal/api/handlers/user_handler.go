@@ -1,11 +1,15 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/base64"
+	"encoding/csv"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/jung-kurt/gofpdf"
 
 	"backend/internal/models"
 	"backend/internal/services"
@@ -15,8 +19,103 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ListUsers lists all users (admin only)
+// @Summary List all users
+// @Description List all users with subscription status (admin only)
+// @Tags admin
+// @Produce json
+// @Param page query int false "Page number"
+// @Param limit query int false "Page size"
+// @Param status query string false "Subscription status filter"
+// @Success 200 {object} utils.APIResponse "List of users"
+// @Failure 401 {object} utils.APIResponse "Unauthorized"
+// @Router /admin/users [get]
+func (h *UserHandler) ListUsers(c *gin.Context) {
+	// TODO: Add admin authentication/authorization check
+	page := 1
+	limit := 20
+	if p := c.Query("page"); p != "" {
+		fmt.Sscanf(p, "%d", &page)
+	}
+	if l := c.Query("limit"); l != "" {
+		fmt.Sscanf(l, "%d", &limit)
+	}
+	offset := (page - 1) * limit
+	filters := map[string]string{}
+	if status := c.Query("status"); status != "" {
+		filters["status"] = status
+	}
+	users, total, err := h.userService.ListUsers(c.Request.Context(), offset, limit, filters)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to list users", err.Error())
+		return
+	}
+	data := map[string]interface{}{
+		"users": users,
+		"total": total,
+		"page":  page,
+		"limit": limit,
+	}
+	utils.SuccessResponse(c, http.StatusOK, "Users listed", data)
+}
+
 type UserHandler struct {
 	userService *services.UserService
+}
+
+// ExportUsers allows admin to export user data as CSV or PDF
+// @Summary Export users (admin)
+// @Description Export all users as CSV or PDF
+// @Tags admin
+// @Produce application/octet-stream
+// @Param format query string false "csv or pdf" default(csv)
+// @Success 200 {file} file
+// @Failure 401 {object} utils.APIResponse
+// @Router /admin/users/export [get]
+func (h *UserHandler) ExportUsers(c *gin.Context) {
+	format := c.DefaultQuery("format", "csv")
+	users, _, err := h.userService.ListUsers(c.Request.Context(), 0, 10000, map[string]string{})
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to fetch users", err.Error())
+		return
+	}
+	if format == "pdf" {
+		pdf := gofpdf.New("P", "mm", "A4", "")
+		pdf.AddPage()
+		pdf.SetFont("Arial", "B", 12)
+		pdf.Cell(40, 10, "User Export Report")
+		pdf.Ln(12)
+		pdf.SetFont("Arial", "", 10)
+		for _, u := range users {
+			pdf.Cell(0, 8, fmt.Sprintf("ID: %v, Name: %s %s, Email: %s", u.ID, u.FirstName, u.LastName, u.Email))
+			pdf.Ln(8)
+		}
+		var buf bytes.Buffer
+		err := pdf.Output(&buf)
+		if err != nil {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to generate PDF", err.Error())
+			return
+		}
+		c.Header("Content-Disposition", "attachment; filename=users.pdf")
+		c.Data(http.StatusOK, "application/pdf", buf.Bytes())
+		return
+	}
+	// Default: CSV
+	var buf bytes.Buffer
+	writer := csv.NewWriter(&buf)
+	writer.Write([]string{"ID", "FirstName", "LastName", "Email", "Status"})
+	for _, u := range users {
+		writer.Write([]string{
+			fmt.Sprintf("%v", u.ID),
+			u.FirstName,
+			u.LastName,
+			u.Email,
+			u.KYCStatus,
+		})
+	}
+	writer.Flush()
+	c.Header("Content-Disposition", "attachment; filename=users.csv")
+	c.Data(http.StatusOK, "text/csv", buf.Bytes())
 }
 
 // SubmitKYCRequest represents KYC submission request

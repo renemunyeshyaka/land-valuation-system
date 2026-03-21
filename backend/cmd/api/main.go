@@ -14,11 +14,16 @@ import (
 	"backend/internal/config"
 	"backend/internal/database"
 	"backend/internal/middleware"
+	"backend/internal/repository"
+	"backend/internal/services"
+	"backend/internal/workers"
 	"backend/pkg/cache"
 	"backend/pkg/logger"
+	"backend/pkg/metrics"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -110,6 +115,31 @@ func main() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal("Failed to start server:", err)
 		}
+	}()
+
+	// Start payment status polling worker (background)
+	ctx, cancelWorker := context.WithCancel(context.Background())
+	defer cancelWorker()
+	paymentService := services.NewPaymentService(db)
+	txnRepo := repository.NewTransactionRepository(db)
+	userService := services.NewUserService(db)
+	invoiceService := services.NewInvoiceService()
+	emailService := services.NewEmailService()
+	go workers.StartPaymentStatusWorker(ctx, 30*time.Second, paymentService, txnRepo, userService, invoiceService, emailService)
+
+	// Start subscription billing worker (background)
+	subBillingWorker := workers.NewSubscriptionBillingWorker(db, paymentService)
+	subBillingWorker.Start(ctx, 24*time.Hour) // Run daily
+
+	// Register Prometheus metrics
+	metrics.Register()
+
+	// Expose /metrics endpoint
+	go func() {
+		mux := http.NewServeMux()
+		mux.Handle("/metrics", promhttp.Handler())
+		log.Println("Prometheus metrics endpoint running on :2112/metrics")
+		http.ListenAndServe(":2112", mux)
 	}()
 
 	// Wait for interrupt signal

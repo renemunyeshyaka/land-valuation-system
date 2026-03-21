@@ -158,22 +158,12 @@ const ResetPassword: React.FC = () => {
                 </div>
               </Link>
 
-              {/* Navigation Menu - Right Side */}
-              <div className="flex items-center gap-2 sm:gap-4">
-                {/* Language Selector */}
-                <button className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-700 hover:text-emerald-700 transition-colors">
-                  <i className="fas fa-globe text-base"></i>
-                  <span className="hidden sm:inline">EN</span>
-                  <i className="fas fa-chevron-down text-xs"></i>
-                </button>
-
-                {/* Login Link */}
-                <Link 
-                  href="/auth/login"
-                  className="px-4 py-2 text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors"
-                >
-                  Log In
-                </Link>
+              <div className="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
+                <Link href="/" className="hover:text-emerald-700 transition">Home</Link>
+                <Link href="/how-it-works" className="hover:text-emerald-700 transition">How it works</Link>
+                <Link href="/benefits" className="hover:text-emerald-700 transition">Benefits</Link>
+                <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
+                <Link href="/contact" className="hover:text-emerald-700 transition">Contact</Link>
               </div>
             </div>
           </div>

@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,15 +16,22 @@ import (
 
 // Constants for payment validation
 const (
-	MinPaymentAmount = 100.0      // Minimum RWF
-	MaxPaymentAmount = 50000000.0 // Maximum RWF
-	RWFTousdRate     = 0.00079    // Approximate RWF to USD conversion
+	MinPaymentAmount = 1.0     // Minimum EUR
+	MaxPaymentAmount = 50000.0 // Maximum EUR
 )
 
 // Payment provider phone patterns
 var phonePatterns = map[string]string{
 	"mtn":    `^(\+250|0)?7(8|9)[0-9]{7}$`, // MTN RW: +250 or 0, then 78 or 79 + 7 digits
 	"airtel": `^(\+250|0)?7[3|4][0-9]{7}$`, // Airtel RW: +250 or 0, then 73 or 74 + 7 digits
+}
+
+// MTN MoMo sandbox test numbers
+var mtnSandboxNumbers = map[string]bool{
+	"46733123450": true,
+	"46733123451": true,
+	"46733123452": true,
+	"46733123453": true,
 }
 
 // MobileMoneyRequest represents a mobile money payment request
@@ -45,6 +54,13 @@ func NewPaymentHandler(paymentService *services.PaymentService) *PaymentHandler 
 
 // validatePhoneNumber validates phone number format for provider
 func validatePhoneNumber(phone, provider string) bool {
+	// Always allow MTN MoMo sandbox test numbers (with or without '+')
+	if provider == "mtn" {
+		p := strings.TrimPrefix(phone, "+")
+		if mtnSandboxNumbers[p] {
+			return true
+		}
+	}
 	pattern, exists := phonePatterns[provider]
 	if !exists {
 		return false
@@ -57,6 +73,11 @@ func validatePhoneNumber(phone, provider string) bool {
 func normalizePhoneNumber(phone string) string {
 	// Remove spaces and hyphens
 	cleaned := regexp.MustCompile(`[\s\-]`).ReplaceAllString(phone, "")
+
+	// Special case: If MTN sandbox mode and number is a sandbox test number, skip normalization
+	if os.Getenv("MTN_MOMO_ENVIRONMENT") == "sandbox" && mtnSandboxNumbers[strings.TrimPrefix(cleaned, "+")] {
+		return cleaned
+	}
 
 	// If starts with 0, replace with +250
 	if len(cleaned) > 0 && cleaned[0] == '0' {
@@ -96,12 +117,12 @@ func (h *PaymentHandler) InitiateMobileMoneyPayment(c *gin.Context) {
 	// Validate amount range
 	if req.Amount < MinPaymentAmount {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Amount validation failed",
-			"Minimum payment amount is 100 RWF")
+			"Minimum payment amount is 1 EUR")
 		return
 	}
 	if req.Amount > MaxPaymentAmount {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Amount validation failed",
-			"Maximum payment amount is 50,000,000 RWF")
+			"Maximum payment amount is 50,000 EUR")
 		return
 	}
 
@@ -123,7 +144,7 @@ func (h *PaymentHandler) InitiateMobileMoneyPayment(c *gin.Context) {
 	paymentReq := &services.PaymentRequest{
 		UserID:          uint(userIDUint),
 		Amount:          req.Amount,
-		Currency:        "RWF",
+		Currency:        "EUR",
 		PhoneNumber:     normalizedPhone,
 		PaymentProvider: req.Provider,
 		Description:     req.Description,
@@ -132,6 +153,8 @@ func (h *PaymentHandler) InitiateMobileMoneyPayment(c *gin.Context) {
 	// Initiate payment
 	response, err := h.paymentService.InitiatePayment(c.Request.Context(), paymentReq)
 	if err != nil {
+		// Explicitly log the error for backend visibility
+		fmt.Printf("[ERROR] Payment initiation failed: %v\n", err)
 		// Distinguish between different error types
 		switch err.Error() {
 		case "insufficient_balance":

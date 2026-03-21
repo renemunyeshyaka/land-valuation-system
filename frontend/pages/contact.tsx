@@ -42,6 +42,27 @@ export default function Contact() {
       <Head>
         <title>Contact Us | Land Valuation System</title>
       </Head>
+      <nav className="bg-white/90 backdrop-blur-sm sticky top-0 z-30 border-b border-gray-200/70">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16 md:h-20">
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 bg-emerald-700 rounded-xl flex items-center justify-center shadow-sm">
+                <i className="fas fa-map-marked-alt text-white text-lg"></i>
+              </div>
+              <span className="font-bold text-xl tracking-tight text-emerald-900">
+                Land<span className="text-emerald-600">Val</span>
+              </span>
+            </div>
+            <div className="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
+              <Link href="/" className="hover:text-emerald-700 transition">Home</Link>
+              <Link href="/how-it-works" className="hover:text-emerald-700 transition">How it works</Link>
+              <Link href="/benefits" className="hover:text-emerald-700 transition">Benefits</Link>
+              <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
+              <Link href="/contact" className="hover:text-emerald-700 transition">Contact</Link>
+            </div>
+          </div>
+        </div>
+      </nav>
       <div className="max-w-xl mx-auto py-16 px-4">
         <h1 className="text-3xl font-bold mb-6">Contact Us</h1>
         <p className="mb-6 text-gray-700">For any inquiries, suggestions, or support, please fill out the form below. Our team will respond as soon as possible. You can also email us directly at <a href="mailto:support@kcoders.org" className="text-blue-600 underline">support@kcoders.org</a>.</p>

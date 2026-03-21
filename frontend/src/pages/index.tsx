@@ -173,9 +173,9 @@ const Home: React.FC = () => {
               {/* main menu (desktop) */}
               <div className="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
                 <Link href="/" className="hover:text-emerald-700 transition">Home</Link>
-                <Link href="/search" className="hover:text-emerald-700 transition">Valuation</Link>
-                <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
                 <Link href="/how-it-works" className="hover:text-emerald-700 transition">How it works</Link>
+                <Link href="/benefits" className="hover:text-emerald-700 transition">Benefits</Link>
+                <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
                 <Link href="/contact" className="hover:text-emerald-700 transition">Contact</Link>
               </div>
 
@@ -587,7 +587,7 @@ const Home: React.FC = () => {
               <ul className="mt-3 space-y-2 text-sm">
                 <li><Link href="/privacy" className="hover:text-white transition">Privacy</Link></li>
                 <li><Link href="/terms" className="hover:text-white transition">Terms</Link></li>
-                <li>Copyright RDB</li>
+                <li>Copyright©</li>
               </ul>
             </div>
           </div>

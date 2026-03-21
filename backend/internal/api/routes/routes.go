@@ -231,12 +231,16 @@ func setupAnalyticsRoutes(router *gin.Engine, db *gorm.DB) {
 func setupAdminRoutes(router *gin.Engine, db *gorm.DB) {
 	adminService := services.NewAdminService(db)
 	adminHandler := handlers.NewAdminHandler(adminService)
+	userService := services.NewUserService(db)
+	userHandler := handlers.NewUserHandler(userService)
 
 	admin := router.Group("/api/v1/admin")
 	admin.Use(middleware.AuthRequired(), middleware.AdminRequired())
 	{
 		admin.GET("/users", adminHandler.GetAllUsers)
+		admin.GET("/users/list", userHandler.ListUsers) // New paginated/filterable endpoint
 		admin.GET("/users/:id", adminHandler.GetUser)
+		admin.GET("/users/export", userHandler.ExportUsers) // Export users as CSV/PDF
 		admin.POST("/users/:id/verify-kyc", adminHandler.VerifyUserKYC)
 		admin.POST("/users/:id/suspend", adminHandler.SuspendUser)
 		admin.POST("/users/:id/reactivate", adminHandler.ReactivateUser)

@@ -1,3 +1,4 @@
+
 package services
 
 import (
@@ -8,6 +9,11 @@ import (
 
 	"gorm.io/gorm"
 )
+
+// ListUsers retrieves paginated users for admin
+func (s *UserService) ListUsers(ctx context.Context, offset, limit int, filters map[string]string) ([]*models.User, int, error) {
+	return s.userRepo.List(ctx, offset, limit, filters)
+}
 
 type UserService struct {
 	userRepo *repository.UserRepository

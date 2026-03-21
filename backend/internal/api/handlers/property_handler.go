@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backend/internal/models"
 	"backend/internal/repository"
 	"backend/internal/utils"
 	"net/http"
@@ -26,8 +27,64 @@ func (h *PropertyHandler) SearchNearby(c *gin.Context) {
 
 // CreateProperty creates a new property
 func (h *PropertyHandler) CreateProperty(c *gin.Context) {
-	// TODO: Implement property creation logic
-	utils.SuccessResponse(c, http.StatusOK, "CreateProperty not implemented", nil)
+	userID, exists := c.Get("user_id")
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", "User ID not found in context")
+		return
+	}
+
+	var req struct {
+		Title            string   `json:"title" binding:"required"`
+		Description      string   `json:"description"`
+		PropertyType     string   `json:"property_type" binding:"required"`
+		Status           string   `json:"status"`
+		UPI              string   `json:"upi" binding:"required"`
+		Address          string   `json:"address"`
+		Latitude         float64  `json:"latitude"`
+		Longitude        float64  `json:"longitude"`
+		LandSize         float64  `json:"land_size" binding:"required"`
+		SizeUnit         string   `json:"size_unit"`
+		ZoneCoefficient  float64  `json:"zone_coefficient"`
+		GazetteReference string   `json:"gazette_reference"`
+		Price            float64  `json:"price" binding:"required"`
+		Currency         string   `json:"currency"`
+		Features         []string `json:"features"`
+		Images           []string `json:"images"`
+		Documents        []string `json:"documents"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		return
+	}
+
+	property := &models.Property{
+		Title:            req.Title,
+		Description:      req.Description,
+		PropertyType:     req.PropertyType,
+		Status:           "available",
+		UPI:              req.UPI,
+		Address:          req.Address,
+		Latitude:         req.Latitude,
+		Longitude:        req.Longitude,
+		LandSize:         req.LandSize,
+		SizeUnit:         req.SizeUnit,
+		ZoneCoefficient:  req.ZoneCoefficient,
+		GazetteReference: req.GazetteReference,
+		Price:            req.Price,
+		Currency:         req.Currency,
+		Features:         req.Features,
+		Images:           req.Images,
+		Documents:        req.Documents,
+		OwnerID:          userID.(uint),
+	}
+
+	if err := h.propertyRepo.Create(property); err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create property", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusCreated, "Property created successfully", property)
 }
 
 type PropertyHandler struct {

@@ -1,13 +1,8 @@
 export const formatPrice = (value: number): string => {
   if (!Number.isFinite(value)) {
-    return 'FRW 0';
+    return 'EUR 0';
   }
-
-  return new Intl.NumberFormat('en-RW', {
-    style: 'currency',
-    currency: 'RWF',
-    maximumFractionDigits: 0,
-  }).format(value);
+  return `EUR ${value}`;
 };
 
 export const formatSize = (value: number, unit?: string): string => {

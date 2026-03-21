@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How It Works · LandVal System Rwanda</title>
+    <!-- Tailwind via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fafaf9 0%, #ffffff 100%);
+        }
+        .hero-gradient {
+            background: linear-gradient(112deg, #0b3b2c 0%, #1f6e4a 100%);
+        }
+        .step-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .step-card:hover {
+            transform: translateY(-8px);
+        }
+        .step-number {
+            background: linear-gradient(135deg, #0b3b2c 0%, #1f6e4a 100%);
+            box-shadow: 0 10px 25px -5px rgba(11, 59, 44, 0.3);
+        }
+        .feature-box {
+            transition: all 0.2s ease;
+        }
+        .feature-box:hover {
+            transform: translateX(8px);
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+        .timeline-dot {
+            position: relative;
+        }
+        .timeline-dot::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 2px;
+            height: calc(100% - 40px);
+            background: linear-gradient(180deg, #10b981 0%, #d1d5db 100%);
+        }
+        .timeline-item:last-child .timeline-dot::after {
+            display: none;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        .video-placeholder {
+            background: linear-gradient(135deg, #0b3b2c 0%, #1f6e4a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .video-placeholder::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .demo-step {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .demo-step.active {
+            background: linear-gradient(135deg, #0b3b2c 0%, #1f6e4a 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="bg-white/95 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 md:h-20">
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 bg-emerald-700 rounded-xl flex items-center justify-center shadow-sm">
+                        <i class="fas fa-map-marked-alt text-white text-lg"></i>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight text-emerald-900">Land<span class="text-emerald-600">Val</span></span>
+                </div>
+                <div class="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
+                    <a href="index.html" class="hover:text-emerald-700 transition">Home</a>
+                    <a href="valuation.html" class="hover:text-emerald-700 transition">Valuation</a>
+                    <a href="marketplace.html" class="hover:text-emerald-700 transition">Marketplace</a>
+                    <a href="how-it-works.html" class="text-emerald-700 font-semibold border-b-2 border-emerald-600 pb-1">How It Works</a>
+                    <a href="benefits.html" class="hover:text-emerald-700 transition">Benefits</a>
+                    <a href="contact.html" class="hover:text-emerald-700 transition">Contact</a>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="#" class="text-sm font-medium text-emerald-800 hover:text-emerald-900 px-3 py-2">Log in</a>
+                    <a href="#" class="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-sm transition">Sign up</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient text-white py-20 md:py-28">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium mb-6 border border-white/10">
+                <i class="fas fa-play-circle mr-2"></i> Simple. Fast. Secure.
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6">
+                How LandVal Works
+                <span class="block text-amber-300 text-2xl md:text-3xl mt-2">Your Complete Guide to Smart Land Transactions</span>
+            </h1>
+            <p class="text-xl text-emerald-100 max-w-3xl mx-auto">
+                From property search to secure ownership transfer — we've made every step simple, transparent, and efficient
+            </p>
+        </div>
+    </section>
+
+    <!-- Interactive Demo Banner -->
+    <section class="py-12 bg-white border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-3xl p-8 md:p-12">
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <div class="inline-flex items-center bg-emerald-200 text-emerald-800 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
+                            <i class="fas fa-video mr-2"></i> Interactive Demo
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">See LandVal in Action</h2>
+                        <p class="text-gray-700 mb-6">Watch how easy it is to value, list, and sell your property in under 5 minutes</p>
+                        <div class="flex gap-3">
+                            <button class="bg-emerald-700 hover:bg-emerald-800 text-white px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2">
+                                <i class="fas fa-play"></i> Watch Demo (2:30)
+                            </button>
+                            <button class="border border-emerald-600 text-emerald-700 hover:bg-emerald-50 px-6 py-3 rounded-xl font-semibold transition">
+                                Try Live Demo
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="video-placeholder rounded-2xl h-48 md:h-64 flex items-center justify-center cursor-pointer group">
+                            <div class="relative z-10 text-center">
+                                <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition">
+                                    <i class="fas fa-play text-white text-3xl ml-1"></i>
+                                </div>
+                                <p class="text-white font-semibold">Click to play demo</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Workflow Steps -->
+    <section class="py-20 bg-gray-50/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <span class="text-emerald-600 font-semibold text-sm tracking-wider uppercase">Your Journey</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mt-2">4 Simple Steps to Success</h2>
+                <p class="text-gray-600 mt-4 max-w-2xl mx-auto">Follow this streamlined process to complete your land transaction with confidence</p>
+            </div>
+
+            <div class="grid md:grid-cols-4 gap-8">
+                <!-- Step 1 -->
+                <div class="step-card text-center">
+                    <div class="step-number w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-600 text-white flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-lg">
+                        1
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Create Account</h3>
+                    <p class="text-gray-600 mb-4">Sign up in seconds with email or Google. Free account gives you 3 valuations to start.</p>
+                    <div class="inline-flex items-center gap-2 text-emerald-600 text-sm">
+                        <i class="fas fa-check-circle"></i>
+                        <span>No credit card required</span>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="step-card text-center">
+                    <div class="step-number w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-600 text-white flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-lg">
+                        2
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Search or Upload</h3>
+                    <p class="text-gray-600 mb-4">Enter parcel number, address, or upload title documents. Our system instantly identifies location.</p>
+                    <div class="inline-flex items-center gap-2 text-emerald-600 text-sm">
+                        <i class="fas fa-search"></i>
+                        <span>Parcel number, address, or map click</span>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="step-card text-center">
+                    <div class="step-number w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-600 text-white flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-lg">
+                        3
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Get Instant Valuation</h3>
+                    <p class="text-gray-600 mb-4">Receive detailed report with gazette data, market trends, and 5-year projections.</p>
+                    <div class="inline-flex items-center gap-2 text-emerald-600 text-sm">
+                        <i class="fas fa-chart-line"></i>
+                        <span>30 seconds · ±5% accuracy</span>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="step-card text-center">
+                    <div class="step-number w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-600 text-white flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-lg">
+                        4
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Transact with Confidence</h3>
+                    <p class="text-gray-600 mb-4">List property, connect with buyers, or make an offer with secure escrow support.</p>
+                    <div class="inline-flex items-center gap-2 text-emerald-600 text-sm">
+                        <i class="fas fa-handshake"></i>
+                        <span>Title verification + escrow included</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detailed Walkthrough with Timeline -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-16 items-start">
+                <div>
+                    <span class="text-emerald-600 font-semibold text-sm tracking-wider uppercase">Detailed Walkthrough</span>
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-6">What Happens Behind the Scenes</h2>
+                    <p class="text-gray-600 mb-8">Our technology works seamlessly to deliver accurate results in seconds</p>
+
+                    <div class="space-y-8">
+                        <!-- Timeline Item 1 -->
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-700">
+                                    <i class="fas fa-map-pin text-xl"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg text-gray-900">1. Location Intelligence</h3>
+                                <p class="text-gray-600 mt-1">Our geocoding engine cross-references your input with Rwanda's cadastral database, identifying exact parcel boundaries, zone classification, and administrative details.</p>
+                                <div class="mt-2 text-sm text-emerald-600">
+                                    <i class="fas fa-check-circle"></i> Covers all 30 districts
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Item 2 -->
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-700">
+                                    <i class="fas fa-database text-xl"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg text-gray-900">2. Gazette Data Integration</h3>
+                                <p class="text-gray-600 mt-1">We pull official coefficients from Rwanda Land Authority's gazette, applying the correct multipliers based on zone type (urban, rural, agricultural, marshland).</p>
+                                <div class="mt-2 text-sm text-emerald-600">
+                                    <i class="fas fa-sync-alt"></i> Updated quarterly
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Item 3 -->
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-700">
+                                    <i class="fas fa-chart-line text-xl"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg text-gray-900">3. Market Analysis & Adjustments</h3>
+                                <p class="text-gray-600 mt-1">Our AI analyzes recent transactions, infrastructure developments, and demand trends to adjust base valuations for current market conditions.</p>
+                                <div class="mt-2 text-sm text-emerald-600">
+                                    <i class="fas fa-brain"></i> 10+ years of historical data
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Item 4 -->
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-700">
+                                    <i class="fas fa-file-alt text-xl"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg text-gray-900">4. Comprehensive Report Generation</h3>
+                                <p class="text-gray-600 mt-1">You receive a detailed PDF report with current value, historical trends, comparable properties, and investment recommendations.</p>
+                                <div class="mt-2 text-sm text-emerald-600">
+                                    <i class="fas fa-download"></i> Downloadable + shareable
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Map Demo -->
+                <div class="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 shadow-xl border border-gray-100">
+                    <div class="text-center mb-6">
+                        <i class="fas fa-map-marked-alt text-4xl text-emerald-600"></i>
+                        <h3 class="text-2xl font-bold text-gray-900 mt-3">Try It Yourself</h3>
+                        <p class="text-gray-600 text-sm">Click any district to see sample valuation</p>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="demo-step bg-gray-100 rounded-xl p-4 hover:bg-emerald-50 transition cursor-pointer" data-district="Kigali">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <i class="fas fa-city text-emerald-600"></i>
+                                    <span class="font-semibold ml-2">Kigali City</span>
+                                </div>
+                                <i class="fas fa-arrow-right text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div class="demo-step bg-gray-100 rounded-xl p-4 hover:bg-emerald-50 transition cursor-pointer" data-district="Musanze">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <i class="fas fa-mountain text-emerald-600"></i>
+                                    <span class="font-semibold ml-2">Musanze (Northern)</span>
+                                </div>
+                                <i class="fas fa-arrow-right text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div class="demo-step bg-gray-100 rounded-xl p-4 hover:bg-emerald-50 transition cursor-pointer" data-district="Rubavu">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <i class="fas fa-water text-emerald-600"></i>
+                                    <span class="font-semibold ml-2">Rubavu (Lake Kivu)</span>
+                                </div>
+                                <i class="fas fa-arrow-right text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div class="demo-step bg-gray-100 rounded-xl p-4 hover:bg-emerald-50 transition cursor-pointer" data-district="Eastern">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <i class="fas fa-tractor text-emerald-600"></i>
+                                    <span class="font-semibold ml-2">Eastern Province</span>
+                                </div>
+                                <i class="fas fa-arrow-right text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="demoResult" class="mt-6 p-4 bg-emerald-50 rounded-xl hidden">
+                        <div class="text-sm text-emerald-800 font-semibold mb-2">Sample Valuation Result:</div>
+                        <div id="demoValue" class="text-2xl font-bold text-emerald-900"></div>
+                        <div class="text-xs text-gray-600 mt-2">* This is a demo. Actual valuations use real gazette data.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Features Explained -->
+    <section class="py-20 bg-gradient-to-b from-gray-50 to-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="text-emerald-600 font-semibold text-sm tracking-wider uppercase">Powerful Features</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mt-2">Everything You Need in One Platform</h2>
+                <p class="text-gray-600 mt-4 max-w-2xl mx-auto">No more switching between tools — LandVal brings it all together</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="feature-box bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-search text-emerald-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Smart Property Search</h3>
+                    <p class="text-gray-600 text-sm">Search by parcel number, owner name, address, or simply click on the interactive map.</p>
+                </div>
+
+                <div class="feature-box bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-chart-simple text-emerald-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Real-Time Market Data</h3>
+                    <p class="text-gray-600 text-sm">Live price updates, transaction volumes, and demand trends for informed decisions.</p>
+                </div>
+
+                <div class="feature-box bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-file-pdf text-emerald-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Professional Reports</h3>
+                    <p class="text-gray-600 text-sm">Download bank-ready valuation certificates with official gazette references.</p>
+                </div>
+
+                <div class="feature-box bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-bell text-emerald-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Price Alerts</h3>
+                    <p class="text-gray-600 text-sm">Get notified when properties in your target area meet your budget criteria.</p>
+                </div>
+
+                <div class="feature-box bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-chart-line text-emerald-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Investment Analytics</h3>
+                    <p class="text-gray-600 text-sm">ROI projections, rental yield calculations, and risk assessment scores.</p>
+                </div>
+
+                <div class="feature-box bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-headset text-emerald-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">24/7 Support</h3>
+                    <p class="text-gray-600 text-sm">Dedicated support team via chat, email, or phone for all your questions.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Tutorials Section -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900">Video Tutorials</h2>
+                <p class="text-gray-600 mt-4">Learn at your own pace with our step-by-step video guides</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="group cursor-pointer">
+                    <div class="bg-gray-100 rounded-2xl h-40 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                                <i class="fas fa-play text-emerald-600 ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="font-semibold mt-3">Getting Started Guide</h3>
+                    <p class="text-sm text-gray-500">3:24 min</p>
+                </div>
+                <div class="group cursor-pointer">
+                    <div class="bg-gray-100 rounded-2xl h-40 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                                <i class="fas fa-play text-emerald-600 ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="font-semibold mt-3">How to List Your Property</h3>
+                    <p class="text-sm text-gray-500">4:12 min</p>
+                </div>
+                <div class="group cursor-pointer">
+                    <div class="bg-gray-100 rounded-2xl h-40 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                                <i class="fas fa-play text-emerald-600 ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="font-semibold mt-3">Understanding Valuation Reports</h3>
+                    <p class="text-sm text-gray-500">5:08 min</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-20 bg-gray-50/50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="text-emerald-600 font-semibold text-sm tracking-wider uppercase">Common Questions</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mt-2">Got Questions? We've Got Answers</h2>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-white rounded-2xl p-6 shadow-sm">
+                    <button class="flex justify-between items-center w-full text-left faq-toggle">
+                        <span class="font-semibold text-gray-900">How accurate are LandVal valuations?</span>
+                        <i class="fas fa-chevron-down text-emerald-600"></i>
+                    </button>
+                    <div class="faq-content mt-3 text-gray-600 hidden">
+                        Our valuations are within ±5% of market value, verified against actual transaction data. We combine official gazette coefficients with real-time market analysis for maximum accuracy.
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-sm">
+                    <button class="flex justify-between items-center w-full text-left faq-toggle">
+                        <span class="font-semibold text-gray-900">Is my data secure?</span>
+                        <i class="fas fa-chevron-down text-emerald-600"></i>
+                    </button>
+                    <div class="faq-content mt-3 text-gray-600 hidden">
+                        Yes! We use bank-level encryption (256-bit SSL) and never share your personal information. All transactions are protected and comply with Rwanda data protection laws.
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-sm">
+                    <button class="flex justify-between items-center w-full text-left faq-toggle">
+                        <span class="font-semibold text-gray-900">Do I need to be in Rwanda to use LandVal?</span>
+                        <i class="fas fa-chevron-down text-emerald-600"></i>
+                    </button>
+                    <div class="faq-content mt-3 text-gray-600 hidden">
+                        Not at all! Our platform is designed for diaspora and international investors. You can value, buy, and sell properties from anywhere in the world with our digital tools and remote support.
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-sm">
+                    <button class="flex justify-between items-center w-full text-left faq-toggle">
+                        <span class="font-semibold text-gray-900">What if I need help with my transaction?</span>
+                        <i class="fas fa-chevron-down text-emerald-600"></i>
+                    </button>
+                    <div class="faq-content mt-3 text-gray-600 hidden">
+                        Our dedicated support team is available via live chat, email, or phone. Premium users get a dedicated account manager to guide them through every step.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="hero-gradient py-16 text-white">
+        <div class="max-w-5xl mx-auto text-center px-4">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
+            <p class="text-emerald-100 text-lg mb-8">Join thousands of satisfied users who've simplified their land transactions with LandVal</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#" class="bg-white text-emerald-900 hover:bg-amber-50 font-semibold px-8 py-4 rounded-2xl shadow-xl text-lg flex items-center gap-2 transition">
+                    <i class="fas fa-user-plus"></i> Create Free Account
+                </a>
+                <a href="#" class="border-2 border-white/50 hover:bg-white/10 px-8 py-4 rounded-2xl font-semibold text-lg flex items-center gap-2 transition">
+                    <i class="fas fa-calendar-alt"></i> Schedule Free Consultation
+                </a>
+            </div>
+            <p class="mt-6 text-sm text-emerald-200">No credit card required · 3 free valuations included</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-emerald-950 text-emerald-200 py-12">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-5 gap-8">
+            <div class="col-span-2">
+                <div class="flex items-center gap-2 text-white">
+                    <i class="fas fa-map-marked-alt text-2xl"></i>
+                    <span class="font-bold text-xl">LandVal</span>
+                </div>
+                <p class="text-sm mt-3">All gazette data sourced from official Rwanda Land Authority publications.</p>
+                <div class="flex gap-4 mt-5">
+                    <i class="fab fa-twitter hover:text-white text-xl cursor-pointer"></i>
+                    <i class="fab fa-linkedin hover:text-white text-xl cursor-pointer"></i>
+                    <i class="fab fa-whatsapp hover:text-white text-xl cursor-pointer"></i>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-white">Product</h4>
+                <ul class="mt-3 space-y-2 text-sm">
+                    <li class="hover:text-white cursor-pointer">Valuation</li>
+                    <li class="hover:text-white cursor-pointer">Marketplace</li>
+                    <li class="hover:text-white cursor-pointer">Pricing</li>
+                    <li class="hover:text-white cursor-pointer">API</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-white">Resources</h4>
+                <ul class="mt-3 space-y-2 text-sm">
+                    <li class="hover:text-white cursor-pointer">How It Works</li>
+                    <li class="hover:text-white cursor-pointer">Benefits</li>
+                    <li class="hover:text-white cursor-pointer">Help center</li>
+                    <li class="hover:text-white cursor-pointer">Blog</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-white">Legal</h4>
+                <ul class="mt-3 space-y-2 text-sm">
+                    <li class="hover:text-white cursor-pointer">Privacy</li>
+                    <li class="hover:text-white cursor-pointer">Terms</li>
+                    <li class="hover:text-white cursor-pointer">Copyright©</li>
+                </ul>
+            </div>
+        </div>
+        <div class="border-t border-emerald-800 mt-10 pt-6 text-center text-xs text-emerald-400">
+            © 2026 Land Valuation System Ltd. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- JavaScript for Interactive Elements -->
+    <script>
+        // FAQ Toggle
+        document.querySelectorAll('.faq-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.nextElementSibling;
+                const icon = button.querySelector('i');
+                content.classList.toggle('hidden');
+                icon.classList.toggle('fa-chevron-down');
+                icon.classList.toggle('fa-chevron-up');
+            });
+        });
+
+        // Demo District Selection
+        const demoValues = {
+            'Kigali': 'Rwf 185,000,000 - 250,000,000 (Urban Zone A)',
+            'Musanze': 'Rwf 97,000,000 - 130,000,000 (Tourism Growth Zone)',
+            'Rubavu': 'Rwf 340,000,000 - 420,000,000 (Lakefront Premium)',
+            'Eastern': 'Rwf 45,000,000 - 85,000,000 (Agricultural Investment Zone)'
+        };
+
+        document.querySelectorAll('.demo-step').forEach(step => {
+            step.addEventListener('click', () => {
+                const district = step.getAttribute('data-district');
+                const resultDiv = document.getElementById('demoResult');
+                const valueDiv = document.getElementById('demoValue');
+                
+                if (district && demoValues[district]) {
+                    valueDiv.textContent = demoValues[district];
+                    resultDiv.classList.remove('hidden');
+                    
+                    // Highlight active step
+                    document.querySelectorAll('.demo-step').forEach(s => {
+                        s.classList.remove('active', 'bg-emerald-700', 'text-white');
+                        s.classList.add('bg-gray-100');
+                    });
+                    step.classList.remove('bg-gray-100');
+                    step.classList.add('active', 'bg-emerald-700', 'text-white');
+                }
+            });
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

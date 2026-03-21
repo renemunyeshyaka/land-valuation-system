@@ -41,8 +41,8 @@ func (s *SubscriptionService) UpdateSubscriptionAfterPayment(ctx context.Context
 			UserID:    user.ID,
 			PlanType:  planType,
 			Status:    "active",
-			StartDate: now.Unix(),
-			EndDate:   expiry.Unix(),
+			StartDate: now,
+			EndDate:   expiry,
 			AutoRenew: true,
 		}
 		_, err = s.subRepo.Create(ctx, sub)
@@ -54,7 +54,7 @@ func (s *SubscriptionService) UpdateSubscriptionAfterPayment(ctx context.Context
 		now := time.Now()
 		sub.PlanType = planType
 		sub.Status = "active"
-		sub.EndDate = now.AddDate(1, 0, 0).Unix()
+		sub.EndDate = now.AddDate(1, 0, 0)
 		_, err = s.subRepo.Update(ctx, sub)
 		if err != nil {
 			return err
@@ -151,8 +151,8 @@ func (s *SubscriptionService) UpgradeSubscription(ctx context.Context, userID, n
 	currentSub, err := s.subRepo.GetByUserID(ctx, userID)
 	if err != nil {
 		// Create new subscription if doesn't exist
-		now := time.Now().Unix()
-		nextYear := time.Now().AddDate(1, 0, 0).Unix()
+		now := time.Now()
+		nextYear := now.AddDate(1, 0, 0)
 		subscription := &models.Subscription{
 			UserID:    parseUint(userID),
 			PlanType:  newPlanType,
@@ -161,14 +161,12 @@ func (s *SubscriptionService) UpgradeSubscription(ctx context.Context, userID, n
 			EndDate:   nextYear,
 			AutoRenew: true,
 		}
-
 		return s.subRepo.Create(ctx, subscription)
 	}
 
 	// Update existing subscription
 	currentSub.PlanType = newPlanType
-	currentSub.EndDate = time.Now().AddDate(1, 0, 0).Unix()
-
+	currentSub.EndDate = time.Now().AddDate(1, 0, 0)
 	return s.subRepo.Update(ctx, currentSub)
 }
 

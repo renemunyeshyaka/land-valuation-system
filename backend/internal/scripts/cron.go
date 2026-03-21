@@ -65,9 +65,9 @@ func RunSubscriptionRenewalJob(db *gorm.DB) {
 		log.Printf("[RenewalJob] Failed to fetch active subscriptions: %v", err)
 		return
 	}
-	now := time.Now().Unix()
+	now := time.Now()
 	for _, sub := range subs {
-		if sub.EndDate <= now {
+		if sub.EndDate.Before(now) {
 			// Attempt auto-renewal (pseudo-code, implement payment initiation as needed)
 			if sub.AutoRenew {
 				log.Printf("[RenewalJob] Auto-renewing subscription %d for user %d", sub.ID, sub.UserID)

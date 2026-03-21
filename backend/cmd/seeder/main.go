@@ -214,10 +214,13 @@ func seedRegularUsers(ctx context.Context) {
 		if user.SubscriptionTier != "free" && user.SubscriptionExpiry != nil {
 			subscription := models.Subscription{
 				UserID:    user.ID,
-				Tier:      user.SubscriptionTier,
-				StartDate: time.Now().Unix(),
-				EndDate:   user.SubscriptionExpiry.Unix(),
+				PlanType:  user.SubscriptionTier,
+				StartDate: time.Now(),
+				EndDate:   *user.SubscriptionExpiry,
 				Status:    "active",
+				AutoRenew: true,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
 			}
 			db.WithContext(ctx).Create(&subscription)
 		}
