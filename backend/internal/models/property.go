@@ -30,6 +30,8 @@ type PropertyFilter struct {
 }
 
 type Property struct {
+	District         string         `gorm:"not null;size:100" json:"district"`
+	Sector           string         `gorm:"not null;size:100" json:"sector"`
 	AreaSqm          float64        `json:"area_sqm"`
 	MarketPriceRWF   float64        `json:"market_price_rwf"`
 	GeometryBoundary string         `json:"geometry_boundary"`

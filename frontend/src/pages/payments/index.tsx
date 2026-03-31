@@ -114,7 +114,7 @@ const PaymentHistory: React.FC = () => {
     try {
       const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
       if (!accessToken) throw new Error('Not authenticated');
-      const res = await fetch(`http://localhost:5000/api/invoice/${invoiceId}/download`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/invoice/${invoiceId}/download`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },

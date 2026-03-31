@@ -19,7 +19,7 @@ func main() {
 	}
 
 	// Connect to the database (for UPI and legacy handlers)
-	db, err := sql.Open("postgres", "postgres://kcoduyxv_landval_admin:gbR7C.XK0maH@localhost:5432/kcoduyxv_landval_bd?sslmode=disable")
+	db, err := sql.Open("postgres", "postgres://kcoduyxv_landval_admin:gbR7C.XK0maH@localhost:5433/kcoduyxv_landval_bd?sslmode=disable")
 	if err != nil {
 		log.Fatal("Failed to connect to DB: ", err)
 	}
@@ -47,6 +47,6 @@ func main() {
 
 // connectGorm initializes a GORM DB connection using environment variables or defaults
 func connectGorm() (*gorm.DB, error) {
-	dsn := "host=localhost user=kcoduyxv_landval_admin password=gbR7C.XK0maH dbname=kcoduyxv_landval_bd port=5432 sslmode=disable TimeZone=Africa/Kigali"
+	dsn := "host=localhost user=kcoduyxv_landval_admin password=gbR7C.XK0maH dbname=kcoduyxv_landval_bd port=5433 sslmode=disable TimeZone=Africa/Kigali"
 	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
 }

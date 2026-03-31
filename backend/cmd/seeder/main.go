@@ -85,7 +85,7 @@ func seedAdminUser(ctx context.Context) {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin123456"), bcrypt.DefaultCost)
 
 	adminUser := models.User{
-		Email:            "admin@landvaluation.rw",
+		// Email:            "admin@landvaluation.rw", // removed as requested
 		FirstName:        "Admin",
 		LastName:         "User",
 		UserType:         "admin",

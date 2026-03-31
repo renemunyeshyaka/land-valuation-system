@@ -24,7 +24,7 @@ func CORS() gin.HandlerFunc {
 		allowedOrigins := os.Getenv("CORS_ORIGIN")
 		if allowedOrigins == "" {
 			// Default to localhost for development
-			allowedOrigins = "http://localhost:3000,http://localhost:5000,http://127.0.0.1:3000,http://127.0.0.1:5000"
+			allowedOrigins = "http://localhost:3001,http://localhost:5001,http://127.0.0.1:3001,http://127.0.0.1:5001"
 		}
 
 		// Check if origin is allowed

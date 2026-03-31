@@ -22,12 +22,18 @@ func NewAdminService(db *gorm.DB) *AdminService {
 }
 
 // GetAllUsers retrieves all users
-func (s *AdminService) GetAllUsers(ctx context.Context, page, limit int, status, userType string) ([]*models.User, int, error) {
+func (s *AdminService) GetAllUsers(ctx context.Context, page, limit int, status, userType, search string) ([]*models.User, int, error) {
 	offset := (page - 1) * limit
 	filters := map[string]string{}
 
 	if status != "" {
 		filters["status"] = status
+	}
+	if userType != "" {
+		filters["type"] = userType
+	}
+	if search != "" {
+		filters["search"] = search
 	}
 
 	return s.userRepo.List(ctx, offset, limit, filters)

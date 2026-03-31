@@ -12,7 +12,7 @@ import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '../
 import FourStepProcess from '../../components/FourStepProcess';
 import SubscriptionSelector from '../../components/SubscriptionSelector';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
 // ...existing code...
 
@@ -68,6 +68,8 @@ interface DashboardNotification {
 }
 
 const Dashboard: React.FC = () => {
+  // Error boundary for admin experience selector
+  const [selectorError, setSelectorError] = useState<string | null>(null);
   const router = useRouter();
   const { data: session, status } = useSession();
   const [user, setUser] = useState<UserData | null>(null);
@@ -92,7 +94,7 @@ const Dashboard: React.FC = () => {
     setEstimateError(null);
     setEstimateResult(null);
     try {
-      const res = await fetch('http://localhost:5000/api/v1/land-value-estimate', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/land-value-estimate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),
@@ -134,21 +136,19 @@ const Dashboard: React.FC = () => {
     if (typeof window === 'undefined') {
       return 'off';
     }
-
     const rawMode = localStorage.getItem('admin_experience_mode');
     if (!rawMode) {
       return 'off';
     }
-
     try {
       const parsed = JSON.parse(rawMode);
       if (parsed?.mode === 'user' || parsed?.mode === 'ultimate') {
         return parsed.mode;
       }
     } catch (e) {
+      setSelectorError('Failed to parse admin experience mode. Please reset selector.');
       console.error('Failed to parse admin experience mode:', e);
     }
-
     return 'off';
   };
 
@@ -175,7 +175,7 @@ const Dashboard: React.FC = () => {
         return;
       }
 
-      const response = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
+      const response = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/users/profile`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -198,179 +198,96 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Redirect to login if not authenticated
+  // Enhanced: Redirect to login if not authenticated, verify admin from backend, and block non-admins
   useEffect(() => {
     if (authRedirecting) {
       return;
     }
 
-    // Check for localStorage tokens (MFA flow) first
     const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
     const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
 
-    if (accessToken) {
-      const loadUserProfile = async () => {
-        let userData: any = null;
-
-        if (storedUser) {
-          try {
-            userData = JSON.parse(storedUser);
-            console.log('Loaded user from localStorage:', userData);
-          } catch (e) {
-            console.error('Failed to parse stored user data:', e);
-          }
-        }
-
-        try {
-          const response = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          });
-
-          if (response.ok) {
-            const payload = await response.json();
-            console.log('Profile endpoint response:', payload);
-            if (payload?.data) {
-              userData = payload.data;
-              console.log('Updated userData from profile endpoint:', userData);
-              localStorage.setItem('user', JSON.stringify(userData));
-            }
-          } else if (response.status === 401) {
-            // Token refresh failed - user must login again
-            console.debug('Token refresh failed: 401 Unauthorized');
-            clearAuthAndRedirectToLogin();
-            return;
-          } else {
-            // Other server error - but if we have cached data, continue
-            if (!userData) {
-              handleProfileFetchError(`Profile endpoint error: ${response.status}`);
-              return;
-            }
-            console.debug(`Profile endpoint returned ${response.status}, using cached data`);
-          }
-        } catch (error) {
-          // Network error - but if we have cached data, continue with it
-          if (!userData) {
-            handleProfileFetchError(error);
-            return;
-          }
-          console.debug('Network error fetching profile, using cached data:', error);
-        }
-
-        if (!userData) {
-          router.push('/auth/login');
-          setLoading(false);
-          return;
-        }
-
-        const adminExperienceMode = getAdminExperienceMode();
-        console.log('Admin redirect check:', {
-          user_type: userData?.user_type,
-          adminExperienceMode,
-          shouldRedirect: userData?.user_type === 'admin' && adminExperienceMode === 'off'
-        });
-
-        if (userData.user_type === 'admin' && adminExperienceMode === 'off') {
-          console.log('Redirecting to /admin/dashboard');
-          router.push('/admin/dashboard');
-          return;
-        }
-
-        const isAdminExperiencingUserMode =
-          userData.user_type === 'admin' && adminExperienceMode !== 'off';
-
-        const effectiveSubscriptionTier = isAdminExperiencingUserMode
-          ? (adminExperienceMode === 'ultimate' ? 'ultimate' : 'free')
-          : (userData.subscription_tier || 'free');
-
-        const effectiveSubscriptionExpiry = isAdminExperiencingUserMode
-          ? null
-          : userData.subscription_expiry;
-
-        const effectiveUserType = isAdminExperiencingUserMode
-          ? 'individual'
-          : userData.user_type;
-
-        setUser({
-          id: userData.id || '1',
-          email: userData.email || 'user@example.com',
-          firstName: userData.first_name || 'User',
-          lastName: userData.last_name || 'Account',
-          userType: effectiveUserType,
-          phone: userData.phone,
-          subscriptionTier: effectiveSubscriptionTier,
-          subscriptionExpiresAt: effectiveSubscriptionExpiry,
-          referralCode: `LV-${userData.email?.split('@')[0]?.toUpperCase()}-2026`,
-          recentValuations: [
-            {
-              id: '1',
-              location: 'Kigali, Rwanda',
-              area: 250,
-              valuationPrice: 150000000,
-              createdAt: '2026-03-01',
-            },
-            {
-              id: '2',
-              location: 'Nyanza, Rwanda',
-              area: 150,
-              valuationPrice: 89000000,
-              createdAt: '2026-02-28',
-            },
-            {
-              id: '3',
-              location: 'Muhanga, Rwanda',
-              area: 300,
-              valuationPrice: 180000000,
-              createdAt: '2026-02-25',
-            },
-          ],
-        });
-
-        setLoading(false);
-      };
-
-      loadUserProfile();
-    } else if (status === 'unauthenticated') {
-      router.push('/auth/login');
-    } else if (status === 'authenticated') {
-      // Load user data from NextAuth session
+    // Helper: Set user and loading
+    const setUserAndLoading = (userData: any) => {
+      const adminExperienceMode = getAdminExperienceMode();
+      const isAdminExperiencingUserMode = userData.user_type === 'admin' && adminExperienceMode !== 'off';
+      const effectiveSubscriptionTier = isAdminExperiencingUserMode
+        ? (adminExperienceMode === 'ultimate' ? 'ultimate' : 'free')
+        : (userData.subscription_tier || 'free');
+      const effectiveSubscriptionExpiry = isAdminExperiencingUserMode
+        ? null
+        : userData.subscription_expiry;
+      const effectiveUserType = isAdminExperiencingUserMode
+        ? 'individual'
+        : userData.user_type;
       setUser({
-        id: '1',
-        email: session?.user?.email || 'user@example.com',
-        firstName: 'Jean',
-        lastName: 'Munyeshyaka',
-        userType: 'individual',
-        phone: '+250 788 123 456',
-        subscriptionTier: 'free',
-        subscriptionExpiresAt: '2026-04-02',
-        referralCode: 'LV-JEANMUN-2026',
-        recentValuations: [
-          {
-            id: '1',
-            location: 'Kigali, Rwanda',
-            area: 250,
-            valuationPrice: 150000000,
-            createdAt: '2026-03-01',
-          },
-          {
-            id: '2',
-            location: 'Nyanza, Rwanda',
-            area: 150,
-            valuationPrice: 89000000,
-            createdAt: '2026-02-28',
-          },
-          {
-            id: '3',
-            location: 'Muhanga, Rwanda',
-            area: 300,
-            valuationPrice: 180000000,
-            createdAt: '2026-02-25',
-          },
-        ],
+        id: userData.id || '1',
+        email: userData.email || 'user@example.com',
+        firstName: userData.first_name || 'User',
+        lastName: userData.last_name || 'Account',
+        userType: effectiveUserType,
+        phone: userData.phone,
+        subscriptionTier: effectiveSubscriptionTier,
+        subscriptionExpiresAt: effectiveSubscriptionExpiry,
+        referralCode: `LV-${userData.email?.split('@')[0]?.toUpperCase()}-2026`,
+        recentValuations: userData.recent_valuations || [],
       });
       setLoading(false);
-    }
+    };
+
+    // Always verify with backend for up-to-date user info
+    const verifyUserFromBackend = async () => {
+      if (!accessToken) {
+        router.replace('/auth/login');
+        setLoading(false);
+        return;
+      }
+      try {
+        const response = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/users/profile`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        if (response.ok) {
+          const payload = await response.json();
+          if (!payload?.data) {
+            router.replace('/auth/login');
+            setLoading(false);
+            return;
+          }
+          // Block banned, inactive, or deleted users (if backend provides status)
+          if (payload.data.status && payload.data.status !== 'active') {
+            toast.error('Account is not active. Contact support.');
+            clearAuthAndRedirectToLogin();
+            return;
+          }
+          // Block non-admins from admin dashboard
+          if (payload.data.user_type === 'admin') {
+            // If adminExperienceMode is off, redirect to admin dashboard
+            const adminExperienceMode = getAdminExperienceMode();
+            if (adminExperienceMode === 'off' && router.pathname !== '/admin/dashboard') {
+              toast('Redirecting to admin dashboard...', { icon: '🔒' });
+              router.replace('/admin/dashboard');
+              return;
+            }
+          } else if (router.pathname.startsWith('/admin')) {
+            // Non-admin trying to access admin dashboard
+            toast.error('Access denied. Admins only.');
+            router.replace('/dashboard');
+            return;
+          }
+          setUserAndLoading(payload.data);
+        } else if (response.status === 401) {
+          clearAuthAndRedirectToLogin();
+        } else {
+          handleProfileFetchError(`Profile endpoint error: ${response.status}`);
+        }
+      } catch (error) {
+        handleProfileFetchError(error);
+      }
+    };
+
+    verifyUserFromBackend();
   }, [authRedirecting, status, session, router]);
 
   // Auto-refresh token for admins to prevent session expiry
@@ -574,16 +491,14 @@ const Dashboard: React.FC = () => {
     <>
       {/* HEAD / SEO */}
       <Head>
-        <title>Dashboard · Land Valuation System</title>
+        <title>User Dashboard · Land Valuation System</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-        <meta name="description" content="Your Land Valuation System dashboard - manage profile, subscriptions, and valuations" />
-        <meta property="og:title" content="Dashboard · LandVal" />
-        <meta property="og:description" content="Your personal land valuation dashboard" />
+        <meta name="description" content="User dashboard for Land Valuation System - manage your profile, subscription, and valuations" />
+        <meta property="og:title" content="User Dashboard · LandVal" />
       </Head>
 
       {/* MAIN LAYOUT */}
       <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
-
         {/* NAVIGATION */}
         <nav className="bg-white/90 backdrop-blur-sm sticky top-0 z-30 border-b border-gray-200/70">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -595,36 +510,24 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-base md:text-lg font-bold text-gray-800 leading-tight">LandVal</span>
-                  <span className="text-xs text-gray-500 leading-tight hidden sm:block">Rwanda Property Valuation</span>
+                  <span className="text-xs text-gray-500 leading-tight hidden sm:block">User Dashboard</span>
                 </div>
               </Link>
-
               {/* Navigation Menu - Right Side */}
               <div className="flex items-center gap-2 sm:gap-4">
-                {/* Dashboard Link */}
-                <Link href="/dashboard" className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-sm text-gray-700 hover:text-emerald-700 transition-colors">
-                  <i className="fas fa-home text-base"></i>
-                  Dashboard
+                <Link href="/dashboard/profile" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 transition-colors hidden sm:block">
+                  <i className="fas fa-user-circle mr-1"></i>
+                  View Profile
                 </Link>
-
-                {/* Language Selector */}
-                <button className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-700 hover:text-emerald-700 transition-colors">
-                  <i className="fas fa-globe text-base"></i>
-                  <span className="hidden sm:inline">EN</span>
-                  <i className="fas fa-chevron-down text-xs"></i>
-                </button>
-
-                {/* Sign Out Button */}
                 <button
-                  onClick={() => {
-                    if (typeof window !== 'undefined') {
-                      localStorage.removeItem('admin_experience_mode');
-                    }
-                    signOut({ redirect: true, callbackUrl: '/' });
+                  onClick={async () => {
+                    clearAuth();
+                    await signOut({ redirect: false });
+                    router.push('/auth/login');
                   }}
                   className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
                 >
-                  Sign Out
+                  Logout
                 </button>
               </div>
             </div>
@@ -634,25 +537,23 @@ const Dashboard: React.FC = () => {
         {/* MAIN CONTENT */}
         <main className="flex-grow">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-            
-            {/* Page Header */}
-            <div className="mb-8">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
-                  Welcome back, {user.firstName}! 👋
-                </h1>
-                {user.userType === 'admin' && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
-                    ADMIN
-                  </span>
-                )}
+            {/* Admin Experience Selector for Admins */}
+            {selectorError && (
+              <div className="mb-4 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
+                <i className="fas fa-exclamation-triangle mr-2"></i>
+                {selectorError}
+                <button
+                  className="ml-4 px-3 py-1 bg-red-600 text-white rounded"
+                  onClick={() => {
+                    localStorage.removeItem('admin_experience_mode');
+                    window.location.reload();
+                  }}
+                >
+                  Reset Selector
+                </button>
               </div>
-              <p className="text-base text-gray-600">
-                Manage your profile, subscription, and track your valuations
-              </p>
-            </div>
-
-
+            )}
+            {renderAdminExperienceSelector(user, router, getAdminExperienceMode)}
             {/* Four Steps Process */}
             <FourStepProcess />
 
@@ -1103,3 +1004,65 @@ const Dashboard: React.FC = () => {
 }
 
 export default Dashboard;
+
+// Admin experience mode selector for admins (now takes arguments)
+const renderAdminExperienceSelector = (
+  user: UserData | null,
+  router: ReturnType<typeof useRouter>,
+  getAdminExperienceMode: () => 'off' | 'user' | 'ultimate'
+) => {
+  try {
+    // Accept only userType (UserData interface)
+    const isAdmin = user?.userType === 'admin';
+    if (isAdmin) {
+      const adminExperienceMode = getAdminExperienceMode();
+      return (
+        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+          <div className="flex gap-2 items-center">
+            <span className="text-xs font-semibold rounded-lg border px-3 py-1 bg-amber-50 text-amber-700 border-amber-200">
+              Admin Experience Mode:
+              <span className="ml-2 font-bold">{adminExperienceMode === 'off' ? 'Admin' : adminExperienceMode === 'ultimate' ? 'Ultimate (No Expiry)' : 'User'}</span>
+            </span>
+            <select
+              value={adminExperienceMode}
+              onChange={e => {
+                const mode = e.target.value;
+                if (mode === 'off' || mode === 'user' || mode === 'ultimate') {
+                  try {
+                    localStorage.setItem('admin_experience_mode', JSON.stringify({ mode, enabledAt: new Date().toISOString() }));
+                    window.location.reload();
+                  } catch (err) {
+                    alert('Failed to update admin experience mode. Please clear your browser storage and try again.');
+                  }
+                }
+              }}
+              className="px-3 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg bg-white hover:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="off">Admin Mode</option>
+              <option value="user">View as User</option>
+              <option value="ultimate">View as Ultimate (No Expiry)</option>
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => router.push('/admin/dashboard')}
+              className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 shadow"
+            >
+              <i className="fas fa-user-shield"></i>
+              Go to Admin Dashboard
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  } catch (err) {
+    // Fallback UI if selector fails
+    return (
+      <div className="mb-4 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
+        <i className="fas fa-exclamation-triangle mr-2"></i>
+        Failed to render admin experience selector. Please reload the page or clear your browser storage.
+      </div>
+    );
+  }
+};

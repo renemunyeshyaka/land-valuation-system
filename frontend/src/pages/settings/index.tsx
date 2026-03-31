@@ -21,7 +21,7 @@ const SettingsPage: React.FC = () => {
     setError(null);
     setEstimateResult(null);
     try {
-      const res = await fetch('http://localhost:5000/api/v1/land-value-estimate', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/land-value-estimate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),

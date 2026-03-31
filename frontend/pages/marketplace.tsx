@@ -7,6 +7,7 @@ import PropertyCard from '../src/components/property/PropertyCard';
 interface Property {
   id: string;
   title: string;
+  description?: string;
   images?: string[];
   status: string;
   isDiaspora?: boolean;
@@ -30,112 +31,48 @@ export default function Marketplace() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const propertiesPerPage = 12;
+  const [pageSize] = useState(12); // Properties per page
+  const [search, setSearch] = useState('');
 
-  // Sample properties for demo
-  const sampleProperties: Property[] = [
-    {
-      id: '1',
-      title: 'Modern Family Home in Kicukiro',
-      images: [
-        'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80'
-      ],
-      status: 'available',
-      isDiaspora: true,
-      isVerified: true,
-      district: 'Kicukiro',
-      sector: 'Nyarugunga',
-      price: 95000000,
-      pricePerSqm: 120000,
-      landSize: 800,
-      sizeUnit: 'sqm',
-      features: ['3 Bedrooms', '2 Bathrooms', 'Garden', 'Garage'],
-      gazetteReference: 'GZT-2024-001',
-      zoneCoefficient: '1.5',
-      views: 120,
-      interested: 8
-    },
-    {
-      id: '2',
-      title: 'Prime Plot in Gasabo',
-      images: [
-        'https://images.unsplash.com/photo-1460518451285-97b6aa326961?auto=format&fit=crop&w=400&q=80'
-      ],
-      status: 'pending',
-      isDiaspora: false,
-      isVerified: true,
-      district: 'Gasabo',
-      sector: 'Remera',
-      price: 45000000,
-      pricePerSqm: 90000,
-      landSize: 500,
-      sizeUnit: 'sqm',
-      features: ['Near Main Road', 'Utilities Connected'],
-      gazetteReference: 'GZT-2024-002',
-      zoneCoefficient: '1.2',
-      views: 80,
-      interested: 3
-    },
-    {
-      id: '3',
-      title: 'Affordable Land in Nyarugenge',
-      images: [],
-      status: 'available',
-      isDiaspora: false,
-      isVerified: false,
-      district: 'Nyarugenge',
-      sector: 'Kimisagara',
-      price: 25000000,
-      pricePerSqm: 60000,
-      landSize: 400,
-      sizeUnit: 'sqm',
-      features: ['Flat Terrain'],
-      gazetteReference: '',
-      zoneCoefficient: '1.0',
-      views: 40,
-      interested: 1
-    },
-    {
-      id: '4',
-      title: 'Luxury Villa in Bugesera',
-      images: [
-        'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=400&q=80'
-      ],
-      status: 'available',
-      isDiaspora: true,
-      isVerified: true,
-      district: 'Bugesera',
-      sector: 'Nyamata',
-      price: 180000000,
-      pricePerSqm: 200000,
-      landSize: 1200,
-      sizeUnit: 'sqm',
-      features: ['5 Bedrooms', 'Swimming Pool', 'Lake View', 'Private Security'],
-      gazetteReference: 'GZT-2024-003',
-      zoneCoefficient: '2.0',
-      views: 200,
-      interested: 15
-    }
-  ];
+  // Sample properties removed (no longer used)
 
   useEffect(() => {
     async function fetchProperties() {
       setLoading(true);
       setError(null);
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
         const res = await fetch(`${apiUrl}/api/v1/marketplace/properties-for-sale`);
         if (!res.ok) throw new Error('Failed to fetch properties');
         const data = await res.json();
-        if (data?.data && data.data.length > 0) {
-          setProperties(data.data);
+        // The backend returns { data: { data: [...] } }
+        const propertyArray = data?.data?.data;
+        if (Array.isArray(propertyArray)) {
+          if (propertyArray.length > 0) {
+            // Map null images/features to empty arrays for compatibility
+            const normalized = propertyArray.map((p: any) => ({
+              ...p,
+              images: Array.isArray(p.images) ? p.images : (p.images ? [p.images] : []),
+              features: Array.isArray(p.features) ? p.features : (p.features ? [p.features] : []),
+            }));
+            setProperties(normalized);
+          } else {
+            setProperties([]); // Backend returned empty array
+          }
         } else {
-          setProperties(sampleProperties);
+          setError('Unexpected API response.');
+          setProperties([]);
+          if (typeof window !== 'undefined') {
+            // Log for debugging
+            // eslint-disable-next-line no-console
+            console.error('API response:', data);
+          }
         }
       } catch (err: any) {
         setError(err.message || 'Unknown error');
-        setProperties(sampleProperties); // fallback to samples on error
+        setProperties([]); // No fallback to samples on error
       } finally {
         setLoading(false);
       }
@@ -143,15 +80,28 @@ export default function Marketplace() {
     fetchProperties();
   }, []);
 
-  // Pagination logic
-  const totalPages = Math.ceil(properties.length / propertiesPerPage);
-  const paginatedProperties = properties.slice(
-    (currentPage - 1) * propertiesPerPage,
-    currentPage * propertiesPerPage
-  );
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+  // Filtered and paginated properties
+  const filtered = properties.filter((p) => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return (
+      p.title?.toLowerCase().includes(s) ||
+      p.district?.toLowerCase().includes(s) ||
+      p.sector?.toLowerCase().includes(s) ||
+      (p.description?.toLowerCase().includes(s) ?? false)
+    );
+  });
+  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  // Navigation handlers
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Pagination logic removed
 
   return (
     <>
@@ -193,8 +143,29 @@ export default function Marketplace() {
 
         {/* Main Marketplace Content */}
         <main className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
+
           <h1 className="text-3xl font-bold mb-2 text-center">Marketplace</h1>
           <p className="text-gray-600 mb-8 text-center">Browse properties for sale. Use filters and search to find your ideal property.</p>
+
+          {/* Search Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
+            <input
+              type="text"
+              placeholder="Search by title, district, sector, or description..."
+              value={search}
+              onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+              className="w-full sm:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <div className="flex gap-2 mt-2 sm:mt-0">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded-lg text-gray-700 font-semibold hover:bg-gray-300"
+                onClick={() => { setSearch(''); setCurrentPage(1); }}
+                disabled={!search}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
 
           {loading && (
             <div className="text-center py-10 text-lg text-gray-500">Loading properties...</div>
@@ -205,38 +176,35 @@ export default function Marketplace() {
           {!loading && !error && properties.length === 0 && (
             <div className="text-center py-10 text-gray-400">No properties found.</div>
           )}
-          {!loading && !error && properties.length > 0 && (
+          {!loading && !error && filtered.length > 0 && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
-                {paginatedProperties.map((property) => (
+                {paginated.map((property) => (
                   <PropertyCard key={property.id} property={property} />
                 ))}
-                {/* Fill empty slots for symmetry */}
-                {Array.from({ length: propertiesPerPage - paginatedProperties.length }).map((_, idx) => (
-                  <div key={idx} className="invisible" />
-                ))}
               </div>
+
               {/* Pagination Controls */}
-              <div className="flex justify-center items-center gap-2 mt-10">
+              <div className="flex items-center justify-center gap-2 mt-10">
                 <button
-                  className="px-4 py-2 rounded-lg border bg-white text-emerald-700 font-semibold hover:bg-emerald-50 disabled:opacity-50"
-                  onClick={() => handlePageChange(currentPage - 1)}
+                  className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 disabled:opacity-50"
+                  onClick={() => goToPage(currentPage - 1)}
                   disabled={currentPage === 1}
                 >
                   Back
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => (
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                   <button
-                    key={i + 1}
-                    className={`px-3 py-2 rounded-lg font-semibold border ${currentPage === i + 1 ? 'bg-emerald-700 text-white' : 'bg-white text-emerald-700 hover:bg-emerald-50'}`}
-                    onClick={() => handlePageChange(i + 1)}
+                    key={page}
+                    className={`px-3 py-2 rounded-lg font-semibold ${page === currentPage ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    onClick={() => goToPage(page)}
                   >
-                    {i + 1}
+                    {page}
                   </button>
                 ))}
                 <button
-                  className="px-4 py-2 rounded-lg border bg-white text-emerald-700 font-semibold hover:bg-emerald-50 disabled:opacity-50"
-                  onClick={() => handlePageChange(currentPage + 1)}
+                  className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 disabled:opacity-50"
+                  onClick={() => goToPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
                 >
                   Next

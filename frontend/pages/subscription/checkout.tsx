@@ -153,7 +153,7 @@ const SubscriptionCheckout: React.FC = () => {
     try {
       // Step 1: Upgrade subscription
 
-      const subscriptionResponse = await fetchWithTokenRefresh('http://localhost:5000/api/v1/subscriptions/upgrade', {
+      const subscriptionResponse = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/subscriptions/upgrade`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -194,10 +194,10 @@ const SubscriptionCheckout: React.FC = () => {
         if (provider === 'mtn') {
           paymentBody.currency = 'EUR'; // Always EUR for MTN sandbox
         }
-        paymentEndpoint = 'http://localhost:5000/api/v1/payments/mobile-money';
+        paymentEndpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/payments/mobile-money`;
       } else if (provider === 'bank') {
         paymentBody.bank_name = 'Bank of Kigali / Equity';
-        paymentEndpoint = 'http://localhost:5000/api/v1/payments/bank/initiate';
+        paymentEndpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/payments/bank/initiate`;
       }
 
       const paymentResponse = await fetchWithTokenRefresh(paymentEndpoint, {

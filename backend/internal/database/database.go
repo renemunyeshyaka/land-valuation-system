@@ -32,9 +32,11 @@ func NewPostgresConnection(cfg *config.Config) (*gorm.DB, error) {
 	)
 
 	// Configure GORM logger
-	gormLogger := logger.Default.LogMode(logger.Info)
+	var gormLogger logger.Interface
 	if cfg.Environment == "production" {
 		gormLogger = logger.Default.LogMode(logger.Error)
+	} else {
+		gormLogger = logger.Default.LogMode(logger.Silent)
 	}
 
 	// Open database connection

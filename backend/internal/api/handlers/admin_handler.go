@@ -34,8 +34,9 @@ func (h *AdminHandler) GetAllUsers(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	status := c.Query("status")
 	userType := c.Query("type")
+	search := c.Query("search")
 
-	users, total, err := h.adminService.GetAllUsers(c.Request.Context(), page, limit, status, userType)
+	users, total, err := h.adminService.GetAllUsers(c.Request.Context(), page, limit, status, userType, search)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve users", err.Error())
 		return

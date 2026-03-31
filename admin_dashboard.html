@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>LVS Admin · Land Valuation Dashboard</title>
+    <!-- Tailwind + FontAwesome + Google Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Leaflet for map management -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f4f7fc; }
+        .admin-sidebar { transition: all 0.2s ease; }
+        .card-hover { transition: transform 0.1s ease, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -12px rgba(0,0,0,0.1); }
+        .scrollable-table { max-height: 420px; overflow-y: auto; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb { background: #2c7a4d; border-radius: 8px; }
+    </style>
+</head>
+<body class="antialiased">
+
+<div class="flex h-screen overflow-hidden">
+    <!-- SIDEBAR: Admin Navigation -->
+    <aside class="admin-sidebar w-72 bg-white border-r border-gray-200 shadow-xl z-20 flex-shrink-0 overflow-y-auto hidden md:block">
+        <div class="px-6 py-6 flex items-center gap-2 border-b border-gray-100">
+            <div class="w-9 h-9 bg-emerald-700 rounded-xl flex items-center justify-center shadow-sm">
+                <i class="fas fa-crown text-white text-sm"></i>
+            </div>
+            <span class="font-bold text-xl tracking-tight text-emerald-900">Land<span class="text-emerald-600">Val</span></span>
+            <span class="ml-2 text-[11px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">ADMIN</span>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-1.5">
+            <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 text-emerald-800 font-medium" data-section="overview">
+                <i class="fas fa-tachometer-alt w-5"></i><span>Dashboard</span>
+            </a>
+            <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50" data-section="properties">
+                <i class="fas fa-map-marked-alt w-5"></i><span>Properties</span>
+            </a>
+            <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50" data-section="users">
+                <i class="fas fa-users w-5"></i><span>Users & Diaspora</span>
+            </a>
+            <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50" data-section="valuations">
+                <i class="fas fa-chart-line w-5"></i><span>Valuations Engine</span>
+            </a>
+            <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50" data-section="transactions">
+                <i class="fas fa-hand-holding-usd w-5"></i><span>Transactions</span>
+            </a>
+            <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50" data-section="gazette">
+                <i class="fas fa-book-open w-5"></i><span>Gazette Manager</span>
+            </a>
+            <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50" data-section="settings">
+                <i class="fas fa-sliders-h w-5"></i><span>System Settings</span>
+            </a>
+        </nav>
+        <div class="border-t border-gray-100 p-5 mt-auto">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 font-bold">AD</div>
+                <div><p class="text-sm font-semibold">Admin User</p><p class="text-xs text-gray-500">superadmin@lvs.rw</p></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 overflow-y-auto bg-gray-50/40">
+        <!-- Top header -->
+        <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <button id="mobileMenuBtn" class="md:hidden text-gray-600 text-xl"><i class="fas fa-bars"></i></button>
+                <h1 class="text-xl font-semibold text-gray-800" id="pageTitle">Dashboard Overview</h1>
+            </div>
+            <div class="flex gap-4 items-center">
+                <i class="fas fa-bell text-gray-500 hover:text-emerald-600 cursor-pointer"></i>
+                <div class="relative">
+                    <input type="text" placeholder="Search parcels, users..." class="pl-9 pr-4 py-2 rounded-full border border-gray-200 bg-gray-50 text-sm w-48 focus:outline-none focus:ring-1 focus:ring-emerald-400">
+                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- DYNAMIC DASHBOARD SECTIONS -->
+        <div id="dashboardContent" class="p-6 md:p-8">
+            <!-- OVERVIEW SECTION (default) -->
+            <div id="section-overview" class="admin-section">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-emerald-600 card-hover"><div class="flex justify-between"><div><p class="text-gray-500 text-sm">Total Properties</p><p class="text-3xl font-bold text-gray-800">2,847</p><span class="text-xs text-green-600 mt-1">+12% this month</span></div><i class="fas fa-building text-4xl text-emerald-200"></i></div></div>
+                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-amber-500 card-hover"><div class="flex justify-between"><div><p class="text-gray-500 text-sm">Active Users</p><p class="text-3xl font-bold text-gray-800">1,923</p><span class="text-xs text-green-600">+34 diaspora</span></div><i class="fas fa-user-friends text-4xl text-amber-200"></i></div></div>
+                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-blue-500 card-hover"><div class="flex justify-between"><div><p class="text-gray-500 text-sm">Total Valuations</p><p class="text-3xl font-bold text-gray-800">5.2B</p><span class="text-xs text-green-600">RWF volume</span></div><i class="fas fa-chart-simple text-4xl text-blue-200"></i></div></div>
+                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-purple-500 card-hover"><div class="flex justify-between"><div><p class="text-gray-500 text-sm">Diaspora leads</p><p class="text-3xl font-bold text-gray-800">208</p><span class="text-xs text-emerald-600">+18 new</span></div><i class="fas fa-globe-africa text-4xl text-purple-200"></i></div></div>
+                </div>
+                <!-- charts row -->
+                <div class="grid lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-2xl shadow-sm p-5"><h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-chart-line text-emerald-600 mr-2"></i> Valuation trends (2025)</h3><canvas id="trendChart" height="200"></canvas></div>
+                    <div class="bg-white rounded-2xl shadow-sm p-5"><h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-chart-pie text-emerald-600 mr-2"></i> Property types distribution</h3><canvas id="pieChart" height="200"></canvas></div>
+                </div>
+                <!-- recent activities & map -->
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm p-5"><h3 class="font-semibold text-gray-800 flex items-center gap-2"><i class="fas fa-clock text-emerald-600"></i> Recent Transactions</h3><div class="overflow-x-auto mt-3"><table class="min-w-full text-sm"><thead class="border-b"><tr><th class="text-left py-2">Parcel ID</th><th>Owner</th><th>Value (RWF)</th><th>Status</th></tr></thead><tbody id="recentTxTable"><tr><td class="py-2">KGL-2456</td><td>Mukamana A.</td><td>82M</td><td><span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full">completed</span></td></tr><tr><td>RUH-1023</td><td>Habimana J.</td><td>145M</td><td><span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">pending</span></td></tr><tr><td>MUS-879</td><td>Uwase L.</td><td>210M</td><td><span class="bg-blue-100 text-blue-700">escrow</span></td></tr><tr><td>KGL-4390</td><td>Diaspora Inv.</td><td>620M</td><td><span class="bg-purple-100">due diligence</span></td></tr></tbody></table></div><div class="mt-4 text-right"><a href="#" class="text-emerald-700 text-sm font-medium" data-section-link="transactions">View all →</a></div></div>
+                    <div class="bg-white rounded-2xl shadow-sm p-4"><h3 class="font-semibold text-gray-800 mb-2"><i class="fas fa-map-marker-alt text-emerald-600"></i> High-value zones (hotspots)</h3><div id="adminMiniMap" style="height: 180px; border-radius: 16px;" class="mb-3"></div><ul class="text-xs space-y-2 mt-3"><li><i class="fas fa-circle text-emerald-500 text-[8px] mr-2"></i> Gasabo (Kigali) - coeff 2.4</li><li><i class="fas fa-circle text-amber-500 text-[8px] mr-2"></i> Rubavu lakefront - coeff 1.9</li><li><i class="fas fa-circle text-blue-500 text-[8px] mr-2"></i> Musanze tourism - coeff 1.7</li></ul></div>
+                </div>
+            </div>
+
+            <!-- PROPERTIES SECTION (data grid) -->
+            <div id="section-properties" class="admin-section hidden">
+                <div class="bg-white rounded-2xl shadow-sm p-6"><div class="flex justify-between flex-wrap"><h2 class="text-xl font-bold">All Registered Properties</h2><button class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm"><i class="fas fa-plus mr-1"></i> Add Property</button></div><div class="mt-6 overflow-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left">Parcel ID</th><th>Location</th><th>Zone</th><th>Area (sqm)</th><th>Current Value</th><th>Status</th><th>Action</th></tr></thead><tbody id="propertyTableBody"><tr><td class="p-3">RDB-1001</td><td>Kacyiru, Kigali</td><td>Urban A</td><td>850</td><td>Rwf 98M</td><td class="text-green-600">Active</td><td><i class="fas fa-edit text-gray-500 cursor-pointer hover:text-emerald-600"></i></td></tr><tr><td class="p-3">RDB-2089</td><td>Nyagatare</td><td>Agricultural</td><td>12,000</td><td>Rwf 34M</td><td>Listed</td><td><i class="fas fa-edit"></i></td></tr><tr><td class="p-3">RDB-3772</td><td>Rubavu</td><td>Tourism</td><td>2,300</td><td>Rwf 217M</td><td>Under review</td><td><i class="fas fa-edit"></i></td></tr><tr><td class="p-3">DIA-001</td><td>Gasabo</td><td>Commercial</td><td>1,500</td><td>Rwf 430M</td><td class="text-amber-600">Diaspora</td><td><i class="fas fa-edit"></i></td></tr></tbody></table></div><div class="mt-5 flex justify-between items-center"><p class="text-gray-500 text-sm">Showing 4 of 2,847 entries</p><div class="flex gap-2"><button class="border rounded px-3 py-1">Prev</button><button class="bg-emerald-600 text-white rounded px-3 py-1">1</button><button class="border rounded px-3 py-1">Next</button></div></div></div>
+            </div>
+
+            <!-- USERS & DIASPORA -->
+            <div id="section-users" class="admin-section hidden">
+                <div class="bg-white rounded-2xl shadow-sm p-6"><h2 class="text-xl font-bold flex gap-2"><i class="fas fa-users"></i> User Management & Diaspora Investors</h2><div class="flex gap-4 mt-4 flex-wrap"><div class="bg-emerald-50 p-3 rounded-xl"><i class="fas fa-chart-simple"></i> Diaspora accounts: 347</div><div class="bg-amber-50 p-3 rounded-xl"><i class="fas fa-flag-checkered"></i> Foreign flagged: 89</div></div><table class="w-full mt-6 text-sm"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Name</th><th>Email</th><th>Type</th><th>Status</th><th>Joined</th><th>Verification</th></tr></thead><tbody><tr><td class="p-2">Claire Uwase</td><td>claire@example.com</td><td>Diaspora (FR)</td><td class="text-green-600">Active</td><td>Jan 2025</td><td><i class="fas fa-check-circle text-emerald-600"></i> KYC</td></tr><tr><td class="p-2">John Mugabo</td><td>john@invest.rw</td><td>Local buyer</td><td>Active</td><td>Dec 2024</td><td>Verified</td></tr><tr><td class="p-2">Maria Uwimana</td><td>maria@diaspora.be</td><td>Diaspora (BE)</td><td>Pending doc</td><td>Feb 2025</td><td><i class="fas fa-clock text-yellow-500"></i> review</td></tr><tr><td class="p-2">Kwibuka Ltd</td><td>contact@kwibuka.rw</td><td>Corporate</td><td>Active</td><td>2024</td><td>RDB certified</td></tr></tbody></table><div class="mt-5 bg-gray-50 p-4 rounded-xl"><div class="font-medium">Diaspora Lead Stats</div><div class="flex justify-between text-sm mt-2"><span>🇧🇪 Belgium: 12 leads</span><span>🇺🇸 USA: 28 leads</span><span>🇫🇷 France: 19 leads</span><span>🇨🇦 Canada: 9 leads</span></div></div></div>
+            </div>
+
+            <!-- VALUATIONS ENGINE -->
+            <div id="section-valuations" class="admin-section hidden">
+                <div class="grid md:grid-cols-2 gap-6"><div class="bg-white rounded-2xl p-6 shadow-sm"><h3 class="font-bold"><i class="fas fa-calculator"></i> Gazette Coefficient Editor</h3><div class="mt-4 space-y-3"><label class="block">Zone Name: <input type="text" class="border rounded-xl w-full p-2" value="Gasabo Premium Urban"></label><label class="block">Current Coefficient: <input type="number" step="0.01" class="border rounded-xl w-full p-2" value="2.45"></label><button class="bg-emerald-700 text-white px-5 py-2 rounded-xl mt-2">Update Gazette Coefficient</button></div><div class="mt-6"><p class="text-sm text-gray-500">Last updated: March 2025 (Official Gazette No. 12)</p></div></div><div class="bg-white rounded-2xl p-6 shadow-sm"><h3 class="font-bold"><i class="fas fa-chart-line"></i> Valuation Algorithm Tuning</h3><div class="flex gap-3 mt-3"><div class="w-full"><label>Market Adjustment %</label><input type="range" min="0" max="30" value="12" class="w-full"><span>+12%</span></div></div><div><label>Diaspora premium factor</label><input type="range" min="1" max="1.5" step="0.01" value="1.08" class="w-full"></div><button class="mt-4 bg-amber-100 text-amber-800 px-4 py-2 rounded-xl">Recalculate all valuations</button></div></div>
+            </div>
+
+            <!-- TRANSACTIONS & ESCROW -->
+            <div id="section-transactions" class="admin-section hidden">
+                <div class="bg-white rounded-2xl shadow-sm p-6"><h2 class="text-xl font-bold">Escrow & Transactions Overview</h2><div class="grid grid-cols-3 gap-4 mt-4"><div class="bg-emerald-50 p-4 rounded-2xl"><p class="text-sm">Total escrow volume</p><p class="text-2xl font-bold">Rwf 1.2B</p></div><div class="bg-amber-50 p-4 rounded-2xl"><p>Pending settlements</p><p class="text-2xl font-bold">18</p></div><div class="bg-blue-50 p-4 rounded-2xl"><p>Avg completion time</p><p class="text-2xl font-bold">8 days</p></div></div><div class="mt-6 overflow-auto scrollable-table"><table class="w-full text-sm"><thead><tr><th>Tx ID</th><th>Parcel</th><th>Buyer</th><th>Seller</th><th>Amount</th><th>Stage</th></tr></thead><tbody><tr><td>TRX782</td><td>KGL-990</td><td>Diaspora (USA)</td><td>Muhire E.</td><td>Rwf 220M</td><td>Title transfer</td></tr><tr><td>TRX981</td><td>RUH-443</td><td>Local investor</td><td>Niyomugabo</td><td>Rwf 55M</td><td>Completed</td></tr><tr><td>TRX673</td><td>MUS-12A</td><td>Foreign entity</td><td>RDB seller</td><td>Rwf 375M</td><td>Due diligence</td></tr></tbody></table></div></div>
+            </div>
+
+            <!-- GAZETTE MANAGER -->
+            <div id="section-gazette" class="admin-section hidden">
+                <div class="bg-white rounded-2xl p-6 shadow-sm"><h2 class="text-xl font-bold">Official Gazette Zones 2025</h2><div class="mt-4 grid gap-3"><div class="flex justify-between border-b pb-2"><span>Kigali Urban Core</span><span>Coeff: 2.8</span><button class="text-emerald-600 text-xs">edit</button></div><div class="flex justify-between border-b pb-2"><span>Eastern Province (Irrigation)</span><span>Coeff: 1.2</span><button class="text-emerald-600">edit</button></div><div class="flex justify-between border-b pb-2"><span>Northern Highlands</span><span>Coeff: 1.35</span><button class="text-emerald-600">edit</button></div><div class="flex justify-between border-b pb-2"><span>Lake Kivu Belt</span><span>Coeff: 1.85</span><button class="text-emerald-600">edit</button></div></div><button class="mt-5 bg-gray-100 px-6 py-2 rounded-xl">Import Gazette XML</button></div>
+            </div>
+
+            <!-- SETTINGS -->
+            <div id="section-settings" class="admin-section hidden">
+                <div class="bg-white rounded-2xl p-6"><h2 class="text-xl font-bold">System Preferences</h2><div class="space-y-4 mt-4"><label class="flex justify-between"><span>Enable diaspora matching AI</span><input type="checkbox" checked class="toggle"></label><label class="flex justify-between"><span>Require 2FA for admin</span><input type="checkbox"></label><label class="flex justify-between"><span>Auto-publish gazette updates</span><input type="checkbox" checked></label><hr><button class="bg-emerald-700 text-white px-6 py-2 rounded-xl">Save Settings</button><button class="ml-3 border px-6 py-2 rounded-xl">Regenerate API Keys</button></div></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // ---------- admin dashboard interactive ----------
+    // hide all sections, show selected
+    const sections = ['overview', 'properties', 'users', 'valuations', 'transactions', 'gazette', 'settings'];
+    function showSection(sectionId) {
+        sections.forEach(sec => {
+            const el = document.getElementById(`section-${sec}`);
+            if (el) el.classList.add('hidden');
+        });
+        const active = document.getElementById(`section-${sectionId}`);
+        if (active) active.classList.remove('hidden');
+        document.getElementById('pageTitle').innerText = sectionId.charAt(0).toUpperCase() + sectionId.slice(1).replace(/([A-Z])/g, ' $1');
+        // update active nav style
+        document.querySelectorAll('.admin-nav-link').forEach(link => {
+            const linkSection = link.getAttribute('data-section');
+            if (linkSection === sectionId) {
+                link.classList.add('bg-emerald-50', 'text-emerald-800', 'font-medium');
+                link.classList.remove('text-gray-700', 'hover:bg-gray-50');
+            } else {
+                link.classList.remove('bg-emerald-50', 'text-emerald-800', 'font-medium');
+                link.classList.add('text-gray-700', 'hover:bg-gray-50');
+            }
+        });
+    }
+
+    // navigation event binding
+    document.querySelectorAll('.admin-nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const section = link.getAttribute('data-section');
+            if (section) showSection(section);
+        });
+    });
+    document.querySelectorAll('[data-section-link]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const sec = link.getAttribute('data-section-link');
+            if (sec) showSection(sec);
+        });
+    });
+
+    // mobile sidebar toggle
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.querySelector('.admin-sidebar');
+    if (mobileBtn) {
+        mobileBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+        });
+    }
+
+    // ---------- CHARTS ----------
+    const trendCtx = document.getElementById('trendChart')?.getContext('2d');
+    if (trendCtx) {
+        new Chart(trendCtx, {
+            type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'], datasets: [{ label: 'Avg Land Value (M RWF)', data: [78, 84, 91, 103, 112], borderColor: '#0f6e4a', tension: 0.3, fill: false }] }
+        });
+    }
+    const pieCtx = document.getElementById('pieChart')?.getContext('2d');
+    if (pieCtx) {
+        new Chart(pieCtx, { type: 'doughnut', data: { labels: ['Residential', 'Agricultural', 'Commercial', 'Tourism'], datasets: [{ data: [48, 27, 15, 10], backgroundColor: ['#2c7a4d', '#eab308', '#3b82f6', '#a855f7'] }] } });
+    }
+
+    // ---------- admin mini map (leaflet) ----------
+    const adminMapDiv = document.getElementById('adminMiniMap');
+    if (adminMapDiv) {
+        const map = L.map(adminMapDiv).setView([-1.95, 30.07], 9);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd' }).addTo(map);
+        L.marker([-1.9441, 30.0619]).bindTooltip('Gasabo (High value)').addTo(map);
+        L.marker([-1.4997, 29.6370]).bindTooltip('Rubavu hotspot').addTo(map);
+        L.circle([-1.9441, 30.0619], { radius: 3000, color: '#10b981', weight: 1, fillOpacity: 0.1 }).addTo(map);
+    }
+
+    // dynamic property add simulation (demo)
+    const addPropertyBtn = document.querySelector('#section-properties button');
+    if (addPropertyBtn) {
+        addPropertyBtn.addEventListener('click', () => {
+            const tableBody = document.getElementById('propertyTableBody');
+            const newRow = `<tr><td class="p-3">NEW-${Math.floor(Math.random()*1000)}</td><td>New District</td><td>Urban B</td><td>1200</td><td>Rwf 67M</td><td class="text-blue-600">Pending</td><td><i class="fas fa-edit"></i></td></tr>`;
+            if(tableBody) tableBody.insertAdjacentHTML('afterbegin', newRow);
+            alert('Demo: new property added (simulated)');
+        });
+    }
+
+    // recent transaction dynamic add
+    setInterval(() => {
+        const tbody = document.getElementById('recentTxTable');
+        if (tbody && document.getElementById('section-overview') && !document.getElementById('section-overview').classList.contains('hidden')) {
+            const randomParcels = ['KGL-78A', 'MUS-223', 'RUH-99X'];
+            const newTx = `<tr><td class="py-2">${randomParcels[Math.floor(Math.random()*3)]}</td><td>New lead</td><td>${Math.floor(Math.random()*400)+30}M</td><td><span class="bg-blue-100 text-blue-700 px-2 rounded-full">active</span></td></tr>`;
+            tbody.insertAdjacentHTML('afterbegin', newTx);
+            if(tbody.children.length > 5) tbody.removeChild(tbody.lastChild);
+        }
+    }, 13000);
+
+    // show default overview
+    showSection('overview');
+
+    // extra: admin live system health message
+    console.log("Admin dashboard fully loaded — gazette sync, valuation engine, diaspora analytics");
+</script>
+</body>
+</html>

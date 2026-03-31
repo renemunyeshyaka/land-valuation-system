@@ -100,7 +100,22 @@ func NewPropertyHandler(propertyRepo *repository.PropertyRepository) *PropertyHa
 // @Router /api/v1/properties/{id} [put]
 func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
-	userID, _ := c.Get("user_id")
+	userIDRaw, hasUserID := c.Get("user_id")
+	if !hasUserID {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "User ID not found in context", "")
+		return
+	}
+	userIDStr, ok := userIDRaw.(string)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "User ID in context is not a string", "")
+		return
+	}
+	parsed, err := strconv.ParseUint(userIDStr, 10, 32)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "User ID in context is not a valid integer string", "")
+		return
+	}
+	userIDUint := uint(parsed)
 
 	property, err := h.propertyRepo.FindByID(uint(id))
 	if err != nil || property == nil {
@@ -108,10 +123,13 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 		return
 	}
 
-	// Check ownership
-	if property.OwnerID != userID.(uint) {
-		utils.ErrorResponse(c, http.StatusForbidden, "You don't have permission to update this property", "")
-		return
+	// Allow admins to update any property, otherwise check ownership
+	userType, hasUserType := c.Get("user_type")
+	if !hasUserType || userType != "admin" {
+		if property.OwnerID != userIDUint {
+			utils.ErrorResponse(c, http.StatusForbidden, "You don't have permission to update this property", "")
+			return
+		}
 	}
 
 	var req struct {
@@ -144,6 +162,10 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 	}
 	if req.Status != "" {
 		property.Status = req.Status
+	}
+	// Update images if provided (allow empty array to clear images)
+	if req.Images != nil {
+		property.Images = req.Images
 	}
 
 	if err := h.propertyRepo.Update(property); err != nil {

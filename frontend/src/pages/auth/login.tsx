@@ -61,11 +61,25 @@ const Login: React.FC = () => {
       }
       setLoading(true);
       try {
-        // TODO: Implement login API call here
-        toast.success('OTP sent to your email! Redirecting...');
-        setTimeout(() => {
-          router.push(`/auth/verify-otp?email=${encodeURIComponent(formData.email)}`);
-        }, 1500);
+        // Call login API
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || 'Login failed. Please check your credentials.');
+        }
+        // Always redirect to OTP verification page after login
+        toast.success('OTP sent! Please verify.');
+        router.push({
+          pathname: '/auth/verify-otp',
+          query: { email: formData.email },
+        });
       } catch (error: any) {
         toast.error(error.message || 'Login failed. Please check your credentials.');
       } finally {

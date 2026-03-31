@@ -127,7 +127,7 @@ const Profile: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/users/profile`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -201,7 +201,7 @@ const Profile: React.FC = () => {
 
   const loadUserProfile = async (accessToken: string) => {
     try {
-      const response = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
+      const response = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/users/profile`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -309,7 +309,7 @@ const Profile: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/profile`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/users/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Footer from '@/components/Footer';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -40,7 +41,7 @@ const Home: React.FC = () => {
 
   const handleEstimate = async () => {
     // Always redirect to register page before allowing estimate
-    window.location.href = 'http://localhost:3000/auth/register';
+    window.location.href = 'http://localhost:3001/auth/register';
     return;
     // --- The code below will not run due to the redirect above ---
     // if (!upi.trim()) {
@@ -52,7 +53,7 @@ const Home: React.FC = () => {
     // setEstimateResult(null);
     // try {
     //   const payloadToSend = { upi: upi.trim() };
-    //   const response = await fetch('http://localhost:5000/api/v1/estimate-search', {
+    //   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/estimate-search`, {
     //     method: 'POST',
     //     headers: { 'Content-Type': 'application/json' },
     //     body: JSON.stringify(payloadToSend),
@@ -138,6 +139,15 @@ const Home: React.FC = () => {
     };
   }, []);
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    const handleRouteChange = () => setMobileMenuOpen(false);
+    router.events?.on?.('routeChangeStart', handleRouteChange);
+    return () => router.events?.off?.('routeChangeStart', handleRouteChange);
+  }, [router]);
+
   return (
     <>
       <Head>
@@ -179,8 +189,23 @@ const Home: React.FC = () => {
                 <Link href="/contact" className="hover:text-emerald-700 transition">Contact</Link>
               </div>
 
+              {/* Hamburger menu button (mobile/tablet) */}
+              <div className="md:hidden flex items-center">
+                <button
+                  aria-label="Open menu"
+                  className="inline-flex items-center justify-center p-2 rounded-md text-emerald-800 hover:text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  onClick={() => setMobileMenuOpen(v => !v)}
+                >
+                  {mobileMenuOpen ? (
+                    <i className="fas fa-times text-2xl"></i>
+                  ) : (
+                    <i className="fas fa-bars text-2xl"></i>
+                  )}
+                </button>
+              </div>
+
               {/* language & auth */}
-              <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-3">
                 <div className="hidden sm:flex items-center border border-gray-200 rounded-full px-3 py-1.5 text-sm bg-white/80">
                   <i className="fas fa-globe text-emerald-600 mr-1 text-xs"></i>
                   <span className="font-medium">RW</span>
@@ -191,6 +216,22 @@ const Home: React.FC = () => {
               </div>
             </div>
           </div>
+          {/* Mobile menu dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden bg-white/95 border-b border-gray-200/70 shadow-lg absolute left-0 right-0 top-full z-40 animate-fade-in-down">
+              <div className="flex flex-col px-6 py-4 space-y-2 text-base font-medium text-gray-800">
+                <Link href="/" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+                <Link href="/how-it-works" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>How it works</Link>
+                <Link href="/benefits" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Benefits</Link>
+                <Link href="/marketplace" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Marketplace</Link>
+                <Link href="/contact" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
+                <div className="flex flex-col gap-2 mt-2">
+                  <Link href="/auth/login" className="text-emerald-800 hover:text-emerald-900 px-3 py-2 rounded-md transition text-sm font-medium bg-emerald-50" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
+                  <Link href="/auth/register" className="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-3 py-2 rounded-md shadow-sm transition" onClick={() => setMobileMenuOpen(false)}>Sign up</Link>
+                </div>
+              </div>
+            </div>
+          )}
         </nav>
 
         {/* HERO section with search & map preview */}
@@ -479,7 +520,7 @@ const Home: React.FC = () => {
               </div>
               {/* card 3 - diaspora focus */}
               <div className="bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-lg transition">
-                <div className="h-44 bg-gray-200 rounded-t-3xl relative overflow-hidden" style={{ background: "url('https://images.unsplash.com/photo-1568605117036-5fe5e7fa0ab6?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80') center/cover" }}>
+                <div className="h-44 bg-gray-200 rounded-t-3xl relative overflow-hidden" style={{ background: "url('https://imgs.search.brave.com/nv0nT5CAQlecHbkSIapYwnTY8tRKrlERdHHBBLwFfP8/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvOTQ2/ODQ3MjM2L3Bob3Rv/L3RoZS1ydWJvbmEt/Y292ZS1vbi1sYWtl/LWtpdnUuanBnP3M9/NjEyeDYxMiZ3PTAm/az0yMCZjPWstblVN/cGI2ZVk4LTAwVi15/bVNBVTFHdEl0ZHNo/MFU5UHBGTUx0VS1l/aXM9') center/cover" }}>
                   <div className="absolute top-3 right-3 bg-purple-200 text-purple-800 text-xs font-bold px-3 py-1 rounded-full">Diaspora preferred</div>
                 </div>
                 <div className="p-5">
@@ -550,51 +591,7 @@ const Home: React.FC = () => {
         </section>
 
         {/* FOOTER */}
-        <footer className="bg-emerald-950 text-emerald-200 py-12">
-          <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-5 gap-8">
-            <div className="col-span-2">
-              <div className="flex items-center gap-2 text-white">
-                <i className="fas fa-map-marked-alt text-2xl"></i>
-                <span className="font-bold text-xl">LandVal</span>
-              </div>
-              <p className="text-sm mt-3">The most trusted land valuation and land marketplace in Rwanda. All gazette data sourced from official publications.</p>
-              <div className="flex gap-4 mt-5">
-                <i className="fab fa-twitter hover:text-white text-xl"></i>
-                <i className="fab fa-linkedin hover:text-white text-xl"></i>
-                <i className="fab fa-whatsapp hover:text-white text-xl"></i>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-bold text-white">Product</h4>
-              <ul className="mt-3 space-y-2 text-sm">
-                <li>Valuation</li>
-                <li>Marketplace</li>
-                <li>Pricing</li>
-                <li>API</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-white">Resources</h4>
-              <ul className="mt-3 space-y-2 text-sm">
-                <li>Gazette 2025</li>
-                <li>Help center</li>
-                <li>Blog</li>
-                <li>Developers</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-white">Legal</h4>
-              <ul className="mt-3 space-y-2 text-sm">
-                <li><Link href="/privacy" className="hover:text-white transition">Privacy</Link></li>
-                <li><Link href="/terms" className="hover:text-white transition">Terms</Link></li>
-                <li>Copyright©</li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-emerald-800 mt-10 pt-6 text-center text-xs text-emerald-400">
-            © 2026 Land Valuation System Ltd. All rights reserved.
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );

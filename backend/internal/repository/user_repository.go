@@ -153,6 +153,19 @@ func (r *UserRepository) List(ctx context.Context, offset, limit int, filters ma
 	if status, ok := filters["status"]; ok {
 		query = query.Where("kyc_status = ?", status)
 	}
+	if userType, ok := filters["type"]; ok {
+		query = query.Where("user_type = ?", userType)
+	}
+	if search, ok := filters["search"]; ok && search != "" {
+		like := "%" + search + "%"
+		query = query.Where(
+			r.db.Where("first_name ILIKE ?", like).
+				Or("last_name ILIKE ?", like).
+				Or("email ILIKE ?", like).
+				Or("phone ILIKE ?", like).
+				Or("national_id ILIKE ?", like),
+		)
+	}
 
 	// Get total count
 	if err := query.Count(&total).Error; err != nil {

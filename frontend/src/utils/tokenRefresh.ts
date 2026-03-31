@@ -8,7 +8,7 @@
  * - Prevent token expiration altogether with proactive refresh
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 const TOKEN_REFRESH_INTERVAL = 20 * 60 * 1000; // Refresh every 20 minutes (token expires in 24 hours)
 
 interface RefreshResponse {

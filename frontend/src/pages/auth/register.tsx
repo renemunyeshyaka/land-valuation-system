@@ -85,11 +85,24 @@ const Register: React.FC = () => {
     }
     setLoading(true);
     try {
-      // TODO: Implement registration API call here
-      // Example:
-      // const response = await fetch('/api/register', { ... });
-      // const data = await response.json();
-      // if (!response.ok) throw new Error(data.message || 'Registration failed');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          phone: formData.phone,
+          user_type: formData.userType,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Registration failed');
+      }
       toast.success('Account created! Redirecting to email verification...');
       setTimeout(() => {
         router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`);

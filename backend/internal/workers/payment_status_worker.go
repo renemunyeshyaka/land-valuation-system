@@ -34,7 +34,7 @@ func StartPaymentStatusWorker(
 				log.Println("Payment status worker stopped.")
 				return
 			case <-ticker.C:
-				log.Printf("msg=\"Polling payment status...\" time=%s", time.Now().Format(time.RFC3339))
+				// log.Printf("msg=\"Polling payment status...\" time=%s", time.Now().Format(time.RFC3339))
 				pendingTxns, err := txnRepo.ListPending(ctx)
 				if err != nil {
 					metrics.WorkerErrors.Inc()

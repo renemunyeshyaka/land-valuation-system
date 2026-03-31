@@ -71,24 +71,24 @@ export default function Benefits() {
         </section>
 
         {/* Key Stats Banner */}
-        <section className="py-12 bg-white border-b border-gray-100">
+        <section className="py-12 bg-sky-400/90 border-b border-gray-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div>
-                <div className="stat-number text-4xl font-extrabold bg-gradient-to-r from-emerald-800 to-emerald-500 bg-clip-text text-transparent">12k+</div>
-                <p className="text-gray-600 text-sm mt-1">Properties Valued</p>
+                <div className="stat-number text-4xl font-extrabold text-white transition-colors duration-200 hover:text-yellow-400 cursor-pointer">12k+</div>
+                <p className="text-white text-sm mt-1">Properties Valued</p>
               </div>
               <div>
-                <div className="stat-number text-4xl font-extrabold bg-gradient-to-r from-emerald-800 to-emerald-500 bg-clip-text text-transparent">30</div>
-                <p className="text-gray-600 text-sm mt-1">Districts Covered</p>
+                <div className="stat-number text-4xl font-extrabold text-white transition-colors duration-200 hover:text-yellow-400 cursor-pointer">30</div>
+                <p className="text-white text-sm mt-1">Districts Covered</p>
               </div>
               <div>
-                <div className="stat-number text-4xl font-extrabold bg-gradient-to-r from-emerald-800 to-emerald-500 bg-clip-text text-transparent">34%</div>
-                <p className="text-gray-600 text-sm mt-1">Diaspora Buyers</p>
+                <div className="stat-number text-4xl font-extrabold text-white transition-colors duration-200 hover:text-yellow-400 cursor-pointer">34%</div>
+                <p className="text-white text-sm mt-1">Diaspora Buyers</p>
               </div>
               <div>
-                <div className="stat-number text-4xl font-extrabold bg-gradient-to-r from-emerald-800 to-emerald-500 bg-clip-text text-transparent">4.8</div>
-                <p className="text-gray-600 text-sm mt-1">User Rating ★</p>
+                <div className="stat-number text-4xl font-extrabold text-white transition-colors duration-200 hover:text-yellow-400 cursor-pointer">4.8</div>
+                <p className="text-white text-sm mt-1">User Rating ★</p>
               </div>
             </div>
           </div>

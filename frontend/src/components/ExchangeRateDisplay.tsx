@@ -34,7 +34,7 @@ const ExchangeRateDisplay: React.FC<ExchangeRateDisplayProps> = ({
   const fetchExchangeRate = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/v1/exchange-rate');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/exchange-rate`);
       const result = await response.json();
 
       if (result.success) {
@@ -60,7 +60,7 @@ const ExchangeRateDisplay: React.FC<ExchangeRateDisplayProps> = ({
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/v1/exchange-rate/convert?amount=${amount}&from=${fromCurrency}&to=${toCurrency}`
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/exchange-rate/convert?amount=${amount}&from=${fromCurrency}&to=${toCurrency}`
       );
       const result = await response.json();
 

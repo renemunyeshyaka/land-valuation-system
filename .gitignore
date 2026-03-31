@@ -114,3 +114,6 @@ copyright/*.md
 copyright/*.txt
 copyright/*.docx
 copyright/*.pdf
+
+# Property Search
+backend/cmd/propertyscraper/ 

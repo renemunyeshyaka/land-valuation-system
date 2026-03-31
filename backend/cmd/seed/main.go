@@ -263,6 +263,9 @@ func seedProperties(db *gorm.DB, users []models.User) ([]models.Property, error)
 		// Generate unique UPI for each property
 		upi := fmt.Sprintf("%s-%s-%d", loc.District, loc.Sector, i)
 
+		// Assign a unique Picsum Photos image URL (always available)
+		imageURL := fmt.Sprintf("https://picsum.photos/seed/property%d/600/400", i)
+
 		property := models.Property{
 			OwnerID:      users[ownerIdx].ID,
 			Title:        fmt.Sprintf("Property in %s, %s", loc.Sector, loc.District),
@@ -280,6 +283,9 @@ func seedProperties(db *gorm.DB, users []models.User) ([]models.Property, error)
 			IsDiaspora:   i%5 == 0, // Mark some as diaspora properties
 			CreatedAt:    time.Now(),
 			UpdatedAt:    time.Now(),
+			Images:       []string{imageURL},
+			District:     loc.District,
+			Sector:       loc.Sector,
 		}
 
 		properties = append(properties, property)
