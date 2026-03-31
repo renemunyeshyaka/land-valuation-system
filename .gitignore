@@ -116,4 +116,10 @@ copyright/*.docx
 copyright/*.pdf
 
 # Property Search
-backend/cmd/propertyscraper/ 
+backend/cmd/propertyscraper/
+
+# Allow migrations to be tracked
+!backend/migrations/
+!backend/migrations/**
+!backend/migrations/
+!backend/migrations/**
