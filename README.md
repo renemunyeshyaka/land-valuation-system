@@ -60,6 +60,100 @@ If you are interested in partnering or integrating with LVS, please contact us v
 
 
 
+
+### 🚩 Property & Marketplace APIs
+
+#### Property Management API
+
+- **Base URL:** `/api/v1/properties`
+- **Description:** Allows registered users to create, view, update, and delete their property listings. Access and limits can be enforced based on user subscription rights.
+
+**Endpoints:**
+
+- `GET /api/v1/properties` — List all properties owned by the authenticated user (with filters, pagination)
+- `POST /api/v1/properties` — Create a new property (requires authentication, checks subscription limits)
+- `GET /api/v1/properties/:id` — Get a property by ID (owner or admin only)
+- `PUT /api/v1/properties/:id` — Update a property (owner or admin only)
+- `DELETE /api/v1/properties/:id` — Delete a property (owner or admin only)
+
+**Request Example (POST):**
+```json
+{
+   "title": "Prime Plot in Kacyiru",
+   "description": "A beautiful residential plot.",
+   "plot_number": "UPI-1234567890",
+   "province": "Kigali",
+   "district": "Gasabo",
+   "sector": "Kacyiru",
+   "cell": "Biryogo",
+   "village": "VillageName",
+   "plot_size_sqm": 500,
+   "price": 6000000,
+   "images": ["https://example.com/uploads/property1.jpg", "https://example.com/uploads/property2.jpg"]
+}
+```
+
+**Response Example (GET):**
+```json
+{
+   "id": 1,
+   "owner_id": 2,
+   "title": "Prime Plot in Kacyiru",
+   "description": "A beautiful residential plot.",
+   "plot_number": "UPI-1234567890",
+   "province": "Kigali",
+   "district": "Gasabo",
+   "sector": "Kacyiru",
+   "cell": "Biryogo",
+   "village": "VillageName",
+   "plot_size_sqm": 500,
+   "price": 6000000,
+   "status": "for_sale",
+   "images": ["https://example.com/uploads/property1.jpg", "https://example.com/uploads/property2.jpg"],
+   "created_at": "2026-03-31T12:00:00Z"
+}
+```
+
+**Additional Fields:**
+- `plot_number`: Unique plot identifier (e.g., UPI or government-issued number).
+- `images`: Array of image URLs. Images should be uploaded via a separate endpoint or as part of a multipart/form-data request. Store only the URLs in the property record.
+
+**Subscription Logic:**
+- Users may be limited in the number of active listings based on their subscription plan.
+- Premium features (e.g., promoted listings, extra images, image upload) can be restricted to higher tiers.
+- All actions require authentication; only owners or admins can modify/delete properties.
+
+#### Marketplace API
+
+- **Base URL:** `/api/v1/marketplace`
+- **Description:** Publicly lists all properties available for sale. No authentication required for browsing.
+
+**Endpoints:**
+- `GET /api/v1/marketplace` — List all properties for sale (with filters, pagination)
+- `GET /api/v1/marketplace/:id` — View a specific property listing
+
+**Response Example (GET):**
+```json
+[
+   {
+      "id": 1,
+      "title": "Prime Plot in Kacyiru",
+      "plot_number": "UPI-1234567890",
+      "province": "Kigali",
+      "district": "Gasabo",
+      "sector": "Kacyiru",
+      "cell": "Biryogo",
+      "village": "VillageName",
+      "plot_size_sqm": 500,
+      "price": 6000000,
+      "status": "for_sale",
+      "images": ["https://example.com/uploads/property1.jpg", "https://example.com/uploads/property2.jpg"]
+   }
+]
+```
+
+---
+
 ### 🚩 Price Estimation Process (Strict Multi-Field Search)
 
 **IMPORTANT: The only supported workflow for price estimation is a multi-field search using the following five fields:**
