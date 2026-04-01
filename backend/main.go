@@ -41,8 +41,18 @@ func main() {
 	http.HandleFunc("/api/v1/search-upi", handlers.UpiSearchHandler)
 	http.HandleFunc("/api/v1/land-value-estimate", handlers.LandValueEstimateHandler)
 
-	log.Println("Server running on :5000...")
-	log.Fatal(http.ListenAndServe(":5000", nil))
+	// Image upload endpoint
+	http.HandleFunc("/api/v1/upload-image", handlers.ImageUploadHandler)
+
+	// Serve static files for property images
+	http.Handle("/property_images/", http.StripPrefix("/property_images/", http.FileServer(http.Dir("backend/property_images"))))
+
+	// Property endpoints
+	http.HandleFunc("/api/v1/properties", handlers.CreatePropertyHandler)   // POST
+	http.HandleFunc("/api/v1/marketplace", handlers.ListMarketplaceHandler) // GET
+
+	log.Println("Server running on :5001...")
+	log.Fatal(http.ListenAndServe(":5001", nil))
 }
 
 // connectGorm initializes a GORM DB connection using environment variables or defaults

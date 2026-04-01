@@ -21,6 +21,11 @@ interface PropertyCardProps {
 export default function PropertyCard({ property }: PropertyCardProps) {
   const [isSaved, setIsSaved] = React.useState(false)
 
+  const placeholder = "https://placehold.co/600x400";
+  let imageUrl = placeholder;
+  if (property.images && property.images.length > 0 && property.images[0]) {
+    imageUrl = property.images[0];
+  }
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -30,18 +35,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     >
       <div className="relative h-48 bg-gray-200">
         {/* Property Image */}
-        {property.images && property.images.length > 0 ? (
-          <Image
-            src={property.images[0]}
-            alt={property.title}
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 opacity-75 flex items-center justify-center">
-            <span className="text-white text-lg font-semibold">No Image</span>
-          </div>
-        )}
+        <Image
+          src={imageUrl}
+          alt={property.title}
+          fill
+          className="object-cover"
+        />
         
         {/* Status Badge */}
         <div className="absolute top-4 left-4">
