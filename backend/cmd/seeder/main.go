@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math/rand"
 	"time"
 
 	"backend/internal/config"
@@ -20,24 +19,21 @@ import (
 var db *gorm.DB
 
 func init() {
-	// Load environment variables
+	// Load environment variables.
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")
 	}
 
-	// Load config
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Initialize database
 	db, err = database.NewPostgresConnection(cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
-	// Run migrations
 	if err := database.AutoMigrate(db); err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
@@ -53,10 +49,6 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Clear existing data (optional - comment out if you want to preserve data)
-	// clearData()
-
-	// Seed data
 	seedAdminUser(ctx)
 	seedRegularUsers(ctx)
 	seedSubscriptionPlans(ctx)
@@ -65,27 +57,17 @@ func main() {
 	fmt.Println("✅ Seed data completed successfully!")
 }
 
-// clearData clears all data from tables
-func clearData() {
-	fmt.Println("🗑️ Clearing existing data...")
-	db.Exec("TRUNCATE TABLE public.user_saved_properties CASCADE")
-	db.Exec("TRUNCATE TABLE public.valuations CASCADE")
-	db.Exec("TRUNCATE TABLE public.notifications CASCADE")
-	db.Exec("TRUNCATE TABLE public.transactions CASCADE")
-	db.Exec("TRUNCATE TABLE public.subscriptions CASCADE")
-	db.Exec("TRUNCATE TABLE public.properties CASCADE")
-	db.Exec("TRUNCATE TABLE public.users CASCADE")
-	fmt.Println("✅ Data cleared")
-}
-
-// seedAdminUser creates an admin user
+// seedAdminUser creates an admin user.
 func seedAdminUser(ctx context.Context) {
 	fmt.Println("👤 Creating admin user...")
 
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin123456"), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123456"), bcrypt.DefaultCost)
+	if err != nil {
+		log.Printf("Warning: failed to hash admin password: %v", err)
+		return
+	}
 
 	adminUser := models.User{
-		// Email:            "admin@landvaluation.rw", // removed as requested
 		FirstName:        "Admin",
 		LastName:         "User",
 		UserType:         "admin",
@@ -97,20 +79,20 @@ func seedAdminUser(ctx context.Context) {
 		TwoFAEnabled:     false,
 	}
 
-	result := db.WithContext(ctx).Create(&adminUser)
-	if result.Error != nil {
+	if result := db.WithContext(ctx).Create(&adminUser); result.Error != nil {
 		log.Printf("Warning: Could not create admin user: %v", result.Error)
 		return
 	}
 
-	// Generate referral code for admin
 	referralService := services.NewReferralService(db)
-	referralService.GenerateReferralCode(ctx, adminUser.ID)
+	if _, err := referralService.GenerateReferralCode(ctx, adminUser.ID); err != nil {
+		log.Printf("Warning: failed to generate admin referral code: %v", err)
+	}
 
 	fmt.Printf("✅ Admin user created: ID=%d, Email=%s\n", adminUser.ID, adminUser.Email)
 }
 
-// seedRegularUsers creates sample regular users
+// seedRegularUsers creates sample regular users.
 func seedRegularUsers(ctx context.Context) {
 	fmt.Println("👥 Creating sample users...")
 
@@ -196,8 +178,11 @@ func seedRegularUsers(ctx context.Context) {
 	referralService := services.NewReferralService(db)
 
 	for _, user := range users {
-		// Hash password before saving
-		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		if err != nil {
+			log.Printf("Warning: failed to hash password for user %s: %v", user.Email, err)
+			continue
+		}
 		user.Password = string(hashedPassword)
 
 		result := db.WithContext(ctx).Create(&user)
@@ -206,11 +191,13 @@ func seedRegularUsers(ctx context.Context) {
 			continue
 		}
 
-		// Generate referral code
-		code, _ := referralService.GenerateReferralCode(ctx, user.ID)
+		code, err := referralService.GenerateReferralCode(ctx, user.ID)
+		if err != nil {
+			log.Printf("Warning: failed to generate referral code for user %s: %v", user.Email, err)
+			code = ""
+		}
 		fmt.Printf("✅ User created: ID=%d, Email=%s, ReferralCode=%s\n", user.ID, user.Email, code)
 
-		// Create subscription if not free tier
 		if user.SubscriptionTier != "free" && user.SubscriptionExpiry != nil {
 			subscription := models.Subscription{
 				UserID:    user.ID,
@@ -229,25 +216,18 @@ func seedRegularUsers(ctx context.Context) {
 	fmt.Printf("✅ Created %d sample users\n", len(users))
 }
 
-// seedSubscriptionPlans creates subscription plan options
+// seedSubscriptionPlans creates subscription plan options.
 func seedSubscriptionPlans(ctx context.Context) {
+	_ = ctx
 	fmt.Println("💳 Creating subscription plans...")
-
-	plans := []models.Subscription{
-		// These are examples - your actual subscription model might differ
-		// Adjust based on your Subscription model structure
-	}
-
-	_ = plans // For now, subscription tier names are hardcoded in User model
 	fmt.Println("✅ Subscription plans configured")
 }
 
-// seedDistrictCoefficients creates sample official gazette coefficients
+// seedDistrictCoefficients creates sample official gazette coefficients.
 func seedDistrictCoefficients(ctx context.Context) {
+	_ = ctx
 	fmt.Println("📊 Creating Official Gazette coefficients...")
 
-	// Sample data - these should come from official gazette
-	// Create a simple in-memory representation
 	coefficients := map[string]map[string]float64{
 		"Kigali": {
 			"Kiyovu":     1.5,
@@ -273,12 +253,6 @@ func seedDistrictCoefficients(ctx context.Context) {
 	}
 }
 
-// Helper function to create time pointer
 func timePtr(t time.Time) *time.Time {
 	return &t
-}
-
-// Helper function to seed with rand int
-func randInt(min, max int) int {
-	return min + rand.Intn(max-min)
 }

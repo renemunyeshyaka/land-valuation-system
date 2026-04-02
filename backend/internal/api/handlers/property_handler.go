@@ -3,33 +3,159 @@ package handlers
 import (
 	"backend/internal/models"
 	"backend/internal/repository"
+	"backend/internal/services"
 	"backend/internal/utils"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 )
 
-// ListProperties returns a list of properties (stub)
+// ListProperties returns a list of properties with optional filters
 func (h *PropertyHandler) ListProperties(c *gin.Context) {
-	utils.SuccessResponse(c, http.StatusOK, "ListProperties not implemented", nil)
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+
+	query := h.propertyRepo.DB().Model(&models.Property{})
+
+	if status := c.Query("status"); status != "" {
+		query = query.Where("status = ?", status)
+	}
+	if propertyType := c.Query("property_type"); propertyType != "" {
+		query = query.Where("property_type = ?", propertyType)
+	}
+	if district := c.Query("district"); district != "" {
+		query = query.Where("district = ?", district)
+	}
+	if sector := c.Query("sector"); sector != "" {
+		query = query.Where("sector = ?", sector)
+	}
+	if upi := c.Query("upi"); upi != "" {
+		query = query.Where("upi = ?", upi)
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count properties", err.Error())
+		return
+	}
+
+	var properties []models.Property
+	offset := (page - 1) * limit
+	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&properties).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to list properties", err.Error())
+		return
+	}
+
+	utils.SuccessPaginatedResponse(c, http.StatusOK, "Properties retrieved successfully", properties, int(total), page, limit)
 }
 
-// GetProperty returns a property by ID (stub)
+// GetProperty returns a property by ID
 func (h *PropertyHandler) GetProperty(c *gin.Context) {
-	utils.SuccessResponse(c, http.StatusOK, "GetProperty not implemented", nil)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid property ID", err.Error())
+		return
+	}
+
+	property, err := h.propertyRepo.FindByID(uint(id), "Owner")
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve property", err.Error())
+		return
+	}
+	if property == nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "Property not found", "")
+		return
+	}
+
+	_ = h.propertyRepo.IncrementViews(uint(id))
+	utils.SuccessResponse(c, http.StatusOK, "Property retrieved successfully", property)
 }
 
-// SearchNearby searches for properties by UPI only (stub)
+// SearchNearby searches for properties using UPI or geo/type/price filters.
+// It returns a paginated envelope with data, total, page, and limit.
 func (h *PropertyHandler) SearchNearby(c *gin.Context) {
-	utils.SuccessResponse(c, http.StatusOK, "SearchNearby not implemented", nil)
+	var req struct {
+		UPI          string  `json:"upi"`
+		Latitude     float64 `json:"latitude"`
+		Longitude    float64 `json:"longitude"`
+		RadiusKm     float64 `json:"radius_km"`
+		PropertyType string  `json:"property_type"`
+		MaxPrice     float64 `json:"max_price"`
+		Page         int     `json:"page"`
+		Limit        int     `json:"limit"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		return
+	}
+
+	hasUPI := req.UPI != ""
+	hasGeo := req.Latitude != 0 && req.Longitude != 0 && req.RadiusKm > 0
+	hasType := req.PropertyType != ""
+	hasPrice := req.MaxPrice > 0
+	if !hasUPI && !hasGeo && !hasType && !hasPrice {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", "provide at least one search criterion: upi, property_type, max_price, or latitude+longitude+radius_km")
+		return
+	}
+
+	page := req.Page
+	limit := req.Limit
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+
+	// Backward-compatible UPI-only search path.
+	if req.UPI != "" {
+		results, total, err := h.propertyRepo.FindByUPIPaginated(req.UPI, page, limit)
+		if err != nil {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to search property", err.Error())
+			return
+		}
+		if total == 0 {
+			utils.SuccessPaginatedResponse(c, http.StatusOK, "No property found for given UPI", []models.Property{}, 0, page, limit)
+			return
+		}
+
+		utils.SuccessPaginatedResponse(c, http.StatusOK, "Property found", results, total, page, limit)
+		return
+	}
+
+	searchService := services.NewMarketplaceService(h.propertyRepo.DB())
+	properties, total, err := searchService.SearchPropertiesPaginated(
+		c.Request.Context(),
+		req.Latitude,
+		req.Longitude,
+		req.RadiusKm,
+		req.PropertyType,
+		req.MaxPrice,
+		page,
+		limit,
+	)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to search properties", err.Error())
+		return
+	}
+
+	utils.SuccessPaginatedResponse(c, http.StatusOK, "Properties found", properties, total, page, limit)
 }
 
 // CreateProperty creates a new property
 func (h *PropertyHandler) CreateProperty(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", "User ID not found in context")
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", err.Error())
 		return
 	}
 
@@ -39,6 +165,8 @@ func (h *PropertyHandler) CreateProperty(c *gin.Context) {
 		PropertyType     string   `json:"property_type" binding:"required"`
 		Status           string   `json:"status"`
 		UPI              string   `json:"upi" binding:"required"`
+		District         string   `json:"district" binding:"required"`
+		Sector           string   `json:"sector" binding:"required"`
 		Address          string   `json:"address"`
 		Latitude         float64  `json:"latitude"`
 		Longitude        float64  `json:"longitude"`
@@ -59,6 +187,8 @@ func (h *PropertyHandler) CreateProperty(c *gin.Context) {
 	}
 
 	property := &models.Property{
+		District:         req.District,
+		Sector:           req.Sector,
 		Title:            req.Title,
 		Description:      req.Description,
 		PropertyType:     req.PropertyType,
@@ -73,10 +203,14 @@ func (h *PropertyHandler) CreateProperty(c *gin.Context) {
 		GazetteReference: req.GazetteReference,
 		Price:            req.Price,
 		Currency:         req.Currency,
-		Features:         req.Features,
-		Images:           req.Images,
-		Documents:        req.Documents,
-		OwnerID:          userID.(uint),
+		Features:         pq.StringArray(req.Features),
+		Images:           pq.StringArray(req.Images),
+		Documents:        pq.StringArray(req.Documents),
+		OwnerID:          userID,
+	}
+
+	if req.Status != "" {
+		property.Status = req.Status
 	}
 
 	if err := h.propertyRepo.Create(property); err != nil {
@@ -100,22 +234,11 @@ func NewPropertyHandler(propertyRepo *repository.PropertyRepository) *PropertyHa
 // @Router /api/v1/properties/{id} [put]
 func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
-	userIDRaw, hasUserID := c.Get("user_id")
-	if !hasUserID {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "User ID not found in context", "")
-		return
-	}
-	userIDStr, ok := userIDRaw.(string)
-	if !ok {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "User ID in context is not a string", "")
-		return
-	}
-	parsed, err := strconv.ParseUint(userIDStr, 10, 32)
+	userIDUint, err := getUserIDFromContext(c)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "User ID in context is not a valid integer string", "")
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", err.Error())
 		return
 	}
-	userIDUint := uint(parsed)
 
 	property, err := h.propertyRepo.FindByID(uint(id))
 	if err != nil || property == nil {
@@ -124,8 +247,8 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 	}
 
 	// Allow admins to update any property, otherwise check ownership
-	userType, hasUserType := c.Get("user_type")
-	if !hasUserType || userType != "admin" {
+	userType, _ := c.Get("user_type")
+	if userType != "admin" {
 		if property.OwnerID != userIDUint {
 			utils.ErrorResponse(c, http.StatusForbidden, "You don't have permission to update this property", "")
 			return
@@ -165,7 +288,7 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 	}
 	// Update images if provided (allow empty array to clear images)
 	if req.Images != nil {
-		property.Images = req.Images
+		property.Images = pq.StringArray(req.Images)
 	}
 
 	if err := h.propertyRepo.Update(property); err != nil {
@@ -180,7 +303,11 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 // @Router /api/v1/properties/{id} [delete]
 func (h *PropertyHandler) DeleteProperty(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
-	userID, _ := c.Get("user_id")
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", err.Error())
+		return
+	}
 
 	property, err := h.propertyRepo.FindByID(uint(id))
 	if err != nil || property == nil {
@@ -188,8 +315,9 @@ func (h *PropertyHandler) DeleteProperty(c *gin.Context) {
 		return
 	}
 
-	// Check ownership
-	if property.OwnerID != userID.(uint) {
+	// Admin can delete any property, non-admin users can only delete their own.
+	userType, _ := c.Get("user_type")
+	if userType != "admin" && property.OwnerID != userID {
 		utils.ErrorResponse(c, http.StatusForbidden, "You don't have permission to delete this property", "")
 		return
 	}
@@ -202,18 +330,36 @@ func (h *PropertyHandler) DeleteProperty(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Property deleted successfully", nil)
 }
 
-// SearchNearby searches for properties with filters
-// @Summary Search properties by location and filters
-// @Description Search for properties by UPI (Unique Parcel Identifier) only
+func getUserIDFromContext(c *gin.Context) (uint, error) {
+	userIDRaw, exists := c.Get("user_id")
+	if !exists {
+		return 0, strconv.ErrSyntax
+	}
+
+	userIDStr, ok := userIDRaw.(string)
+	if !ok || userIDStr == "" {
+		return 0, strconv.ErrSyntax
+	}
+
+	parsed, err := strconv.ParseUint(userIDStr, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+
+	return uint(parsed), nil
+}
+
+// SearchNearby godoc
+// @Summary Search properties by UPI or filters
+// @Description Search properties using either an exact UPI match or one or more filters: property_type, max_price, or latitude+longitude+radius_km. Returns a paginated response envelope.
 // @Tags properties
 // @Accept json
 // @Produce json
-// @Param request body PropertySearchRequest true "Search filters"
-// @Success 200 {object} utils.APIResponse "Properties found"
+// @Param request body object{upi=string,latitude=number,longitude=number,radius_km=number,property_type=string,max_price=number,page=integer,limit=integer} true "Search criteria and pagination"
+// @Success 200 {object} utils.APIResponse "Paginated property search result"
 // @Failure 400 {object} utils.APIResponse "Invalid request"
 // @Failure 500 {object} utils.APIResponse "Server error"
 // @Router /api/v1/properties/search [post]
-// (UPI-only version implemented above)
 
 // GetStatistics returns property statistics
 // @Router /api/v1/properties/stats [get]

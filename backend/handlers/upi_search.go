@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -32,7 +33,9 @@ func UpiSearchHandler(w http.ResponseWriter, r *http.Request) {
 	if req.UPI == "" {
 		resp := UpiSearchResponse{Error: "UPI is required"}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			log.Printf("UpiSearchHandler encode error: %v", err)
+		}
 		return
 	}
 	var resp UpiSearchResponse
@@ -47,5 +50,7 @@ func UpiSearchHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("UpiSearchHandler encode error: %v", err)
+	}
 }

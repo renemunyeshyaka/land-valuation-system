@@ -28,6 +28,7 @@
 ```bash
 # Navigate to project
 cd /home/sdragon/Desktop/GitHub/land-valuation-system
+```
 
 ## 🤝 Partners & Integrations
 
@@ -129,8 +130,7 @@ If you are interested in partnering or integrating with LVS, please contact us v
 - **Description:** Publicly lists all properties available for sale. No authentication required for browsing.
 
 **Endpoints:**
-- `GET /api/v1/marketplace` — List all properties for sale (with filters, pagination)
-- `GET /api/v1/marketplace/:id` — View a specific property listing
+- `GET /api/v1/marketplace/properties-for-sale` — List all properties for sale (with filters, pagination)
 
 **Response Example (GET):**
 ```json
@@ -335,11 +335,7 @@ This workflow ensures LVS is robust, user-friendly, and fully independent.
 ### (Deprecated) UPI-Based Search
 
 > **Note:** UPI-based search and estimation logic is deprecated and must not be used for price estimation. All price estimation must use the multi-field search workflow described above. The `gazette_land_prices` and `collected_upis` tables are not used for price estimation. All logic is based on the `village_land_values` table.
-            "price": 11000000,
-            "price_type": "Weighted Average Value Per Sqm"
-         }
-      }
-      ```
+
 - Go 1.21+
 - Node.js 18+
 - Docker & Docker Compose
@@ -355,7 +351,9 @@ This workflow ensures LVS is robust, user-friendly, and fully independent.
    ```
 
 2. **Run Tests**
-   - Backend: `cd backend && go test ./... -v` | go run ./cmd/api/main.go | go build ./cmd/api && go run ./cmd/api/main.go
-   - Frontend: `cd frontend && npm run test` | rm -rf .next && npm run dev | npm run build && npm run dev
+   - Backend: `cd backend && go test ./... -v` | go run ./cmd/api | go build ./cmd/api && ./api
+
+   Note: `backend/main.go` is a deprecated shim and should not be used as a runtime entrypoint.
+   - Frontend: `cd frontend && npm run test` | rm -rf .next && npm run dev | npm run build && npm run start
    - Mobile: `cd mobile && npm run test`
 

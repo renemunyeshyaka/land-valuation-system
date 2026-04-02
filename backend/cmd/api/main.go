@@ -139,7 +139,9 @@ func main() {
 		mux := http.NewServeMux()
 		mux.Handle("/metrics", promhttp.Handler())
 		log.Println("Prometheus metrics endpoint running on :2112/metrics")
-		http.ListenAndServe(":2112", mux)
+		if err := http.ListenAndServe(":2112", mux); err != nil && err != http.ErrServerClosed {
+			log.Printf("Prometheus metrics server error: %v", err)
+		}
 	}()
 
 	// Wait for interrupt signal

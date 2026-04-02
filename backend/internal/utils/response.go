@@ -38,6 +38,21 @@ func SuccessResponse(c *gin.Context, code int, message string, data interface{})
 	})
 }
 
+// PaginatedDataPayload builds the standardized paginated envelope used in API responses.
+func PaginatedDataPayload(data interface{}, total, page, limit int) gin.H {
+	return gin.H{
+		"data":  data,
+		"total": total,
+		"page":  page,
+		"limit": limit,
+	}
+}
+
+// SuccessPaginatedResponse sends a success response with the standardized paginated envelope.
+func SuccessPaginatedResponse(c *gin.Context, code int, message string, data interface{}, total, page, limit int) {
+	SuccessResponse(c, code, message, PaginatedDataPayload(data, total, page, limit))
+}
+
 // PaginatedResponse sends a paginated response
 func PaginatedResponse(c *gin.Context, message string, data interface{}, total int, page int, limit int) {
 	c.JSON(http.StatusOK, gin.H{

@@ -81,7 +81,7 @@ func ValidateImageFile(filename string, mimeType string, fileSize int64) error {
 	if !isAllowedImageType(mimeType) {
 		return FileValidationError{
 			Field:   filename,
-			Message: fmt.Sprintf("Invalid image format. Allowed: JPG, PNG, GIF"),
+			Message: "Invalid image format. Allowed: JPG, PNG, GIF",
 		}
 	}
 
@@ -117,7 +117,7 @@ func ValidateDocumentFile(filename string, mimeType string, fileSize int64) erro
 	if !isAllowedDocumentType(mimeType) {
 		return FileValidationError{
 			Field:   filename,
-			Message: fmt.Sprintf("Invalid document format. Only PDF files are allowed"),
+			Message: "Invalid document format. Only PDF files are allowed",
 		}
 	}
 

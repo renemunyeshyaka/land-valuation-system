@@ -41,7 +41,9 @@ func LandValueEstimateHandler(w http.ResponseWriter, r *http.Request) {
 	if req.Province == "" || req.District == "" || req.Sector == "" || req.Cell == "" || req.Village == "" || req.PlotSize <= 0 {
 		resp := LandValueEstimateResponse{Error: "All fields are required and plot_size must be positive (district required)."}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			log.Printf("LandValueEstimateHandler encode error: %v", err)
+		}
 		return
 	}
 	// Query the repository (case-insensitive, alternate name logic)
@@ -50,7 +52,9 @@ func LandValueEstimateHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("LandValueEstimateHandler: %v", err)
 		resp := LandValueEstimateResponse{Error: "Land parcel not found for provided details"}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			log.Printf("LandValueEstimateHandler encode error: %v", err)
+		}
 		return
 	}
 	// Use weighted average if available, else min, else max
@@ -76,5 +80,7 @@ func LandValueEstimateHandler(w http.ResponseWriter, r *http.Request) {
 		Total:     total,
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("LandValueEstimateHandler encode error: %v", err)
+	}
 }

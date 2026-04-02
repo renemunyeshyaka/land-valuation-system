@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	// Removed unused imports
@@ -68,7 +69,9 @@ func UpdatePropertyHandler(w http.ResponseWriter, r *http.Request) {
 		prop.Images = strings.Split(v, ",")
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(prop)
+	if err := json.NewEncoder(w).Encode(prop); err != nil {
+		log.Printf("UpdatePropertyHandler encode error: %v", err)
+	}
 }
 
 // DeletePropertyHandler allows owner or admin to delete a property
@@ -149,7 +152,9 @@ func CreatePropertyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	properties = append(properties, property)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(property)
+	if err := json.NewEncoder(w).Encode(property); err != nil {
+		log.Printf("CreatePropertyHandler encode error: %v", err)
+	}
 }
 
 func ListMarketplaceHandler(w http.ResponseWriter, r *http.Request) {
@@ -161,5 +166,7 @@ func ListMarketplaceHandler(w http.ResponseWriter, r *http.Request) {
 		props[i], props[len(props)-1-i] = props[len(props)-1-i], props[i]
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(props)
+	if err := json.NewEncoder(w).Encode(props); err != nil {
+		log.Printf("ListMarketplaceHandler encode error: %v", err)
+	}
 }

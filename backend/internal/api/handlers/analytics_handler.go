@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"backend/internal/services"
@@ -94,17 +95,27 @@ func (h *AnalyticsHandler) GetMarketTrends(c *gin.Context) {
 
 // GetHeatmap godoc
 // @Summary Get property price heatmap
-// @Description Retrieve geographic heatmap data showing property prices across regions
+// @Description Retrieve geographic heatmap data showing property prices across regions. Returns a paginated envelope with data, total, page, and limit.
 // @Tags analytics
 // @Produce json
 // @Param type query string false "Property type"
 // @Param district query string false "Filter by district"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Page size" default(20)
 // @Success 200 {object} utils.APIResponse
 // @Failure 500 {object} utils.APIResponse
 // @Router /analytics/heatmap [get]
 func (h *AnalyticsHandler) GetHeatmap(c *gin.Context) {
 	propertyType := c.Query("type")
 	district := c.Query("district")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
 
 	heatmap, err := h.analyticsService.GetHeatmap(c.Request.Context(), propertyType, district)
 	if err != nil {
@@ -112,7 +123,18 @@ func (h *AnalyticsHandler) GetHeatmap(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Heatmap retrieved", heatmap)
+	total := len(heatmap)
+	offset := (page - 1) * limit
+	paged := []map[string]interface{}{}
+	if offset < total {
+		end := offset + limit
+		if end > total {
+			end = total
+		}
+		paged = heatmap[offset:end]
+	}
+
+	utils.SuccessPaginatedResponse(c, http.StatusOK, "Heatmap retrieved", paged, total, page, limit)
 }
 
 // GetUserActivityReport godoc
@@ -143,16 +165,26 @@ func (h *AnalyticsHandler) GetUserActivityReport(c *gin.Context) {
 
 // GetSearchAnalytics godoc
 // @Summary Get search analytics
-// @Description Retrieve analytics about property searches performed by the user
+// @Description Retrieve analytics about property searches performed by the user. Returns a paginated envelope for top_locations with data, total, page, and limit, while preserving legacy summary fields.
 // @Tags analytics
 // @Produce json
 // @Security BearerAuth
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Page size" default(20)
 // @Success 200 {object} utils.APIResponse
 // @Failure 401 {object} utils.APIResponse
 // @Failure 500 {object} utils.APIResponse
 // @Router /analytics/searches [get]
 func (h *AnalyticsHandler) GetSearchAnalytics(c *gin.Context) {
 	userID := c.MustGet("user_id").(string)
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
 
 	analytics, err := h.analyticsService.GetSearchAnalytics(c.Request.Context(), userID)
 	if err != nil {
@@ -160,7 +192,38 @@ func (h *AnalyticsHandler) GetSearchAnalytics(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Search analytics retrieved", analytics)
+	allTopLocations := []string{}
+	if raw, ok := analytics["top_locations"]; ok {
+		switch v := raw.(type) {
+		case []string:
+			allTopLocations = v
+		case []interface{}:
+			for _, item := range v {
+				if s, ok := item.(string); ok {
+					allTopLocations = append(allTopLocations, s)
+				}
+			}
+		}
+	}
+
+	total := len(allTopLocations)
+	offset := (page - 1) * limit
+	pagedTopLocations := []string{}
+	if offset < total {
+		end := offset + limit
+		if end > total {
+			end = total
+		}
+		pagedTopLocations = allTopLocations[offset:end]
+	}
+
+	payload := utils.PaginatedDataPayload(pagedTopLocations, total, page, limit)
+	// Preserve existing payload fields for backward compatibility.
+	payload["total_searches"] = analytics["total_searches"]
+	payload["unique_locations"] = analytics["unique_locations"]
+	payload["top_locations"] = allTopLocations
+	payload["most_searched_type"] = analytics["most_searched_type"]
+	utils.SuccessResponse(c, http.StatusOK, "Search analytics retrieved", payload)
 }
 
 // GetValuationInsights godoc

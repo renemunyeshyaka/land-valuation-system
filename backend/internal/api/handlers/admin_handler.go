@@ -42,12 +42,7 @@ func (h *AdminHandler) GetAllUsers(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Users retrieved", gin.H{
-		"data":  users,
-		"total": total,
-		"page":  page,
-		"limit": limit,
-	})
+	utils.SuccessPaginatedResponse(c, http.StatusOK, "Users retrieved", users, total, page, limit)
 }
 
 // GetUser retrieves specific user details (admin only)
@@ -261,12 +256,7 @@ func (h *AdminHandler) GetAuditLogs(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Audit logs retrieved", gin.H{
-		"data":  logs,
-		"total": total,
-		"page":  page,
-		"limit": limit,
-	})
+	utils.SuccessPaginatedResponse(c, http.StatusOK, "Audit logs retrieved", logs, total, page, limit)
 }
 
 // GetSystemHealth retrieves system health status (admin only)
@@ -294,12 +284,7 @@ func (h *AdminHandler) ManageSubscriptions(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Subscriptions retrieved", gin.H{
-		"data":  subscriptions,
-		"total": total,
-		"page":  page,
-		"limit": limit,
-	})
+	utils.SuccessPaginatedResponse(c, http.StatusOK, "Subscriptions retrieved", subscriptions, total, page, limit)
 }
 
 // ApproveProperty approves property listing (admin only)

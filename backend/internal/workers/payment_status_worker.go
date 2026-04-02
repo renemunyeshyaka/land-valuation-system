@@ -41,10 +41,12 @@ func StartPaymentStatusWorker(
 					log.Printf("msg=\"Failed to fetch pending transactions\" error=%q time=%s", err, time.Now().Format(time.RFC3339))
 					errorCount++
 					if errorCount >= alertThreshold {
-						alert.SendEmail(
+						if err := alert.SendEmail(
 							"Payment Worker Error: DB Fetch",
 							fmt.Sprintf("Failed to fetch pending transactions: %v (time: %s)", err, time.Now().Format(time.RFC3339)),
-						)
+						); err != nil {
+							log.Printf("msg=\"Failed to send worker alert email\" error=%q", err)
+						}
 						metrics.WorkerAlertEmails.Inc()
 						errorCount = 0
 					}
@@ -65,10 +67,12 @@ func StartPaymentStatusWorker(
 						log.Printf("msg=\"Error checking status\" txn_id=%s provider=%s error=%q time=%s", txnID, provider, err, time.Now().Format(time.RFC3339))
 						errorCount++
 						if errorCount >= alertThreshold {
-							alert.SendEmail(
+							if err := alert.SendEmail(
 								"Payment Worker Error: Status Check",
 								fmt.Sprintf("Error checking status for txn %s (provider: %s): %v (time: %s)", txnID, provider, err, time.Now().Format(time.RFC3339)),
-							)
+							); err != nil {
+								log.Printf("msg=\"Failed to send worker alert email\" error=%q", err)
+							}
 							metrics.WorkerAlertEmails.Inc()
 							errorCount = 0
 						}

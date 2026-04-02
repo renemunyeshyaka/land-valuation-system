@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/jung-kurt/gofpdf"
@@ -35,10 +36,20 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 	page := 1
 	limit := 20
 	if p := c.Query("page"); p != "" {
-		fmt.Sscanf(p, "%d", &page)
+		if parsed, err := strconv.Atoi(p); err == nil {
+			page = parsed
+		}
 	}
 	if l := c.Query("limit"); l != "" {
-		fmt.Sscanf(l, "%d", &limit)
+		if parsed, err := strconv.Atoi(l); err == nil {
+			limit = parsed
+		}
+	}
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 || limit > 100 {
+		limit = 20
 	}
 	offset := (page - 1) * limit
 	filters := map[string]string{}
@@ -50,12 +61,9 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to list users", err.Error())
 		return
 	}
-	data := map[string]interface{}{
-		"users": users,
-		"total": total,
-		"page":  page,
-		"limit": limit,
-	}
+	data := utils.PaginatedDataPayload(users, total, page, limit)
+	// Backward compatibility: keep `users` alias while clients migrate to `data`.
+	data["users"] = users
 	utils.SuccessResponse(c, http.StatusOK, "Users listed", data)
 }
 
@@ -103,17 +111,27 @@ func (h *UserHandler) ExportUsers(c *gin.Context) {
 	// Default: CSV
 	var buf bytes.Buffer
 	writer := csv.NewWriter(&buf)
-	writer.Write([]string{"ID", "FirstName", "LastName", "Email", "Status"})
+	if err := writer.Write([]string{"ID", "FirstName", "LastName", "Email", "Status"}); err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to generate CSV", err.Error())
+		return
+	}
 	for _, u := range users {
-		writer.Write([]string{
+		if err := writer.Write([]string{
 			fmt.Sprintf("%v", u.ID),
 			u.FirstName,
 			u.LastName,
 			u.Email,
 			u.KYCStatus,
-		})
+		}); err != nil {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to generate CSV", err.Error())
+			return
+		}
 	}
 	writer.Flush()
+	if err := writer.Error(); err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to generate CSV", err.Error())
+		return
+	}
 	c.Header("Content-Disposition", "attachment; filename=users.csv")
 	c.Data(http.StatusOK, "text/csv", buf.Bytes())
 }
@@ -159,7 +177,10 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 
 	if strings.Contains(contentType, "multipart/form-data") {
 		// Handle multipart form data with optional file upload
-		c.Request.ParseMultipartForm(filevalidation.MaxFileSize)
+		if err := c.Request.ParseMultipartForm(filevalidation.MaxFileSize); err != nil {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Invalid multipart form data", err.Error())
+			return
+		}
 
 		firstNameVal = c.PostForm("first_name")
 		lastNameVal = c.PostForm("last_name")

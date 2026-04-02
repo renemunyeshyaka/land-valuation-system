@@ -231,12 +231,16 @@ func (s *AuthService) VerifyOTP(ctx context.Context, email, otpCode string) (*mo
 	// Check if OTP matches
 	if user.OTPCode != otpCode {
 		// Increment failed attempts
-		s.userRepo.IncrementOTPAttempts(ctx, fmt.Sprintf("%d", user.ID))
+		if err := s.userRepo.IncrementOTPAttempts(ctx, fmt.Sprintf("%d", user.ID)); err != nil {
+			return nil, "", "", fmt.Errorf("failed to track OTP attempt: %w", err)
+		}
 
 		// Lock account after 5 failed attempts
 		if user.OTPAttempts >= 4 { // Will become 5 after increment
 			lockedUntil := time.Now().Add(15 * time.Minute)
-			s.userRepo.LockOTPVerification(ctx, fmt.Sprintf("%d", user.ID), lockedUntil)
+			if err := s.userRepo.LockOTPVerification(ctx, fmt.Sprintf("%d", user.ID), lockedUntil); err != nil {
+				return nil, "", "", fmt.Errorf("failed to lock OTP verification: %w", err)
+			}
 			return nil, "", "", errors.New("too many failed attempts. Account locked for 15 minutes")
 		}
 
@@ -255,7 +259,9 @@ func (s *AuthService) VerifyOTP(ctx context.Context, email, otpCode string) (*mo
 	}
 
 	// Update last login
-	s.userRepo.UpdateLastLogin(ctx, fmt.Sprintf("%d", user.ID))
+	if err := s.userRepo.UpdateLastLogin(ctx, fmt.Sprintf("%d", user.ID)); err != nil {
+		return nil, "", "", fmt.Errorf("failed to update last login: %w", err)
+	}
 
 	// Generate tokens
 	accessToken, err := s.generateAccessToken(user)

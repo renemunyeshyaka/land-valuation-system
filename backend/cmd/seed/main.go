@@ -331,6 +331,8 @@ func timePtr(t time.Time) *time.Time {
 
 func generateReferralCode() string {
 	b := make([]byte, 16)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		return fmt.Sprintf("REF%013d", time.Now().UnixNano()%1e13)
+	}
 	return base64.URLEncoding.EncodeToString(b)[:16]
 }

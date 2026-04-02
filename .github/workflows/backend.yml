@@ -56,6 +56,11 @@ jobs:
       run: |
         psql $DATABASE_URL < migrations/001_init_schema.sql
     
+    - name: Run focused authz regression suite
+      working-directory: backend
+      run: |
+        go test ./internal/api/middleware ./internal/api/handlers ./internal/services ./internal/api/routes ./internal/repository -run 'MarketplaceService_|FunctionalReadPaths|CreateValidationAndSuccess|PublicPayloadContract|PaginationEdgeCases|SubscriptionPlansRoute|SubscriptionBillingHistoryRoute|AdminUsersListRoute|GetPlans|SearchNearby|SearchNearby_RejectsEmptyCriteria|GetSearchAnalytics|GetHeatmap|AnalyticsSearchRoute|AnalyticsHeatmapRoute|SyncPropertyWithMarketplaces|SyncMarketplaceAPIs|GetPropertyListingsOnSale|SearchProperties|SearchPropertiesPaginated|FindByUPIPaginated|AuthRequired|GetUserIDFromContext|PropertyUpdateRoute|PropertyDeleteRoute|MarketplaceSyncRoute|ProtectedRoutes_RequireAuthorizationHeader|ProtectedRoutes_RequireValidBearerFormat'
+
     - name: Run tests
       working-directory: backend
       env:
@@ -90,7 +95,7 @@ jobs:
     - name: Build
       working-directory: backend
       run: |
-        go build -o api ./cmd/api/main.go
+        go build -o api ./cmd/api
         go build -o migrator ./cmd/migrator/main.go
     
     - name: Upload artifacts

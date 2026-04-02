@@ -56,19 +56,29 @@ type PropertyFilter struct {
 	UPI string
 }
 
-// FindByUPI finds a property by its Unique Parcel Identifier
-func (r *PropertyRepository) FindByUPI(upi string) (*models.Property, error) {
-	var property models.Property
-
-	err := r.db.Where("upi = ?", upi).First(&property).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
+// FindByUPIPaginated finds properties by UPI with database-level pagination.
+func (r *PropertyRepository) FindByUPIPaginated(upi string, page, limit int) ([]models.Property, int, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
 	}
 
-	return &property, nil
+	query := r.db.Model(&models.Property{}).Where("upi = ?", upi)
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	var properties []models.Property
+	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&properties).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return properties, int(total), nil
 }
 
 func (r *PropertyRepository) FindAll(filter PropertyFilter) ([]models.Property, int64, error) {

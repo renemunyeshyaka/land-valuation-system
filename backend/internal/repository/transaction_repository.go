@@ -71,7 +71,7 @@ func (r *TransactionRepository) ListByUser(ctx context.Context, userID uint, pag
 	var transactions []models.Transaction
 	var total int64
 
-	query := r.db.WithContext(ctx).Where("user_id = ? OR buyer_id = ?", userID, userID)
+	query := r.db.WithContext(ctx).Model(&models.Transaction{}).Where("user_id = ? OR buyer_id = ?", userID, userID)
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err

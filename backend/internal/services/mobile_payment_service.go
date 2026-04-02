@@ -671,6 +671,29 @@ func (s *PaymentService) preventReplay(provider string, payload map[string]inter
 	return nil
 }
 
+func (s *PaymentService) markReplaySeen(provider string, payload map[string]interface{}, signature string) error {
+	payloadJSON, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to serialize callback payload: %w", err)
+	}
+
+	now := time.Now()
+	fingerprint := fmt.Sprintf("%s|%s|%s", provider, signature, string(payloadJSON))
+
+	s.replayMutex.Lock()
+	defer s.replayMutex.Unlock()
+
+	if s.callbackReplayCache == nil {
+		s.callbackReplayCache = make(map[string]time.Time)
+	}
+	if s.callbackReplayTTL <= 0 {
+		s.callbackReplayTTL = 15 * time.Minute
+	}
+
+	s.callbackReplayCache[fingerprint] = now
+	return nil
+}
+
 func (s *PaymentService) validateCallbackFreshness(provider string, payload map[string]interface{}) error {
 	if s.callbackMaxSkew <= 0 {
 		return nil
@@ -775,14 +798,25 @@ func (s *PaymentService) ProcessCallback(ctx context.Context, provider string, p
 		return fmt.Errorf("webhook signature validation failed: %w", err)
 	}
 
+	var processErr error
 	switch resolvedProvider {
 	case "mtn":
-		return s.processMTNCallback(ctx, payload)
+		processErr = s.processMTNCallback(ctx, payload)
 	case "airtel":
-		return s.processAirtelCallback(ctx, payload)
+		processErr = s.processAirtelCallback(ctx, payload)
 	default:
-		return fmt.Errorf("unsupported payment provider: %s", provider)
+		processErr = fmt.Errorf("unsupported payment provider: %s", provider)
 	}
+
+	if processErr != nil {
+		return processErr
+	}
+
+	if err := s.markReplaySeen(resolvedProvider, payload, signature); err != nil {
+		return fmt.Errorf("failed to track callback replay state: %w", err)
+	}
+
+	return nil
 }
 
 // processMTNCallback handles MTN MoMo webhook callbacks

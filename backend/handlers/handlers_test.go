@@ -36,7 +36,9 @@ func TestEstimateSearchHandler_EmptyUPI(t *testing.T) {
 		t.Errorf("Expected status 200 or 0, got %d", w.Status)
 	}
 	var resp EstimateSearchResponse
-	json.Unmarshal(w.Body, &resp)
+	if err := json.Unmarshal(w.Body, &resp); err != nil {
+		t.Fatalf("failed to unmarshal response: %v", err)
+	}
 	if resp.Error == "" {
 		t.Error("Expected error for empty UPI")
 	}
@@ -53,7 +55,9 @@ func TestUPIPriceHandler_EmptyUPI(t *testing.T) {
 		t.Errorf("Expected status 200 or 0, got %d", w.Status)
 	}
 	var resp UPIPriceResponse
-	json.Unmarshal(w.Body, &resp)
+	if err := json.Unmarshal(w.Body, &resp); err != nil {
+		t.Fatalf("failed to unmarshal response: %v", err)
+	}
 	if resp.Error == "" {
 		t.Error("Expected error for empty UPI")
 	}
@@ -69,7 +73,9 @@ func TestUpiSearchHandler_EmptyUPI(t *testing.T) {
 		t.Errorf("Expected status 200 or 0, got %d", w.Status)
 	}
 	var resp UpiSearchResponse
-	json.Unmarshal(w.Body, &resp)
+	if err := json.Unmarshal(w.Body, &resp); err != nil {
+		t.Fatalf("failed to unmarshal response: %v", err)
+	}
 	if resp.Error == "" {
 		t.Error("Expected error for empty UPI")
 	}

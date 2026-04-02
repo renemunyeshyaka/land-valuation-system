@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -62,9 +63,19 @@ func (h *MarketplaceHandler) GetMarketplaceListings(c *gin.Context) {
 func (h *MarketplaceHandler) SyncMarketplaceAPIs(c *gin.Context) {
 	propertyID := c.Param("id")
 	userID := c.MustGet("user_id").(string)
+	userType, _ := c.Get("user_type")
+	isAdmin := userType == "admin"
 
-	result, err := h.marketplaceService.SyncPropertyWithMarketplaces(c.Request.Context(), propertyID, userID)
+	result, err := h.marketplaceService.SyncPropertyWithMarketplaces(c.Request.Context(), propertyID, userID, isAdmin)
 	if err != nil {
+		if errors.Is(err, services.ErrMarketplacePropertyNotFound) {
+			utils.ErrorResponse(c, http.StatusNotFound, "Marketplace sync failed", err.Error())
+			return
+		}
+		if errors.Is(err, services.ErrMarketplaceSyncForbidden) {
+			utils.ErrorResponse(c, http.StatusForbidden, "Marketplace sync failed", err.Error())
+			return
+		}
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Marketplace sync failed", err.Error())
 		return
 	}
@@ -92,10 +103,5 @@ func (h *MarketplaceHandler) GetPropertyListingsOnSale(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Properties on sale retrieved", gin.H{
-		"data":  listings,
-		"total": total,
-		"page":  page,
-		"limit": limit,
-	})
+	utils.SuccessPaginatedResponse(c, http.StatusOK, "Properties on sale retrieved", listings, total, page, limit)
 }

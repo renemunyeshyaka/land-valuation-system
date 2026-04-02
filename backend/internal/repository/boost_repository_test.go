@@ -81,21 +81,27 @@ func TestBoostRepository_ListActiveBoosts(t *testing.T) {
 	ctx := context.Background()
 
 	// Add two active boosts, one expired
-	repo.Create(ctx, &models.PropertyBoost{
+	if _, err := repo.Create(ctx, &models.PropertyBoost{
 		PropertyID: 3,
 		Status:     "active",
 		EndTime:    time.Now().Add(2 * time.Hour),
-	})
-	repo.Create(ctx, &models.PropertyBoost{
+	}); err != nil {
+		t.Fatalf("Create failed: %v", err)
+	}
+	if _, err := repo.Create(ctx, &models.PropertyBoost{
 		PropertyID: 4,
 		Status:     "active",
 		EndTime:    time.Now().Add(2 * time.Hour),
-	})
-	repo.Create(ctx, &models.PropertyBoost{
+	}); err != nil {
+		t.Fatalf("Create failed: %v", err)
+	}
+	if _, err := repo.Create(ctx, &models.PropertyBoost{
 		PropertyID: 5,
 		Status:     "expired",
 		EndTime:    time.Now().Add(-2 * time.Hour),
-	})
+	}); err != nil {
+		t.Fatalf("Create failed: %v", err)
+	}
 
 	boosts, err := repo.ListActiveBoosts(ctx)
 	if err != nil {

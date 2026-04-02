@@ -20,16 +20,45 @@ func NewSubscriptionHandler(subscriptionService *services.SubscriptionService) *
 	}
 }
 
-// GetPlans retrieves all subscription plans
+// GetPlans retrieves all subscription plans.
+// It returns a paginated envelope with data, total, page, and limit.
+// @Summary Get subscription plans
+// @Description Retrieve subscription plans with a paginated response envelope.
+// @Tags subscriptions
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Page size" default(20)
+// @Success 200 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
 // @Router /subscriptions/plans [get]
 func (h *SubscriptionHandler) GetPlans(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+
 	plans, err := h.subscriptionService.GetAllPlans(c.Request.Context())
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve plans", err.Error())
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Subscription plans retrieved", plans)
+	total := len(plans)
+	offset := (page - 1) * limit
+	paged := []map[string]interface{}{}
+	if offset < total {
+		end := offset + limit
+		if end > total {
+			end = total
+		}
+		paged = plans[offset:end]
+	}
+
+	utils.SuccessPaginatedResponse(c, http.StatusOK, "Subscription plans retrieved", paged, total, page, limit)
 }
 
 // GetCurrentSubscription retrieves current user subscription
@@ -124,6 +153,12 @@ func (h *SubscriptionHandler) GetBillingHistory(c *gin.Context) {
 	userID := c.MustGet("user_id").(string)
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 10
+	}
 
 	invoices, total, err := h.subscriptionService.GetBillingHistory(c.Request.Context(), userID, page, limit)
 	if err != nil {
@@ -131,12 +166,7 @@ func (h *SubscriptionHandler) GetBillingHistory(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Billing history retrieved", gin.H{
-		"invoices": invoices,
-		"total":    total,
-		"page":     page,
-		"limit":    limit,
-	})
+	utils.SuccessPaginatedResponse(c, http.StatusOK, "Billing history retrieved", invoices, total, page, limit)
 }
 
 // UpdateBillingInfo updates billing information

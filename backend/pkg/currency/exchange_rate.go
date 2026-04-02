@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -19,7 +18,6 @@ type ExchangeRateService struct {
 	httpClient   *http.Client
 	apiURL       string
 	cacheTTL     time.Duration
-	mu           sync.RWMutex
 	fallbackRate float64 // Fallback rate if API fails
 }
 

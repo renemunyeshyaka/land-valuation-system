@@ -4,6 +4,7 @@ import (
 	"backend/pricing"
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -77,7 +78,9 @@ func UPIPriceHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		resp := UPIPriceResponse{UPI: req.UPI, Error: "UPI not found or inactive"}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		if encErr := json.NewEncoder(w).Encode(resp); encErr != nil {
+			log.Printf("UPIPriceHandler encode error: %v", encErr)
+		}
 		return
 	}
 	// Step 2: Pricing Lookup by UPI
@@ -91,5 +94,7 @@ func UPIPriceHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Error = err.Error()
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	if encErr := json.NewEncoder(w).Encode(resp); encErr != nil {
+		log.Printf("UPIPriceHandler encode error: %v", encErr)
+	}
 }

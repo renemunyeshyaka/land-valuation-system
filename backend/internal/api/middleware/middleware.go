@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -58,7 +59,7 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		userID, ok := claims["user_id"].(string)
+		rawUserID, ok := claims["user_id"]
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "user id not found in token",
@@ -67,7 +68,24 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
+		var userID string
+		switch v := rawUserID.(type) {
+		case string:
+			userID = v
+		case float64:
+			userID = strconv.FormatUint(uint64(v), 10)
+		default:
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "invalid user id in token",
+			})
+			c.Abort()
+			return
+		}
+
 		c.Set("user_id", userID)
+		if userType, ok := claims["user_type"].(string); ok {
+			c.Set("user_type", userType)
+		}
 		c.Set("claims", claims)
 		c.Next()
 	}

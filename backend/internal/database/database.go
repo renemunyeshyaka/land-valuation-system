@@ -86,6 +86,8 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.Notification{},
 		&models.Subscription{},
 		&models.Transaction{},
+		&models.PropertyBoost{},
+		&models.MarketplaceListing{},
 	)
 	if err != nil {
 		// Backward-compatibility: some existing DBs have an index instead of the legacy

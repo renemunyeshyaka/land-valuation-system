@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users table
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id BIGSERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     phone VARCHAR(20) UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
@@ -36,8 +36,8 @@ CREATE TABLE users (
 
 -- Properties table (Land parcels)
 CREATE TABLE properties (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id BIGSERIAL PRIMARY KEY,
+    owner_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     property_type VARCHAR(50) NOT NULL CHECK (property_type IN ('residential', 'commercial', 'agricultural', 'mixed')),
@@ -74,9 +74,9 @@ CREATE TABLE properties (
 
 -- Valuations table
 CREATE TABLE valuations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    property_id UUID NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id),
+    id BIGSERIAL PRIMARY KEY,
+    property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+    valuator_id BIGINT NOT NULL REFERENCES users(id),
     valuation_type VARCHAR(50) NOT NULL CHECK (valuation_type IN ('standard', 'detailed', 'market_analysis')),
     base_price_rwf DECIMAL(15, 2),
     market_price_rwf DECIMAL(15, 2),
@@ -93,8 +93,8 @@ CREATE TABLE valuations (
 
 -- Subscriptions table
 CREATE TABLE subscriptions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     plan_type VARCHAR(50) NOT NULL CHECK (plan_type IN ('free', 'basic', 'professional', 'ultimate')),
     status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'cancelled', 'expired', 'suspended')),
     start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -109,9 +109,9 @@ CREATE TABLE subscriptions (
 
 -- Transactions table (Payments)
 CREATE TABLE transactions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    subscription_id UUID REFERENCES subscriptions(id),
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    subscription_id BIGINT REFERENCES subscriptions(id),
     transaction_type VARCHAR(50) NOT NULL CHECK (transaction_type IN ('subscription', 'valuation', 'premium_feature', 'refund')),
     amount_rwf DECIMAL(15, 2),
     payment_method VARCHAR(50) NOT NULL CHECK (payment_method IN ('card', 'mobile_money', 'bank_transfer')),
@@ -126,8 +126,8 @@ CREATE TABLE transactions (
 
 -- Marketplace listings
 CREATE TABLE marketplace_listings (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    property_id UUID REFERENCES properties(id) ON DELETE SET NULL,
+    id BIGSERIAL PRIMARY KEY,
+    property_id BIGINT REFERENCES properties(id) ON DELETE SET NULL,
     api_name VARCHAR(100) NOT NULL,
     external_id VARCHAR(255),
     external_url VARCHAR(500),
@@ -143,11 +143,11 @@ CREATE TABLE marketplace_listings (
 
 -- Activity logs
 CREATE TABLE activity_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
     action VARCHAR(100) NOT NULL,
     resource_type VARCHAR(100),
-    resource_id UUID,
+    resource_id BIGINT,
     ip_address INET,
     user_agent TEXT,
     details JSONB,
@@ -156,8 +156,8 @@ CREATE TABLE activity_logs (
 
 -- Analytics events  
 CREATE TABLE analytics_events (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
     event_type VARCHAR(100) NOT NULL,
     event_name VARCHAR(255),
     properties JSONB,
@@ -166,8 +166,8 @@ CREATE TABLE analytics_events (
 
 -- Search queries log
 CREATE TABLE search_queries (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
     query_text VARCHAR(500),
     filters JSONB,
     results_count INT,
@@ -178,8 +178,8 @@ CREATE TABLE search_queries (
 
 -- User saved properties
 CREATE TABLE user_saved_properties (
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    property_id UUID NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, property_id)
 );
@@ -190,13 +190,14 @@ CREATE INDEX idx_properties_status ON properties(status);
 CREATE INDEX idx_properties_type ON properties(property_type);
 CREATE INDEX idx_properties_district ON properties(district);
 CREATE INDEX idx_valuations_property ON valuations(property_id);
-CREATE INDEX idx_valuations_user ON valuations(user_id);
+CREATE INDEX idx_valuations_valuator ON valuations(valuator_id);
 CREATE INDEX idx_subscriptions_user ON subscriptions(user_id);
 CREATE INDEX idx_subscriptions_status ON subscriptions(status);
 CREATE INDEX idx_transactions_user ON transactions(user_id);
 CREATE INDEX idx_transactions_status ON transactions(status);
 CREATE INDEX idx_marketplace_property ON marketplace_listings(property_id);
 CREATE INDEX idx_marketplace_api ON marketplace_listings(api_name);
+CREATE UNIQUE INDEX idx_marketplace_property_api ON marketplace_listings(property_id, api_name);
 CREATE INDEX idx_activity_logs_user ON activity_logs(user_id);
 CREATE INDEX idx_activity_logs_action ON activity_logs(action);
 CREATE INDEX idx_analytics_events_user ON analytics_events(user_id);

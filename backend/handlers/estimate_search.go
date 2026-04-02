@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -38,9 +38,13 @@ type EstimateSearchResponse struct {
 // EstimateSearchHandler handles POST /api/v1/estimate-search (multi-field search only)
 func EstimateSearchHandler(w http.ResponseWriter, r *http.Request) {
 	var req EstimateSearchRequest
-	body, _ := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "failed to read request body", http.StatusBadRequest)
+		return
+	}
 	log.Printf("/api/v1/estimate-search raw body: %s", string(body))
-	r.Body = ioutil.NopCloser(strings.NewReader(string(body)))
+	r.Body = io.NopCloser(strings.NewReader(string(body)))
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Printf("/api/v1/estimate-search decode error: %v", err)
 		http.Error(w, "invalid request", http.StatusBadRequest)
@@ -50,7 +54,9 @@ func EstimateSearchHandler(w http.ResponseWriter, r *http.Request) {
 	if req.Province == "" || req.District == "" || req.Sector == "" || req.Cell == "" || req.Village == "" {
 		resp := EstimateSearchResponse{Error: "All location fields (province, district, sector, cell, village) are required."}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			log.Printf("/api/v1/estimate-search encode error: %v", err)
+		}
 		return
 	}
 
@@ -61,7 +67,9 @@ func EstimateSearchHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("EstimateSearchHandler: No match found: %v", err)
 		resp := EstimateSearchResponse{Error: "No land value data found for the provided location."}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			log.Printf("/api/v1/estimate-search encode error: %v", err)
+		}
 		return
 	}
 
@@ -88,5 +96,7 @@ func EstimateSearchHandler(w http.ResponseWriter, r *http.Request) {
 		TotalMaxValue:          totalMax,
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("/api/v1/estimate-search encode error: %v", err)
+	}
 }

@@ -233,7 +233,9 @@ func processBatch(db *gorm.DB, parcels []map[string]interface{}, dryRun bool) (i
 func askForConfirmation(prompt string) bool {
 	fmt.Print(prompt)
 	var response string
-	fmt.Scanln(&response)
+	if _, err := fmt.Scanln(&response); err != nil {
+		return false
+	}
 	return strings.ToLower(strings.TrimSpace(response)) == "yes"
 }
 

@@ -381,10 +381,12 @@ func TestPaymentService_AirtelTokenCaching(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount++
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{
 			"access_token": "test_token_123",
 			"expires_in":   3600,
-		})
+		}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}))
 	defer server.Close()
 
@@ -418,10 +420,12 @@ func TestPaymentService_CheckPaymentStatusWithSync(t *testing.T) {
 	// Create mock MTN server
 	mtnServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{
 			"status": "SUCCESSFUL",
 			"reason": "Payment completed successfully",
-		})
+		}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}))
 	defer mtnServer.Close()
 
@@ -667,10 +671,12 @@ func TestPaymentService_Integration_MTN_CallbackThenStatusSync(t *testing.T) {
 	// Mock MTN status endpoint for post-callback sync check.
 	mtnServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{
 			"status": "SUCCESSFUL",
 			"reason": "Payment completed successfully",
-		})
+		}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}))
 	defer mtnServer.Close()
 
@@ -850,10 +856,12 @@ func TestPaymentService_Integration_CallbackBeforeStatusCheck(t *testing.T) {
 
 	mtnServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{
 			"status": "SUCCESSFUL",
 			"reason": "Provider confirms success",
-		})
+		}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}))
 	defer mtnServer.Close()
 
