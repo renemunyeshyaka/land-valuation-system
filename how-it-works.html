@@ -107,10 +107,27 @@
                     <a href="benefits.html" class="hover:text-emerald-700 transition">Benefits</a>
                     <a href="contact.html" class="hover:text-emerald-700 transition">Contact</a>
                 </div>
+                <!-- Auth + hamburger -->
                 <div class="flex items-center gap-3">
                     <a href="#" class="text-sm font-medium text-emerald-800 hover:text-emerald-900 px-3 py-2">Log in</a>
-                    <a href="#" class="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-sm transition">Sign up</a>
+                    <a href="#" class="hidden sm:inline-flex bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-sm transition">Sign up</a>
+                    <button id="nav-mobile-btn" class="md:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition" aria-label="Open menu">
+                        <i class="fas fa-bars text-base"></i>
+                    </button>
                 </div>
+            </div>
+        </div>
+        <!-- Mobile dropdown -->
+        <div id="nav-mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white px-4 pb-4 pt-2 space-y-1">
+            <a href="index.html" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition">Home</a>
+            <a href="valuation.html" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition">Valuation</a>
+            <a href="marketplace.html" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition">Marketplace</a>
+            <a href="how-it-works.html" class="block px-3 py-2 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50">How It Works</a>
+            <a href="benefits.html" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition">Benefits</a>
+            <a href="contact.html" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition">Contact</a>
+            <div class="pt-2 border-t border-gray-100 flex gap-2">
+                <a href="#" class="flex-1 text-center text-sm font-medium text-emerald-800 border border-emerald-200 rounded-xl py-2.5 hover:bg-emerald-50 transition">Log in</a>
+                <a href="#" class="flex-1 text-center bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-xl py-2.5 transition">Sign up</a>
             </div>
         </div>
     </nav>
@@ -639,6 +656,15 @@
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
+        });
+
+        // Mobile nav toggle
+        document.getElementById('nav-mobile-btn').addEventListener('click', function () {
+            const menu = document.getElementById('nav-mobile-menu');
+            const icon = this.querySelector('i');
+            menu.classList.toggle('hidden');
+            icon.classList.toggle('fa-bars');
+            icon.classList.toggle('fa-times');
         });
     </script>
 </body>
