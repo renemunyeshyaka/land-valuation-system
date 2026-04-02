@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valuation · LandVal System Rwanda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hero-gradient { background: linear-gradient(112deg, #0b3b2c 0%, #1f6e4a 100%); }
+    </style>
+</head>
+<body class="antialiased bg-gray-50">
+
+    <!-- Navigation -->
+    <nav class="bg-white/95 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 md:h-20">
+                <!-- Logo -->
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 bg-emerald-700 rounded-xl flex items-center justify-center shadow-sm">
+                        <i class="fas fa-map-marked-alt text-white text-lg"></i>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight text-emerald-900">Land<span class="text-emerald-600">Val</span></span>
+                </div>
+                <!-- Desktop menu -->
+                <div class="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
+                    <a href="index.html" class="hover:text-emerald-700 transition">Home</a>
+                    <a href="valuation.html" class="text-emerald-700 font-semibold border-b-2 border-emerald-600 pb-1">Valuation</a>
+                    <a href="marketplace.html" class="hover:text-emerald-700 transition">Marketplace</a>
+                    <a href="how-it-works.html" class="hover:text-emerald-700 transition">How It Works</a>
+                    <a href="benefits.html" class="hover:text-emerald-700 transition">Benefits</a>
+                    <a href="contact.html" class="hover:text-emerald-700 transition">Contact</a>
+                </div>
+                <!-- Auth + hamburger -->
+                <div class="flex items-center gap-3">
+                    <a href="#" class="text-sm font-medium text-emerald-800 hover:text-emerald-900 px-3 py-2">Log in</a>
+                    <a href="#" class="hidden sm:inline-flex bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-sm transition">Sign up</a>
+                    <button id="nav-mobile-btn" class="md:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition" aria-label="Open menu">
+                        <i class="fas fa-bars text-base"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile dropdown -->
+        <div id="nav-mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white px-4 pb-4 pt-2 space-y-1">
+            <a href="index.html" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition">Home</a>
+            <a href="valuation.html" class="block px-3 py-2 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50">Valuation</a>
+            <a href="marketplace.html" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition">Marketplace</a>
+            <a href="how-it-works.html" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition">How It Works</a>
+            <a href="benefits.html" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition">Benefits</a>
+            <a href="contact.html" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition">Contact</a>
+            <div class="pt-2 border-t border-gray-100 flex gap-2">
+                <a href="#" class="flex-1 text-center text-sm font-medium text-emerald-800 border border-emerald-200 rounded-xl py-2.5 hover:bg-emerald-50 transition">Log in</a>
+                <a href="#" class="flex-1 text-center bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-xl py-2.5 transition">Sign up</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-gradient text-white py-20 md:py-28">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium mb-6 border border-white/10">
+                <i class="fas fa-calculator mr-2"></i> Instant. Accurate. Official.
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6">
+                Land Valuation
+                <span class="block text-amber-300 text-2xl md:text-3xl mt-2">Get Your Official Rwanda Gazette-Based Estimate</span>
+            </h1>
+            <p class="text-xl text-emerald-100 max-w-3xl mx-auto mb-10">
+                Enter your parcel details below and receive an accurate valuation in under 30 seconds, powered by Rwanda Land Authority official data.
+            </p>
+        </div>
+    </section>
+
+    <!-- Valuation Form -->
+    <section class="py-16 bg-white">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-12">
+                <h2 class="text-2xl font-bold text-gray-900 mb-8 text-center">Enter Property Details</h2>
+                <form class="space-y-6" onsubmit="return false;">
+                    <!-- UPI / Parcel Number -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-id-card text-emerald-600 mr-1"></i> UPI / Parcel Number
+                        </label>
+                        <input type="text" placeholder="e.g. 1/01/01/01/1234" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
+                    </div>
+                    <!-- District -->
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-map-pin text-emerald-600 mr-1"></i> District
+                            </label>
+                            <select class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                                <option value="">Select district…</option>
+                                <option>Gasabo</option>
+                                <option>Kicukiro</option>
+                                <option>Nyarugenge</option>
+                                <option>Musanze</option>
+                                <option>Rubavu</option>
+                                <option>Rusizi</option>
+                                <option>Huye</option>
+                                <option>Muhanga</option>
+                                <option>Rwamagana</option>
+                                <option>Bugesera</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-layer-group text-emerald-600 mr-1"></i> Land Use Zone
+                            </label>
+                            <select class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                                <option value="">Select zone…</option>
+                                <option>Urban Residential</option>
+                                <option>Commercial</option>
+                                <option>Industrial</option>
+                                <option>Agricultural</option>
+                                <option>Rural Residential</option>
+                                <option>Marshland</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Area -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-ruler-combined text-emerald-600 mr-1"></i> Plot Area (m²)
+                        </label>
+                        <input type="number" min="1" placeholder="e.g. 500" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
+                    </div>
+                    <!-- Submit -->
+                    <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-4 rounded-xl shadow-lg transition text-base flex items-center justify-center gap-2">
+                        <i class="fas fa-calculator"></i> Get Instant Valuation
+                    </button>
+                </form>
+
+                <!-- Result placeholder -->
+                <div id="valuation-result" class="hidden mt-8 p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
+                    <div class="text-sm font-semibold text-emerald-700 mb-1">Estimated Market Value</div>
+                    <div class="text-3xl font-bold text-emerald-900" id="result-value">—</div>
+                    <p class="text-xs text-gray-500 mt-2">Based on Rwanda Land Authority Gazette 2025 official coefficients · ±5% accuracy</p>
+                </div>
+            </div>
+
+            <!-- Trust badges -->
+            <div class="mt-8 grid grid-cols-3 gap-4 text-center">
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <i class="fas fa-shield-alt text-emerald-600 text-2xl mb-2"></i>
+                    <p class="text-xs font-semibold text-gray-700">Official Data</p>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <i class="fas fa-bolt text-emerald-600 text-2xl mb-2"></i>
+                    <p class="text-xs font-semibold text-gray-700">30-Second Result</p>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <i class="fas fa-file-pdf text-emerald-600 text-2xl mb-2"></i>
+                    <p class="text-xs font-semibold text-gray-700">PDF Report</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How the valuation works -->
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-10">How Our Valuation Works</h2>
+            <div class="grid sm:grid-cols-3 gap-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-4 text-emerald-700">
+                        <i class="fas fa-database text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-900 mb-2">Gazette Coefficients</h3>
+                    <p class="text-sm text-gray-600">We apply official Rwanda Land Authority multipliers by zone and land use type.</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-4 text-emerald-700">
+                        <i class="fas fa-chart-line text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-900 mb-2">Market Adjustment</h3>
+                    <p class="text-sm text-gray-600">Recent transaction data and demand trends fine-tune the base estimate.</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-4 text-emerald-700">
+                        <i class="fas fa-file-alt text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-900 mb-2">Detailed Report</h3>
+                    <p class="text-sm text-gray-600">Download a bank-ready PDF with comparables and 5-year price projections.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-emerald-950 text-emerald-200 py-12">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-5 gap-8">
+            <div class="col-span-2">
+                <div class="flex items-center gap-2 text-white">
+                    <i class="fas fa-map-marked-alt text-2xl"></i>
+                    <span class="font-bold text-xl">LandVal</span>
+                </div>
+                <p class="text-sm mt-3">All gazette data sourced from official Rwanda Land Authority publications.</p>
+                <div class="flex gap-4 mt-5">
+                    <i class="fab fa-twitter hover:text-white text-xl cursor-pointer"></i>
+                    <i class="fab fa-linkedin hover:text-white text-xl cursor-pointer"></i>
+                    <i class="fab fa-whatsapp hover:text-white text-xl cursor-pointer"></i>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-white">Product</h4>
+                <ul class="mt-3 space-y-2 text-sm">
+                    <li><a href="valuation.html" class="hover:text-white">Valuation</a></li>
+                    <li><a href="marketplace.html" class="hover:text-white">Marketplace</a></li>
+                    <li class="hover:text-white cursor-pointer">Pricing</li>
+                    <li class="hover:text-white cursor-pointer">API</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-white">Resources</h4>
+                <ul class="mt-3 space-y-2 text-sm">
+                    <li><a href="how-it-works.html" class="hover:text-white">How It Works</a></li>
+                    <li><a href="benefits.html" class="hover:text-white">Benefits</a></li>
+                    <li class="hover:text-white cursor-pointer">Help Center</li>
+                    <li class="hover:text-white cursor-pointer">Blog</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-white">Legal</h4>
+                <ul class="mt-3 space-y-2 text-sm">
+                    <li class="hover:text-white cursor-pointer">Privacy</li>
+                    <li class="hover:text-white cursor-pointer">Terms</li>
+                    <li class="hover:text-white cursor-pointer">Copyright©</li>
+                </ul>
+            </div>
+        </div>
+        <div class="border-t border-emerald-800 mt-10 pt-6 text-center text-xs text-emerald-400">
+            © 2026 Land Valuation System Ltd. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('nav-mobile-btn').addEventListener('click', function () {
+            const menu = document.getElementById('nav-mobile-menu');
+            const icon = this.querySelector('i');
+            menu.classList.toggle('hidden');
+            icon.classList.toggle('fa-bars');
+            icon.classList.toggle('fa-times');
+        });
+    </script>
+</body>
+</html>
