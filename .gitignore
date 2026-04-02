@@ -33,6 +33,7 @@ script/
 **/scripts/
 **/script/
 *.py
+!backend/preflight_auth_env.sh
 
 ## Build outputs
 dist/
@@ -42,6 +43,10 @@ out/
 frontend/.next/
 frontend/out/
 *.tsbuildinfo
+backend/api
+backend/main
+backend/landval-api
+backend/backend
 
 ## Uploads and temporary files
 temp/

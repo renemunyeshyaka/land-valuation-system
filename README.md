@@ -357,3 +357,24 @@ This workflow ensures LVS is robust, user-friendly, and fully independent.
    - Frontend: `cd frontend && npm run test` | rm -rf .next && npm run dev | npm run build && npm run start
    - Mobile: `cd mobile && npm run test`
 
+### VPS Auth/MFA Deploy Preflight
+
+To keep authentication and MFA working when VPS pulls from GitHub, validate config before deploy:
+
+1. Validate production template in CI/local:
+   ```bash
+   cd backend
+   ./preflight_auth_env.sh .env.production.example --template
+   ```
+2. Validate real VPS env file before restart:
+   ```bash
+   cd /path/to/repo/backend
+   ./preflight_auth_env.sh /path/to/production.env
+   ```
+3. Required auth keys must be present: `PORT`, `BACKEND_URL`, `FRONTEND_URL`, `JWT_SECRET`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `SMTP_HOST`, `SMTP_PORT`, `EMAIL_USER`, `EMAIL_PASS`, `SMTP_FROM`.
+4. Run focused auth tests before deploy:
+   ```bash
+   cd backend
+   go test ./internal/services ./internal/api/middleware ./internal/api/routes
+   ```
+

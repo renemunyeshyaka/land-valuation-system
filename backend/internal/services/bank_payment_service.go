@@ -30,10 +30,10 @@ func NewBankPaymentService(db *gorm.DB) *BankPaymentService {
 		db:              db,
 		transactionRepo: repository.NewTransactionRepository(db),
 		bankName:        "Equity Bank Rwanda",
-		accountNumber:   os.Getenv("EQUITY_BANK_ACCOUNT"), // 4009111291475
-		accountName:     os.Getenv("EQUITY_BANK_NAME"),    // Add to .env
-		swiftCode:       os.Getenv("EQUITY_BANK_SWIFT"),   // EQBLRWRWXXX
-		branchCode:      os.Getenv("EQUITY_BANK_BRANCH"),  // Add to .env
+		accountNumber:   os.Getenv("EQUITY_BANK_ACCOUNT"),
+		accountName:     os.Getenv("EQUITY_BANK_NAME"),
+		swiftCode:       os.Getenv("EQUITY_BANK_SWIFT"),
+		branchCode:      os.Getenv("EQUITY_BANK_BRANCH"),
 	}
 }
 

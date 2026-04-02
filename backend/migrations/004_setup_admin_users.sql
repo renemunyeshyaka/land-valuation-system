@@ -23,7 +23,7 @@ AND NOT EXISTS (SELECT 1 FROM users WHERE user_type = 'admin');
 -- Ensure at least one admin exists by email (for testing/development)
 -- This will only apply if the ID referenced in seed_data exists
 
--- Ensure munyeshyaka@hotmail.com is admin
+-- Ensure default admin email is admin
 UPDATE users 
 SET user_type = 'admin', 
   subscription_tier = 'ultimate',
@@ -32,7 +32,7 @@ SET user_type = 'admin',
   is_verified = true,
   email_verified = true,
   is_active = true
-WHERE email = 'munyeshyaka@hotmail.com';
+WHERE email = 'admin@landvaluation.rw';
 
 -- Log admin update
 DO $$

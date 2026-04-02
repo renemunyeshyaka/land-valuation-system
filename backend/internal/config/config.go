@@ -98,9 +98,9 @@ func Load() (*Config, error) {
 
 		SMTPHost:     getEnv("SMTP_HOST", "smtp.gmail.com"),
 		SMTPPort:     getEnvAsInt("SMTP_PORT", 587),
-		SMTPUser:     getEnv("SMTP_USER", ""),
-		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
-		EmailFrom:    getEnv("EMAIL_FROM", "noreply@landvaluationsystem.rw"),
+		SMTPUser:     getEnv("SMTP_USER", getEnv("EMAIL_USER", "")),
+		SMTPPassword: getEnv("SMTP_PASSWORD", getEnv("EMAIL_PASS", "")),
+		EmailFrom:    getEnv("EMAIL_FROM", getEnv("SMTP_FROM", "noreply@landvaluationsystem.rw")),
 
 		MaxFileSize: getEnvAsInt64("MAX_FILE_SIZE", 10*1024*1024), // 10MB
 		UploadPath:  getEnv("UPLOAD_PATH", "./uploads"),
@@ -122,11 +122,22 @@ func Load() (*Config, error) {
 }
 
 func (c *Config) validate() error {
-	if c.JWTSecret == "your-secret-key" && c.Environment == "production" {
-		return fmt.Errorf("JWT_SECRET must be changed in production")
-	}
-	if c.DBPassword == "" && c.Environment == "production" {
-		return fmt.Errorf("DB_PASSWORD is required in production")
+	if c.Environment == "production" {
+		if c.JWTSecret == "your-secret-key" || len(c.JWTSecret) < 32 {
+			return fmt.Errorf("JWT_SECRET must be set and at least 32 characters in production")
+		}
+		if c.DBPassword == "" {
+			return fmt.Errorf("DB_PASSWORD is required in production")
+		}
+		if c.SMTPHost == "" || c.SMTPPort <= 0 {
+			return fmt.Errorf("SMTP_HOST and SMTP_PORT are required in production")
+		}
+		if c.SMTPUser == "" || c.SMTPPassword == "" {
+			return fmt.Errorf("SMTP_USER/EMAIL_USER and SMTP_PASSWORD/EMAIL_PASS are required in production")
+		}
+		if c.EmailFrom == "" {
+			return fmt.Errorf("EMAIL_FROM/SMTP_FROM is required in production")
+		}
 	}
 	if c.MapboxToken == "" {
 		return fmt.Errorf("MAPBOX_TOKEN is required")

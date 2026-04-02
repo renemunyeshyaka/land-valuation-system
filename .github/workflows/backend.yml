@@ -55,6 +55,12 @@ jobs:
         DATABASE_URL: postgres://postgres:postgres@localhost:5432/land_valuation_test?sslmode=disable
       run: |
         psql $DATABASE_URL < migrations/001_init_schema.sql
+
+    - name: Validate auth env template
+      working-directory: backend
+      run: |
+        chmod +x preflight_auth_env.sh
+        ./preflight_auth_env.sh .env.production.example --template
     
     - name: Run focused authz regression suite
       working-directory: backend

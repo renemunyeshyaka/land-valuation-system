@@ -183,8 +183,8 @@ func (h *MultiPaymentHandler) GetAvailablePaymentMethods(c *gin.Context) {
 			"banks": []map[string]string{
 				{
 					"name":           "Equity Bank Rwanda",
-					"account_number": "4009111291475",
-					"swift":          "EQBLRWRWXXX",
+					"account_number": "configured-via-env",
+					"swift":          "configured-via-env",
 				},
 			},
 			"currency":    []string{"EUR", "USD"},

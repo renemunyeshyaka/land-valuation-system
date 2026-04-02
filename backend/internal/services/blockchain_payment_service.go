@@ -37,7 +37,7 @@ func NewBlockchainPaymentService(db *gorm.DB, redisClient *redis.Client) *Blockc
 		db:              db,
 		transactionRepo: repository.NewTransactionRepository(db),
 		exchangeRate:    currency.NewExchangeRateService(redisClient),
-		walletAddress:   os.Getenv("BLOCKCHAIN_WALLET_ADDRESS"), // 0x2f22a13cce6041c8bf3f0d569bb32a1ce729d599
+		walletAddress:   os.Getenv("BLOCKCHAIN_WALLET_ADDRESS"),
 		chainName:       "BNB Smart Chain (BEP20)",
 		acceptedTokens:  []string{"USDT", "USDC", "BNB"},
 		bscscanAPIKey:   os.Getenv("BSCSCAN_API_KEY"), // Get from https://bscscan.com/apis
