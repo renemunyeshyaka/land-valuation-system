@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '../../utils/tokenRefresh';
 import FourStepProcess from '../../components/FourStepProcess';
 import SubscriptionSelector from '../../components/SubscriptionSelector';
+import MainNavbar from '../../components/MainNavbar';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
@@ -670,39 +671,7 @@ const Dashboard: React.FC = () => {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Profile Info */}
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Full Name</p>
-                        <p className="text-base font-medium text-gray-800">{user.firstName} {user.lastName}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Email</p>
-                        <p className="text-base font-medium text-gray-800">{user.email}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Phone</p>
-                        <p className="text-base font-medium text-gray-800">{user.phone || 'Not set'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Member Since</p>
-                        <p className="text-base font-medium text-gray-800">March 2, 2026</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Total Valuations */}
-                  <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-medium text-gray-600">Total Valuations</h3>
-                      <i className="fas fa-chart-bar text-emerald-700 text-lg"></i>
-                    </div>
+                    <MainNavbar />
                     <p className="text-3xl font-bold text-gray-800">{user.recentValuations.length}</p>
                     <p className="text-xs text-gray-500 mt-2">Lifetime property assessments</p>
                   </div>

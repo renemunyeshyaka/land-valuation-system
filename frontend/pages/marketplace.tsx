@@ -35,6 +35,7 @@ export default function Marketplace() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(12); // Properties per page
   const [search, setSearch] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Sample properties removed (no longer used)
 
@@ -128,6 +129,19 @@ export default function Marketplace() {
                 <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
                 <Link href="/contact" className="hover:text-emerald-700 transition">Contact</Link>
               </div>
+              <div className="md:hidden flex items-center">
+                <button
+                  aria-label="Open menu"
+                  className="inline-flex items-center justify-center p-2 rounded-md text-emerald-800 hover:text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  onClick={() => setMobileMenuOpen(v => !v)}
+                >
+                  {mobileMenuOpen ? (
+                    <i className="fas fa-times text-2xl"></i>
+                  ) : (
+                    <i className="fas fa-bars text-2xl"></i>
+                  )}
+                </button>
+              </div>
               <div className="flex items-center gap-3">
                 <div className="hidden sm:flex items-center border border-gray-200 rounded-full px-3 py-1.5 text-sm bg-white/80">
                   <i className="fas fa-globe text-emerald-600 mr-1 text-xs"></i>
@@ -139,6 +153,21 @@ export default function Marketplace() {
               </div>
             </div>
           </div>
+          {mobileMenuOpen && (
+            <div className="md:hidden bg-white/95 border-b border-gray-200/70 shadow-lg absolute left-0 right-0 top-full z-40">
+              <div className="flex flex-col px-6 py-4 space-y-2 text-base font-medium text-gray-800">
+                <Link href="/" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+                <Link href="/how-it-works" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>How it works</Link>
+                <Link href="/benefits" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Benefits</Link>
+                <Link href="/marketplace" className="text-emerald-700 font-semibold" onClick={() => setMobileMenuOpen(false)}>Marketplace</Link>
+                <Link href="/contact" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
+                <div className="flex flex-col gap-2 mt-2">
+                  <Link href="/auth/login" className="text-emerald-800 hover:text-emerald-900 px-3 py-2 rounded-md transition text-sm font-medium bg-emerald-50" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
+                  <Link href="/auth/register" className="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-3 py-2 rounded-md shadow-sm transition" onClick={() => setMobileMenuOpen(false)}>Sign up</Link>
+                </div>
+              </div>
+            </div>
+          )}
         </nav>
 
         {/* Main Marketplace Content */}
