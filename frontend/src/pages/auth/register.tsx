@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import MainNavbar from '../../components/MainNavbar';
 
 /**
  * REGISTER PAGE · Land Valuation System
@@ -144,49 +145,7 @@ const Register: React.FC = () => {
       <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
 
         {/* NAVIGATION */}
-        <nav className="bg-white/90 backdrop-blur-sm sticky top-0 z-30 border-b border-gray-200/70">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16 md:h-20">
-              
-              {/* Logo + Brand Name */}
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 bg-emerald-700 rounded-xl flex items-center justify-center shadow-sm">
-                  <i className="fas fa-map-marked-alt text-white text-lg"></i>
-                </div>
-                <Link href="/" className="font-bold text-xl tracking-tight text-emerald-900 hover:text-emerald-700 transition">
-                  Land<span className="text-emerald-600">Val</span>
-                </Link>
-              </div>
-
-              {/* Desktop Menu */}
-              <div className="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
-                <Link href="/" className="hover:text-emerald-700 transition">Home</Link>
-                <Link href="/how-it-works" className="hover:text-emerald-700 transition">How it works</Link>
-                <Link href="/benefits" className="hover:text-emerald-700 transition">Benefits</Link>
-                <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
-                <Link href="/contact" className="hover:text-emerald-700 transition">Contact</Link>
-              </div>
-
-              {/* Language + Auth */}
-              <div className="flex items-center gap-3">
-                
-                {/* Language Selector */}
-                <div className="hidden sm:flex items-center border border-gray-200 rounded-full px-3 py-1.5 text-sm bg-white/80">
-                  <i className="fas fa-globe text-emerald-600 mr-1 text-xs"></i>
-                  <span className="font-medium">RW</span>
-                  <i className="fas fa-chevron-down ml-1 text-gray-400 text-xs"></i>
-                </div>
-
-                <Link 
-                  href="/auth/login"
-                  className="px-4 py-2 text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors"
-                >
-                  Log in
-                </Link>
-              </div>
-            </div>
-          </div>
-        </nav>
+        <MainNavbar />
 
         {/* MAIN CONTENT */}
         <main className="flex-1 py-12 md:py-16">

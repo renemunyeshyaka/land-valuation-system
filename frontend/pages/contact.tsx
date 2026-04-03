@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import MainNavbar from '../src/components/MainNavbar';
 
 export default function Contact() {
   const [name, setName] = useState('');
@@ -8,7 +9,6 @@ export default function Contact() {
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,81 +47,7 @@ export default function Contact() {
       </Head>
       <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
         {/* NAVIGATION */}
-        <nav className="bg-white/90 backdrop-blur-sm sticky top-0 z-30 border-b border-gray-200/70">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16 md:h-20">
-              {/* Logo */}
-              <Link href="/" className="flex items-center gap-2 group">
-                <div className="w-9 h-9 bg-emerald-700 rounded-lg flex items-center justify-center group-hover:bg-emerald-800 transition-colors">
-                  <i className="fas fa-map-marked-alt text-white text-lg"></i>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-base md:text-lg font-bold text-gray-800 leading-tight">LandVal</span>
-                  <span className="text-xs text-gray-500 leading-tight hidden sm:block">Rwanda Property Valuation</span>
-                </div>
-              </Link>
-              {/* Navigation Menu - Right Side */}
-              <div className="flex items-center gap-2 sm:gap-4">
-                {/* Main Navigation Menu */}
-                <div className="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
-                  <Link href="/" className="hover:text-emerald-700 transition">Home</Link>
-                  <Link href="/how-it-works" className="hover:text-emerald-700 transition">How it works</Link>
-                  <Link href="/benefits" className="hover:text-emerald-700 transition">Benefits</Link>
-                  <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
-                  <Link href="/contact" className="hover:text-emerald-700 transition">Contact</Link>
-                </div>
-                <div className="md:hidden flex items-center">
-                  <button
-                    aria-label="Open menu"
-                    className="inline-flex items-center justify-center p-2 rounded-md text-emerald-800 hover:text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    onClick={() => setMobileMenuOpen(v => !v)}
-                  >
-                    {mobileMenuOpen ? (
-                      <i className="fas fa-times text-2xl"></i>
-                    ) : (
-                      <i className="fas fa-bars text-2xl"></i>
-                    )}
-                  </button>
-                </div>
-                {/* Language Selector */}
-                <div className="hidden sm:flex items-center border border-gray-200 rounded-full px-3 py-1.5 text-sm bg-white/80">
-                  <i className="fas fa-globe text-emerald-600 mr-1 text-xs"></i>
-                  <span className="font-medium">RW</span>
-                  <i className="fas fa-chevron-down ml-1 text-gray-400 text-xs"></i>
-                </div>
-                {/* Register Link */}
-                <Link 
-                  href="/auth/register"
-                  className="px-4 py-2 text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors"
-                >
-                  Create Account
-                </Link>
-                {/* Login Link */}
-                <Link 
-                  href="/auth/login"
-                  className="px-4 py-2 text-sm font-medium text-emerald-700 border border-emerald-700 bg-white hover:bg-emerald-50 rounded-lg transition-colors"
-                >
-                  Log In
-                </Link>
-              </div>
-            </div>
-          </div>
-          {mobileMenuOpen && (
-            <div className="md:hidden bg-white/95 border-b border-gray-200/70 shadow-lg absolute left-0 right-0 top-full z-40">
-              <div className="flex flex-col px-6 py-4 space-y-2 text-base font-medium text-gray-800">
-                <Link href="/" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-                <Link href="/how-it-works" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>How it works</Link>
-                <Link href="/benefits" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Benefits</Link>
-                <Link href="/marketplace" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Marketplace</Link>
-                <Link href="/contact" className="text-emerald-700 font-semibold" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
-                <div className="flex flex-col gap-2 mt-2">
-                  <Link href="/auth/login" className="text-emerald-800 hover:text-emerald-900 px-3 py-2 rounded-md transition text-sm font-medium bg-emerald-50" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
-                  <Link href="/auth/register" className="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-3 py-2 rounded-md shadow-sm transition" onClick={() => setMobileMenuOpen(false)}>Create Account</Link>
-                </div>
-              </div>
-            </div>
-          )}
-        </nav>
+        <MainNavbar />
 
         {/* MAIN CONTENT */}
         <main className="flex-grow">

@@ -43,7 +43,7 @@ export default function HowItWorks() {
                   )}
                 </button>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-3">
                 <div className="hidden sm:flex items-center border border-gray-200 rounded-full px-3 py-1.5 text-sm bg-white/80">
                   <i className="fas fa-globe text-emerald-600 mr-1 text-xs"></i>
                   <span className="font-medium">RW</span>
