@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import LandEstimateForm, { LandEstimateRequest } from '../../components/LandEstimateForm';
 import MainNavbar from '../../components/MainNavbar';
+import { resolveImageUrl } from '../../utils/image';
 
 /**
  * PROPERTY SEARCH PAGE · Land Valuation System
@@ -196,7 +197,7 @@ const PropertySearch: React.FC = () => {
                     <div className="relative h-48 bg-gray-200 overflow-hidden">
                       {property.image ? (
                         <img
-                          src={property.image}
+                          src={resolveImageUrl(property.image)}
                           alt={property.district + ' ' + property.sector + ' ' + property.cell}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
@@ -257,7 +258,7 @@ const PropertySearch: React.FC = () => {
                     <div className="hidden md:block w-48 h-32 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                       {property.image ? (
                         <img
-                          src={property.image}
+                          src={resolveImageUrl(property.image)}
                           alt={property.district + ' ' + property.sector + ' ' + property.cell}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />

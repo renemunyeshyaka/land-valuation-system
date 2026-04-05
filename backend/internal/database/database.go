@@ -93,7 +93,8 @@ func AutoMigrate(db *gorm.DB) error {
 		// Backward-compatibility: some existing DBs have an index instead of the legacy
 		// `uni_properties_upi` constraint name; allow startup and rely on SQL migrations.
 		if strings.Contains(err.Error(), "uni_properties_upi") && strings.Contains(err.Error(), "does not exist") {
-			log.Printf("⚠️ Ignoring legacy UPI constraint mismatch during AutoMigrate: %v", err)
+			// This mismatch is expected on databases where UPI uniqueness is enforced by index.
+			// Suppress noisy startup warning and continue.
 			return nil
 		}
 		return fmt.Errorf("failed to run migrations: %w", err)

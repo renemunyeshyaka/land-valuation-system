@@ -102,7 +102,12 @@ const Register: React.FC = () => {
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || data.message || 'Registration failed');
+        const backendMessage =
+          data?.error?.details ||
+          data?.error?.message ||
+          data?.message ||
+          'Registration failed';
+        throw new Error(backendMessage);
       }
       toast.success('Account created! Redirecting to email verification...');
       setTimeout(() => {

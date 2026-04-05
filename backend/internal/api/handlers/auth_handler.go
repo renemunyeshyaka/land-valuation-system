@@ -27,6 +27,7 @@ type RegisterRequest struct {
 	Password  string `json:"password" binding:"required,min=8"`
 	FirstName string `json:"first_name" binding:"required"`
 	LastName  string `json:"last_name" binding:"required"`
+	Phone     string `json:"phone" binding:"required"`
 	UserType  string `json:"user_type" binding:"required"`
 }
 
@@ -65,6 +66,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Email:     req.Email,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
+		Phone:     req.Phone,
 		UserType:  req.UserType,
 	}, req.Password)
 

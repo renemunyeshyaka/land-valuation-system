@@ -33,7 +33,7 @@ export default function Marketplace() {
   const [error, setError] = useState<string | null>(null);
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(12); // Properties per page
+  const [pageSize] = useState(9); // Properties per page
   const [search, setSearch] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -45,7 +45,9 @@ export default function Marketplace() {
       setError(null);
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-        const res = await fetch(`${apiUrl}/api/v1/marketplace/properties-for-sale`);
+        const res = await fetch(`${apiUrl}/api/v1/marketplace/properties-for-sale?t=${Date.now()}`, {
+          cache: 'no-store',
+        });
         if (!res.ok) throw new Error('Failed to fetch properties');
         const data = await res.json();
         // The backend returns { data: { data: [...] } }
@@ -58,6 +60,15 @@ export default function Marketplace() {
               images: Array.isArray(p.images) ? p.images : (p.images ? [p.images] : []),
               features: Array.isArray(p.features) ? p.features : (p.features ? [p.features] : []),
             }));
+            // Keep most recently created properties first on page 1.
+            normalized.sort((a: any, b: any) => {
+              const ta = Date.parse(a?.created_at || '');
+              const tb = Date.parse(b?.created_at || '');
+              if (Number.isFinite(ta) && Number.isFinite(tb) && ta !== tb) return tb - ta;
+              const ia = Number(a?.id || 0);
+              const ib = Number(b?.id || 0);
+              return ib - ia;
+            });
             setProperties(normalized);
           } else {
             setProperties([]); // Backend returned empty array

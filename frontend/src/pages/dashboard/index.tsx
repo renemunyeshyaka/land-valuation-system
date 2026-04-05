@@ -599,7 +599,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Quick Navigation */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
               <Link
                 href="/properties/add"
                 className="flex flex-col items-center gap-3 p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 border border-emerald-600 rounded-lg hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all group"
@@ -618,6 +618,16 @@ const Dashboard: React.FC = () => {
                   <i className="fas fa-search text-emerald-700 text-lg"></i>
                 </div>
                 <span className="text-sm font-semibold text-gray-800">Search Properties</span>
+              </Link>
+
+              <Link
+                href="/dashboard/properties"
+                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
+              >
+                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                  <i className="fas fa-list text-emerald-700 text-lg"></i>
+                </div>
+                <span className="text-sm font-semibold text-gray-800">My Properties</span>
               </Link>
 
               <Link

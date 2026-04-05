@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"backend/internal/config"
@@ -50,7 +51,11 @@ func main() {
 	defer cancel()
 
 	seedAdminUser(ctx)
-	seedRegularUsers(ctx)
+	if os.Getenv("SEED_SAMPLE_USERS") == "true" {
+		seedRegularUsers(ctx)
+	} else {
+		fmt.Println("⏭️ Skipping sample users (set SEED_SAMPLE_USERS=true to enable)")
+	}
 	seedSubscriptionPlans(ctx)
 	seedDistrictCoefficients(ctx)
 

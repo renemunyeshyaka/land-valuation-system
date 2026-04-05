@@ -1,7 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { signOut } from 'next-auth/react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
+import { refreshAccessToken } from '@/utils/tokenRefresh';
 import Footer from '@/components/Footer';
 import UserManagement from '@/components/admin/UserManagement';
 import MarketplaceManagement from '@/components/admin/MarketplaceManagement';
@@ -21,37 +24,168 @@ const NAV = [
   { key: 'analytics', label: 'Analytics', icon: 'fas fa-chart-line' },
   { key: 'support', label: 'Support', icon: 'fas fa-headset' },
   { key: 'system', label: 'System', icon: 'fas fa-sliders-h' },
-  { key: 'data', label: 'Data', icon: 'fas fa-database' },
+  { key: 'data', label: 'System Data', icon: 'fas fa-database' },
 ];
 
 
 function AdminDashboard() {
   const [active, setActive] = useState('overview');
+  const router = useRouter();
   const { data: session } = useSession();
-  const [profile, setProfile] = useState<{ firstName: string; email: string } | null>(null);
+  const [profile, setProfile] = useState<{ fullName: string; firstName: string; email: string } | null>(null);
+  const [overview, setOverview] = useState({
+    totalProperties: 0,
+    activeUsers: 0,
+    totalRevenue: 0,
+    activeSubscriptions: 0,
+  });
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+
+  const toDisplayName = (user: any) => {
+    const first = user?.first_name || user?.firstName || '';
+    const last = user?.last_name || user?.lastName || '';
+    const full = [first, last].join(' ').trim() || user?.name || 'Admin';
+    return {
+      fullName: full,
+      firstName: first || String(full).split(' ')[0] || 'Admin',
+      email: user?.email || 'No email',
+    };
+  };
+
+  const getStoredUserProfile = () => {
+    if (typeof window === 'undefined') return null;
+    const rawUser = localStorage.getItem('user');
+    if (!rawUser) return null;
+    try {
+      const user = JSON.parse(rawUser);
+      return toDisplayName(user);
+    } catch {
+      return null;
+    }
+  };
+
+  const getAuthToken = () => {
+    if (session && (session as any).accessToken) return (session as any).accessToken as string;
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('access_token');
+      if (token) return token;
+    }
+    return null;
+  };
 
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const res = await fetch('/api/v1/users/profile', {
-          credentials: 'include',
+        const token = getAuthToken();
+        if (!token) {
+          const stored = getStoredUserProfile();
+          if (stored) {
+            setProfile(stored);
+            return;
+          }
+          setProfile(null);
+          return;
+        }
+
+        const res = await fetch(`${API_BASE_URL}/api/v1/users/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
+        if (res.status === 401) {
+          const refreshed = await refreshAccessToken();
+          if (refreshed) {
+            const refreshedToken = getAuthToken();
+            if (refreshedToken) {
+              const retryRes = await fetch(`${API_BASE_URL}/api/v1/users/profile`, {
+                headers: {
+                  Authorization: `Bearer ${refreshedToken}`,
+                },
+              });
+              if (retryRes.ok) {
+                const retryPayload = await retryRes.json();
+                const retryData = retryPayload?.data || retryPayload;
+                setProfile(toDisplayName(retryData));
+                return;
+              }
+            }
+          }
+        }
         if (res.ok) {
-          const data = await res.json();
-          // Adjust field names as per backend response
-          setProfile({
-            firstName: data.firstName || data.name?.split(' ')[0] || 'Admin',
-            email: data.email || 'No email',
-          });
+          const payload = await res.json();
+          const data = payload?.data || payload;
+          setProfile(toDisplayName(data));
         } else {
+          const stored = getStoredUserProfile();
+          if (stored) {
+            setProfile(stored);
+            return;
+          }
           setProfile(null);
         }
       } catch (e) {
+        const stored = getStoredUserProfile();
+        if (stored) {
+          setProfile(stored);
+          return;
+        }
         setProfile(null);
       }
     }
     fetchProfile();
-  }, []);
+  }, [session]);
+
+  // Redirect to login if completely unauthenticated
+  useEffect(() => {
+    async function checkAuth() {
+      const token = getAuthToken();
+      if (!token) {
+        const refreshed = await refreshAccessToken();
+        if (!refreshed) {
+          router.replace('/auth/login');
+        }
+      }
+    }
+    // Only check after session has resolved (not during loading)
+    if (session !== undefined) {
+      checkAuth();
+    }
+  }, [session]);
+
+  useEffect(() => {
+    async function fetchOverview() {
+      let token = getAuthToken();
+      if (!token) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) token = getAuthToken();
+      }
+      if (!token) return;
+
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
+      };
+
+      // Use allSettled so one failing endpoint doesn't zero out all cards
+      const [usersRes, propsRes, subsRes, revRes] = await Promise.allSettled([
+        axios.get(`${API_BASE_URL}/api/v1/admin/users`, { ...config, params: { page: 1, limit: 1 } }),
+        axios.get(`${API_BASE_URL}/api/v1/admin/properties`, { ...config, params: { page: 1, limit: 1 } }),
+        axios.get(`${API_BASE_URL}/api/v1/admin/subscriptions`, { ...config, params: { page: 1, limit: 1 } }),
+        axios.get(`${API_BASE_URL}/api/v1/admin/analytics/revenue`, { ...config, params: { range: '30d' } }),
+      ]);
+
+      const val = <T,>(r: PromiseSettledResult<T>) => (r.status === 'fulfilled' ? r.value : null);
+
+      setOverview({
+        activeUsers:         Number((val(usersRes) as any)?.data?.data?.total   || 0),
+        totalProperties:     Number((val(propsRes) as any)?.data?.data?.total   || 0),
+        activeSubscriptions: Number((val(subsRes) as any)?.data?.data?.total    || 0),
+        totalRevenue:        Number((val(revRes) as any)?.data?.data?.total_revenue || 0),
+      });
+    }
+
+    fetchOverview();
+  }, [session]);
 
   function renderSection() {
     switch (active) {
@@ -67,18 +201,28 @@ function AdminDashboard() {
       default:
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-emerald-600 card-hover"><div className="flex justify-between"><div><p className="text-gray-500 text-sm">Total Properties</p><p className="text-3xl font-bold text-gray-800">2,847</p><span className="text-xs text-green-600 mt-1">+12% this month</span></div><i className="fas fa-building text-4xl text-emerald-200"></i></div></div>
-            <div className="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-amber-500 card-hover"><div className="flex justify-between"><div><p className="text-gray-500 text-sm">Active Users</p><p className="text-3xl font-bold text-gray-800">1,923</p><span className="text-xs text-green-600">+34 diaspora</span></div><i className="fas fa-user-friends text-4xl text-amber-200"></i></div></div>
-            <div className="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-blue-500 card-hover"><div className="flex justify-between"><div><p className="text-gray-500 text-sm">Total Valuations</p><p className="text-3xl font-bold text-gray-800">5.2B</p><span className="text-xs text-green-600">RWF volume</span></div><i className="fas fa-chart-simple text-4xl text-blue-200"></i></div></div>
-            <div className="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-purple-500 card-hover"><div className="flex justify-between"><div><p className="text-gray-500 text-sm">Diaspora leads</p><p className="text-3xl font-bold text-gray-800">208</p><span className="text-xs text-emerald-600">+18 new</span></div><i className="fas fa-globe-africa text-4xl text-purple-200"></i></div></div>
+            <div className="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-emerald-600 card-hover"><div className="flex justify-between"><div><p className="text-gray-500 text-sm">Total Properties</p><p className="text-3xl font-bold text-gray-800">{overview.totalProperties.toLocaleString()}</p><span className="text-xs text-green-600 mt-1">Live from database</span></div><i className="fas fa-building text-4xl text-emerald-200"></i></div></div>
+            <div className="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-amber-500 card-hover"><div className="flex justify-between"><div><p className="text-gray-500 text-sm">Active Users</p><p className="text-3xl font-bold text-gray-800">{overview.activeUsers.toLocaleString()}</p><span className="text-xs text-green-600">Live from database</span></div><i className="fas fa-user-friends text-4xl text-amber-200"></i></div></div>
+            <div className="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-blue-500 card-hover"><div className="flex justify-between"><div><p className="text-gray-500 text-sm">Total Revenue</p><p className="text-3xl font-bold text-gray-800">{overview.totalRevenue.toLocaleString()}</p><span className="text-xs text-green-600">RWF volume</span></div><i className="fas fa-chart-simple text-4xl text-blue-200"></i></div></div>
+            <div className="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-purple-500 card-hover"><div className="flex justify-between"><div><p className="text-gray-500 text-sm">Active Subscriptions</p><p className="text-3xl font-bold text-gray-800">{overview.activeSubscriptions.toLocaleString()}</p><span className="text-xs text-emerald-600">Live from database</span></div><i className="fas fa-globe-africa text-4xl text-purple-200"></i></div></div>
           </div>
         );
     }
   }
 
-  // Prefer profile from backend, fallback to session
-  const firstName = profile?.firstName || (session?.user?.name ? session.user.name.split(' ')[0] : 'Admin');
-  const email = profile?.email || session?.user?.email || 'No email';
+  // Prefer profile from backend, fallback to session/local user cache
+  const sessionName = session?.user?.name || null;
+  const storedProfile = getStoredUserProfile();
+  const fullName = profile?.fullName || sessionName || storedProfile?.fullName || 'Admin';
+  const firstName = profile?.firstName || (sessionName ? sessionName.split(' ')[0] : (storedProfile?.firstName || 'Admin'));
+  const email = profile?.email || session?.user?.email || storedProfile?.email || 'No email';
+
+  const switchToUltimateDashboard = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_experience_mode', JSON.stringify({ mode: 'ultimate', enabledAt: new Date().toISOString() }));
+    }
+    router.push('/dashboard');
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -107,7 +251,7 @@ function AdminDashboard() {
         <div className="px-5 pb-2">
           <button
             className="w-full flex items-center gap-2 px-4 py-2 mt-2 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-medium transition"
-            onClick={() => window.location.href = '/dashboard'}
+            onClick={switchToUltimateDashboard}
           >
             <i className="fas fa-exchange-alt"></i>
             Switch to Ultimate Dashboard
@@ -121,7 +265,7 @@ function AdminDashboard() {
             </div>
             <div>
               <p className="text-sm font-semibold">
-                {firstName}
+                {fullName}
               </p>
               <p className="text-xs text-gray-500">
                 {email}

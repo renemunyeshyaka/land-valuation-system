@@ -1,10 +1,11 @@
 -- Migration 010: Add land_parcel_id foreign key to properties table
 -- Allows properties (user listings) to link to official land parcel data
 
-ALTER TABLE properties ADD COLUMN land_parcel_id UUID REFERENCES land_parcels(id) ON DELETE SET NULL;
+ALTER TABLE properties
+ADD COLUMN IF NOT EXISTS land_parcel_id UUID REFERENCES land_parcels(id) ON DELETE SET NULL;
 
 -- Create index for faster lookups
-CREATE INDEX idx_properties_land_parcel ON properties(land_parcel_id);
+CREATE INDEX IF NOT EXISTS idx_properties_land_parcel ON properties(land_parcel_id);
 
 -- Migrate existing properties with UPIs to link to land_parcels
 -- This migration assumes land_parcels are already loaded

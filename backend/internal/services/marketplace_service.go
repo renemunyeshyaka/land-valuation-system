@@ -63,9 +63,16 @@ func (s *MarketplaceService) SyncPropertyWithMarketplaces(ctx context.Context, p
 func (s *MarketplaceService) GetAllPropertiesOnSale(ctx context.Context, page, limit int) ([]interface{}, int, error) {
 	var properties []models.Property
 	var total int64
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
 	offset := (page - 1) * limit
 	err := s.db.Model(&models.Property{}).
-		Where("status = ?", "available").
+		Where("visibility = ?", "public").
+		Where("LOWER(status) NOT IN ?", []string{"sold", "rented"}).
 		Count(&total).
 		Limit(limit).
 		Offset(offset).
@@ -387,7 +394,9 @@ func (s *MarketplaceService) GetPropertyListingsOnSale(ctx context.Context, page
 	base := s.db.WithContext(ctx).
 		Model(&models.Property{}).
 		Joins("INNER JOIN marketplace_listings ml ON ml.property_id = properties.id").
-		Where("properties.deleted_at IS NULL AND properties.status = ?", "available")
+		Where("properties.deleted_at IS NULL").
+		Where("LOWER(properties.visibility) = ?", "public").
+		Where("LOWER(properties.status) NOT IN ?", []string{"sold", "rented"})
 
 	if propertyType != "" {
 		base = base.Where("properties.property_type = ?", propertyType)

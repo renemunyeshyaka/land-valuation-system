@@ -35,7 +35,7 @@ SELECT
     '3711',
     true,
     'available'
-WHERE NOT EXISTS (SELECT 1 FROM properties WHERE upi = '3711')
+WHERE FALSE AND NOT EXISTS (SELECT 1 FROM properties WHERE upi = '3711')
 UNION ALL
 SELECT
     (SELECT id FROM users ORDER BY id LIMIT 1),
@@ -52,7 +52,7 @@ SELECT
     '4512',
     true,
     'available'
-WHERE NOT EXISTS (SELECT 1 FROM properties WHERE upi = '4512')
+WHERE FALSE AND NOT EXISTS (SELECT 1 FROM properties WHERE upi = '4512')
 UNION ALL
 SELECT
     (SELECT id FROM users ORDER BY id LIMIT 1),
@@ -69,7 +69,7 @@ SELECT
     '7823',
     true,
     'available'
-WHERE NOT EXISTS (SELECT 1 FROM properties WHERE upi = '7823')
+WHERE FALSE AND NOT EXISTS (SELECT 1 FROM properties WHERE upi = '7823')
 UNION ALL
 SELECT
     (SELECT id FROM users ORDER BY id LIMIT 1),
@@ -86,4 +86,4 @@ SELECT
     '9001',
     true,
     'available'
-WHERE NOT EXISTS (SELECT 1 FROM properties WHERE upi = '9001');
+WHERE FALSE AND NOT EXISTS (SELECT 1 FROM properties WHERE upi = '9001');

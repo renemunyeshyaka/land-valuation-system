@@ -1,6 +1,5 @@
 import React from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { motion } from 'framer-motion'
 import {
   MapPin,
@@ -13,6 +12,7 @@ import {
   Search
 } from 'lucide-react'
 import { formatPrice, formatSize } from '../../utils/formatters'
+import { resolveImageUrl } from '../../utils/image'
 
 interface PropertyCardProps {
   property: any
@@ -20,12 +20,17 @@ interface PropertyCardProps {
 
 export default function PropertyCard({ property }: PropertyCardProps) {
   const [isSaved, setIsSaved] = React.useState(false)
+  const placeholder = 'https://placehold.co/600x400/png?text=No+Image'
+  const [displayImageUrl, setDisplayImageUrl] = React.useState<string>(placeholder)
 
-  const placeholder = "https://placehold.co/600x400";
-  let imageUrl = placeholder;
-  if (property.images && property.images.length > 0 && property.images[0]) {
-    imageUrl = property.images[0];
-  }
+  React.useEffect(() => {
+    if (property.images && property.images.length > 0 && property.images[0]) {
+      setDisplayImageUrl(resolveImageUrl(property.images[0]))
+      return
+    }
+    setDisplayImageUrl(placeholder)
+  }, [property.images])
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -35,11 +40,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     >
       <div className="relative h-48 bg-gray-200">
         {/* Property Image */}
-        <Image
-          src={imageUrl}
+        <img
+          src={displayImageUrl}
           alt={property.title}
-          fill
-          className="object-cover"
+          className="h-full w-full object-cover"
+          loading="lazy"
+          onError={() => setDisplayImageUrl(placeholder)}
         />
         
         {/* Status Badge */}

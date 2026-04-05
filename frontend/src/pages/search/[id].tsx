@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
+import { resolveImageUrl } from '../../utils/image';
 
 /**
  * PROPERTY DETAIL PAGE · Land Valuation System
@@ -198,7 +199,7 @@ const PropertyDetail: React.FC = () => {
               <div className="lg:col-span-2">
                 <div className="w-full h-96 md:h-[500px] bg-gray-200 rounded-lg overflow-hidden">
                   <img
-                    src={property.image}
+                    src={resolveImageUrl(property.image)}
                     alt={property.location}
                     className="w-full h-full object-cover"
                   />
@@ -212,7 +213,7 @@ const PropertyDetail: React.FC = () => {
                         key={idx}
                         className="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden cursor-pointer border-2 border-gray-300 hover:border-emerald-500 transition-colors"
                       >
-                        <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
+                        <img src={resolveImageUrl(img)} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
                       </div>
                     ))}
                   </div>

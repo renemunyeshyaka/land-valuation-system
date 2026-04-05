@@ -85,9 +85,17 @@ func main() {
 	}
 
 	// Set Gin mode
-	if cfg.Environment == "production" {
-		gin.SetMode(gin.ReleaseMode)
+	ginMode := os.Getenv("GIN_MODE")
+	if ginMode == "" {
+		// Default to release mode to avoid noisy debug startup warnings.
+		// Set GIN_MODE=debug when local debugging is needed.
+		if cfg.Environment == "production" {
+			ginMode = gin.ReleaseMode
+		} else {
+			ginMode = gin.ReleaseMode
+		}
 	}
+	gin.SetMode(ginMode)
 
 	// Create router
 	router := gin.New()

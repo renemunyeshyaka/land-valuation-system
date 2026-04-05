@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { resolveImageUrl } from '../../utils/image';
+import { useSession } from 'next-auth/react';
+import { refreshAccessToken } from '../../utils/tokenRefresh';
 
 const PropertyListings: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -10,57 +13,185 @@ const PropertyListings: React.FC = () => {
   const [showEdit, setShowEdit] = useState(false);
   const [editListing, setEditListing] = useState<any | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showGallery, setShowGallery] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [galleryTitle, setGalleryTitle] = useState('Property Images');
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+  const { data: session } = useSession();
+
+  const getAuthToken = () => {
+    if (session && (session as any).accessToken) return (session as any).accessToken as string;
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('access_token');
+      if (token) return token;
+    }
+    return null;
+  };
+
+  const getAuthConfig = () => {
+    const token = getAuthToken();
+    return {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    };
+  };
+
+  const getPrimaryImage = (listing: any): string | null => {
+    if (Array.isArray(listing?.images) && listing.images.length > 0 && listing.images[0]) {
+      return resolveImageUrl(listing.images[0]);
+    }
+    if (typeof listing?.images === 'string' && listing.images) {
+      return resolveImageUrl(listing.images);
+    }
+    if (typeof listing?.image === 'string' && listing.image) {
+      return resolveImageUrl(listing.image);
+    }
+    return null;
+  };
+
+  const getGalleryImages = (listing: any): string[] => {
+    if (Array.isArray(listing?.images)) {
+      return listing.images
+        .filter(Boolean)
+        .map((img: string) => resolveImageUrl(img))
+        .filter(Boolean);
+    }
+    if (typeof listing?.images === 'string' && listing.images) {
+      return [resolveImageUrl(listing.images)].filter(Boolean);
+    }
+    if (typeof listing?.image === 'string' && listing.image) {
+      return [resolveImageUrl(listing.image)].filter(Boolean);
+    }
+    return [];
+  };
+
+  const openGallery = (listing: any) => {
+    const images = getGalleryImages(listing);
+    if (images.length === 0) {
+      return;
+    }
+    setGalleryImages(images);
+    setGalleryIndex(0);
+    setGalleryTitle(listing?.title || 'Property Images');
+    setShowGallery(true);
+  };
+
+  const getGoogleMapsLink = (listing: any): string | null => {
+    const lat = Number(listing?.latitude);
+    const lng = Number(listing?.longitude);
+    if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) {
+      return `https://www.google.com/maps?q=${lat},${lng}`;
+    }
+
+    const addressParts = [listing?.address, listing?.sector, listing?.district].filter(Boolean);
+    if (addressParts.length > 0) {
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressParts.join(', '))}`;
+    }
+
+    return null;
+  };
+
+  const getLocationText = (listing: any): string => {
+    const addressParts = [listing?.address, listing?.sector, listing?.district].filter(Boolean);
+    if (addressParts.length > 0) {
+      return addressParts.join(', ');
+    }
+    return listing?.location || '-';
+  };
 
   // Fetch listings
-  const fetchListings = async () => {
+  const fetchListings = async (allowRetry = true) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/v1/properties`, { withCredentials: true });
-      setListings(res.data.data || res.data.properties || []);
-    } catch (err) {
-      setError('Failed to fetch properties');
+      let token = getAuthToken();
+      if (!token) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) token = getAuthToken();
+      }
+      if (!token) {
+        setListings([]);
+        setError('Authentication token missing. Please log in again.');
+        setLoading(false);
+        return;
+      }
+
+      const res = await axios.get(`${API_BASE_URL}/api/v1/properties`, getAuthConfig());
+      let listingsArr = res.data?.data?.data || res.data?.properties || res.data?.data || [];
+      if (!Array.isArray(listingsArr)) listingsArr = [];
+      setListings(listingsArr);
+    } catch (err: any) {
+      if (allowRetry && err?.response?.status === 401) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          await fetchListings(false);
+          return;
+        }
+      }
+      setListings([]);
+      setError(err?.response?.data?.error?.message || err?.message || 'Failed to fetch properties');
     }
     setLoading(false);
   };
 
   useEffect(() => {
     fetchListings();
-  }, []);
+  }, [session]);
 
   // Add property
-  const onAdd = async (data: any) => {
+  const onAdd = async (data: any, allowRetry = true) => {
     try {
-      await axios.post(`${API_BASE_URL}/api/v1/properties`, data, { withCredentials: true });
+      await axios.post(`${API_BASE_URL}/api/v1/properties`, data, getAuthConfig());
       setShowAdd(false);
       fetchListings();
-    } catch (err) {
-      setError('Failed to add property');
+    } catch (err: any) {
+      if (allowRetry && err?.response?.status === 401) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          await onAdd(data, false);
+          return;
+        }
+      }
+      setError(err?.response?.data?.error?.message || err?.message || 'Failed to add property');
     }
   };
 
   // Edit property
-  const onEdit = async (data: any) => {
+  const onEdit = async (data: any, allowRetry = true) => {
     if (!editListing) return;
     try {
-      await axios.put(`${API_BASE_URL}/api/v1/properties/${editListing.id}`, data, { withCredentials: true });
+      await axios.put(`${API_BASE_URL}/api/v1/properties/${editListing.id}`, data, getAuthConfig());
       setShowEdit(false);
       setEditListing(null);
       fetchListings();
-    } catch (err) {
-      setError('Failed to edit property');
+    } catch (err: any) {
+      if (allowRetry && err?.response?.status === 401) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          await onEdit(data, false);
+          return;
+        }
+      }
+      setError(err?.response?.data?.error?.message || err?.message || 'Failed to edit property');
     }
   };
 
   // Remove property
-  const onDelete = async (id: string) => {
+  const onDelete = async (id: string, allowRetry = true) => {
     try {
-      await axios.delete(`${API_BASE_URL}/api/v1/properties/${id}`, { withCredentials: true });
+      await axios.delete(`${API_BASE_URL}/api/v1/properties/${id}`, getAuthConfig());
       setDeleteId(null);
       fetchListings();
-    } catch (err) {
-      setError('Failed to delete property');
+    } catch (err: any) {
+      if (allowRetry && err?.response?.status === 401) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          await onDelete(id, false);
+          return;
+        }
+      }
+      setError(err?.response?.data?.error?.message || err?.message || 'Failed to delete property');
     }
   };
   return (
@@ -101,10 +232,12 @@ const PropertyListings: React.FC = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
             <thead>
               <tr style={{ background: '#f3f4f6' }}>
+                <th style={{ padding: 8, border: '1px solid #eee' }}>Image</th>
                 <th style={{ padding: 8, border: '1px solid #eee' }}>Title</th>
                 <th style={{ padding: 8, border: '1px solid #eee' }}>Location</th>
                 <th style={{ padding: 8, border: '1px solid #eee' }}>Type</th>
                 <th style={{ padding: 8, border: '1px solid #eee' }}>Status</th>
+                <th style={{ padding: 8, border: '1px solid #eee' }}>Map</th>
                 <th style={{ padding: 8, border: '1px solid #eee' }}>Actions</th>
               </tr>
             </thead>
@@ -113,16 +246,51 @@ const PropertyListings: React.FC = () => {
                 const q = search.toLowerCase();
                 return (
                   (listing.title || '').toLowerCase().includes(q) ||
-                  (listing.location || '').toLowerCase().includes(q) ||
-                  (listing.type || '').toLowerCase().includes(q) ||
+                  getLocationText(listing).toLowerCase().includes(q) ||
+                  (listing.property_type || listing.type || '').toLowerCase().includes(q) ||
                   (listing.status || '').toLowerCase().includes(q)
                 );
               }).map(listing => (
                 <tr key={listing.id}>
+                  <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>
+                    {getPrimaryImage(listing) ? (
+                      <button
+                        type="button"
+                        onClick={() => openGallery(listing)}
+                        style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
+                        title="View all images"
+                      >
+                        <img
+                          src={getPrimaryImage(listing) as string}
+                          alt={listing.title || 'Property image'}
+                          style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </button>
+                    ) : (
+                      <span style={{ color: '#9ca3af', fontSize: 12 }}>No image</span>
+                    )}
+                  </td>
                   <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.title || '-'}</td>
-                  <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.location || '-'}</td>
-                  <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.type || '-'}</td>
+                  <td style={{ padding: 8, border: '1px solid #eee' }}>{getLocationText(listing)}</td>
+                  <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.property_type || listing.type || '-'}</td>
                   <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.status || '-'}</td>
+                  <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>
+                    {getGoogleMapsLink(listing) ? (
+                      <a
+                        href={getGoogleMapsLink(listing) as string}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}
+                      >
+                        Open Map
+                      </a>
+                    ) : (
+                      <span style={{ color: '#9ca3af', fontSize: 12 }}>N/A</span>
+                    )}
+                  </td>
                   <td style={{ padding: 8, border: '1px solid #eee' }}>
                     <button onClick={() => { setEditListing(listing); setShowEdit(true); }} style={{ marginRight: 8, background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                     <button onClick={() => setDeleteId(listing.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
@@ -196,6 +364,55 @@ const PropertyListings: React.FC = () => {
               <button onClick={() => onDelete(deleteId)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
               <button onClick={() => setDeleteId(null)} style={{ background: '#eee', color: '#222', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Gallery Modal */}
+      {showGallery && galleryImages.length > 0 && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#000b', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+          <div style={{ background: '#fff', borderRadius: 12, width: 'min(900px, 95vw)', maxHeight: '92vh', overflow: 'auto', padding: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 style={{ margin: 0 }}>{galleryTitle}</h3>
+              <button onClick={() => setShowGallery(false)} style={{ background: '#eee', border: 'none', borderRadius: 6, padding: '0.4rem 0.8rem', cursor: 'pointer' }}>Close</button>
+            </div>
+
+            <div style={{ background: '#f3f4f6', borderRadius: 10, padding: 8 }}>
+              <img src={galleryImages[galleryIndex]} alt={`Image ${galleryIndex + 1}`} style={{ width: '100%', maxHeight: '62vh', objectFit: 'contain', borderRadius: 8 }} />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+              <button
+                onClick={() => setGalleryIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length)}
+                disabled={galleryImages.length <= 1}
+                style={{ background: '#2d6a4f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', cursor: galleryImages.length > 1 ? 'pointer' : 'not-allowed', opacity: galleryImages.length > 1 ? 1 : 0.6 }}
+              >
+                Previous
+              </button>
+              <span style={{ fontSize: 14, color: '#374151' }}>{galleryIndex + 1} / {galleryImages.length}</span>
+              <button
+                onClick={() => setGalleryIndex((prev) => (prev + 1) % galleryImages.length)}
+                disabled={galleryImages.length <= 1}
+                style={{ background: '#2d6a4f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', cursor: galleryImages.length > 1 ? 'pointer' : 'not-allowed', opacity: galleryImages.length > 1 ? 1 : 0.6 }}
+              >
+                Next
+              </button>
+            </div>
+
+            {galleryImages.length > 1 && (
+              <div style={{ display: 'flex', gap: 8, marginTop: 10, overflowX: 'auto', paddingBottom: 4 }}>
+                {galleryImages.map((img, idx) => (
+                  <button
+                    key={`${img}-${idx}`}
+                    type="button"
+                    onClick={() => setGalleryIndex(idx)}
+                    style={{ border: idx === galleryIndex ? '2px solid #2d6a4f' : '1px solid #d1d5db', borderRadius: 8, padding: 0, background: 'transparent', cursor: 'pointer' }}
+                  >
+                    <img src={img} alt={`Thumb ${idx + 1}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 6, display: 'block' }} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

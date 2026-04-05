@@ -1,14 +1,96 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useSession } from 'next-auth/react';
+import { refreshAccessToken } from '../../utils/tokenRefresh';
 
 const SupportModeration = () => {
   const [search, setSearch] = useState('');
-  // Placeholder tickets/users array for demonstration
-  const tickets = [];
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [limit] = useState(20);
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+  const { data: session } = useSession();
+
+  const getAuthToken = () => {
+    if (session && (session as any).accessToken) return (session as any).accessToken as string;
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('access_token');
+      if (token) return token;
+    }
+    return null;
+  };
+
+  const getAuthConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      withCredentials: true,
+    };
+  };
+
+  const fetchTickets = async (page = currentPage, allowRetry = true) => {
+    setLoading(true);
+    setError(null);
+    try {
+      let token = getAuthToken();
+      if (!token) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) token = getAuthToken();
+      }
+      if (!token) {
+        setError('Authentication token missing. Please log in again.');
+        setTickets([]);
+        setLoading(false);
+        return;
+      }
+
+      const res = await axios.get(`${API_BASE_URL}/api/v1/admin/audit-logs`, {
+        ...getAuthConfig(),
+        params: { page, limit },
+      });
+      let rows = res.data?.data?.data || [];
+      if (!Array.isArray(rows)) rows = [];
+      setTickets(rows);
+      setCurrentPage(Number(res.data?.data?.page || page));
+      setTotal(Number(res.data?.data?.total || rows.length || 0));
+    } catch (err: any) {
+      if (allowRetry && err?.response?.status === 401) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          await fetchTickets(page, false);
+          return;
+        }
+      }
+      setError(err?.response?.data?.error?.message || err?.message || 'Failed to fetch support/moderation data');
+      setTickets([]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchTickets(currentPage);
+  }, [session, currentPage]);
+
+  const filtered = tickets.filter((t) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      String(t?.id || '').toLowerCase().includes(q) ||
+      String(t?.user_id || '').toLowerCase().includes(q) ||
+      String(t?.action || '').toLowerCase().includes(q) ||
+      String(t?.timestamp || '').toLowerCase().includes(q)
+    );
+  });
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
   return (
     <div style={{ maxWidth: 900, margin: '2rem auto', background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px #0001', padding: '2rem' }}>
       <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1.5rem', color: '#2d6a4f' }}>Support & Moderation</h2>
       <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
-        <button style={{ background: '#2d6a4f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.75rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>View Tickets</button>
+        <button onClick={() => fetchTickets(1)} style={{ background: '#2d6a4f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.75rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>View Tickets</button>
         <button style={{ background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.75rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Moderate User</button>
       </div>
       {/* Search bar with Search and Clear buttons */}
@@ -21,7 +103,7 @@ const SupportModeration = () => {
           style={{ width: 320, padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
         />
         <button
-          onClick={() => {}}
+          onClick={() => fetchTickets(1)}
           style={{ background: '#2d6a4f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}
         >
           Search
@@ -33,9 +115,46 @@ const SupportModeration = () => {
           Clear
         </button>
       </div>
+      {error && <div style={{ color: 'red', marginBottom: 16 }}>{error}</div>}
       <div style={{ borderTop: '1px solid #eee', paddingTop: '1.5rem' }}>
-        {/* Support tickets and moderation controls would go here */}
-        <p style={{ color: '#888' }}>Support tickets and moderation actions will appear here.</p>
+        {loading ? (
+          <p style={{ color: '#666' }}>Loading support data...</p>
+        ) : (
+          <>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
+              <thead>
+                <tr style={{ background: '#f3f4f6' }}>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Log ID</th>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>User</th>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Action</th>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((t) => (
+                  <tr key={t.id}>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>{t.id}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>{t.user_id || '-'}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>{t.action || '-'}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>{t.timestamp || '-'}</td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={4} style={{ padding: 12, border: '1px solid #eee', textAlign: 'center', color: '#666' }}>No logs found</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+              <span style={{ fontSize: 14, color: '#666' }}>Page {currentPage} of {totalPages}</span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage <= 1} style={{ background: currentPage <= 1 ? '#ddd' : '#eee', border: 'none', borderRadius: 6, padding: '0.45rem 0.9rem', cursor: currentPage <= 1 ? 'not-allowed' : 'pointer' }}>Previous</button>
+                <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} style={{ background: currentPage >= totalPages ? '#ddd' : '#2d6a4f', color: currentPage >= totalPages ? '#666' : '#fff', border: 'none', borderRadius: 6, padding: '0.45rem 0.9rem', cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer' }}>Next</button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

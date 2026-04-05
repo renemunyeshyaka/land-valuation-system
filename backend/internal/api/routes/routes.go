@@ -29,6 +29,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client) 
 	setupAuthRoutes(router, db)
 	setupUserRoutes(router, db)
 	setupPropertyRoutes(router, db)
+	setupFileRoutes(router)
 	setupValuationRoutes(router, db)
 	setupSubscriptionRoutes(router, db)
 	setupPaymentRoutes(router, db, redisClient)
@@ -118,20 +119,23 @@ func setupPropertyRoutes(router *gin.Engine, db *gorm.DB) {
 
 	properties := router.Group("/api/v1/properties")
 	{
-		properties.GET("", propertyHandler.ListProperties)
-		properties.GET("/:id", propertyHandler.GetProperty)
-		properties.POST("/search", propertyHandler.SearchNearby)
-		properties.GET("/stats", propertyHandler.GetStatistics)
-
+		// Protected routes MUST come before parameterized routes to avoid route matching issues
 		protectedProperties := properties.Group("")
 		protectedProperties.Use(middleware.AuthRequired())
 		{
+			protectedProperties.GET("/my", propertyHandler.ListMyProperties)
 			protectedProperties.POST("", propertyHandler.CreateProperty)
 			protectedProperties.PUT("/:id", propertyHandler.UpdateProperty)
 			protectedProperties.DELETE("/:id", propertyHandler.DeleteProperty)
 			protectedProperties.GET("/:id/marketplace-listings", marketplaceHandler.GetMarketplaceListings)
 			protectedProperties.POST("/:id/sync-marketplace", marketplaceHandler.SyncMarketplaceAPIs)
 		}
+
+		// Public routes
+		properties.GET("", propertyHandler.ListProperties)
+		properties.POST("/search", propertyHandler.SearchNearby)
+		properties.GET("/stats", propertyHandler.GetStatistics)
+		properties.GET("/:id", propertyHandler.GetProperty)
 	}
 
 	marketplace := router.Group("/api/v1/marketplace")
@@ -250,6 +254,7 @@ func setupAdminRoutes(router *gin.Engine, db *gorm.DB) {
 		admin.GET("/audit-logs", adminHandler.GetAuditLogs)
 		admin.GET("/health", adminHandler.GetSystemHealth)
 		admin.GET("/subscriptions", adminHandler.ManageSubscriptions)
+		admin.GET("/properties", adminHandler.GetAllProperties)
 		admin.POST("/properties/:id/approve", adminHandler.ApproveProperty)
 		admin.POST("/properties/:id/reject", adminHandler.RejectProperty)
 	}
@@ -329,4 +334,18 @@ func setupHealthRoutes(router *gin.Engine, db *gorm.DB) {
 		health.GET("", healthHandler.HealthCheck)
 		health.GET("/db", healthHandler.DatabaseStats)
 	}
+}
+
+func setupFileRoutes(router *gin.Engine) {
+	fileHandler := handlers.NewFileHandler()
+
+	files := router.Group("/api/v1/files")
+	files.Use(middleware.AuthRequired())
+	{
+		files.POST("/upload-image", fileHandler.UploadPropertyImage)
+		files.DELETE("/delete-image", fileHandler.DeletePropertyImage)
+	}
+
+	// Serve static files from property_images directory
+	router.Static("/property_images", "./property_images")
 }

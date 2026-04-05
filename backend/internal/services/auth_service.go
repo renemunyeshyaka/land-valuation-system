@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"os"
 	"time"
@@ -83,8 +84,11 @@ func (s *AuthService) Register(ctx context.Context, user *models.User, password 
 	}
 	err = s.emailService.SendActivationEmail(createdUser.Email, firstName, verificationCode)
 	if err != nil {
-		// Log error but don't fail registration
-		fmt.Printf("Failed to send activation email: %v\n", err)
+		// Enforce activation-code delivery on signup: remove the user so they can retry cleanly.
+		if delErr := s.db.WithContext(ctx).Unscoped().Delete(&models.User{}, createdUser.ID).Error; delErr != nil {
+			log.Printf("failed to rollback user %d after activation email error: %v", createdUser.ID, delErr)
+		}
+		return nil, fmt.Errorf("failed to send activation email: %w", err)
 	}
 
 	return createdUser, nil
@@ -114,11 +118,6 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*model
 		return nil, fmt.Errorf("too many failed attempts. Please try again in %.0f minutes", remainingTime)
 	}
 
-	// Check rate limiting (max 1 OTP per minute)
-	if user.LastOTPSentAt != nil && time.Since(*user.LastOTPSentAt) < time.Minute {
-		return nil, errors.New("please wait before requesting another OTP")
-	}
-
 	// Generate OTP
 	otpCode, err := GenerateOTP()
 	if err != nil {
@@ -139,8 +138,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*model
 	}
 	err = s.emailService.SendOTPEmail(user.Email, firstName, otpCode)
 	if err != nil {
-		// Log error but don't fail login
-		fmt.Printf("Failed to send OTP email: %v\n", err)
+		return nil, fmt.Errorf("failed to send OTP email: %w", err)
 	}
 
 	return user, nil

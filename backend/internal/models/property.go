@@ -44,8 +44,9 @@ type Property struct {
 	// Basic Information
 	Title        string `gorm:"not null;size:255" json:"title"`
 	Description  string `gorm:"type:text" json:"description"`
-	PropertyType string `gorm:"not null;size:50" json:"property_type"`            // residential, commercial, agricultural, industrial
-	Status       string `gorm:"not null;size:50;default:available" json:"status"` // available, pending, sold, rented
+	PropertyType string `gorm:"not null;size:50" json:"property_type"`             // residential, commercial, agricultural, industrial
+	Status       string `gorm:"not null;size:50;default:available" json:"status"`  // available, pending, sold, rented
+	Visibility   string `gorm:"not null;size:20;default:public" json:"visibility"` // public, registered, only_me
 
 	// Location
 	UPI       string  `gorm:"size:50;uniqueIndex;not null" json:"upi"` // Unique Parcel Identifier (x/xx/xx/xx/xxxx)

@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     phone VARCHAR(20) UNIQUE,
@@ -35,7 +35,7 @@ CREATE TABLE users (
 );
 
 -- Properties table (Land parcels)
-CREATE TABLE properties (
+CREATE TABLE IF NOT EXISTS properties (
     id BIGSERIAL PRIMARY KEY,
     owner_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
@@ -73,7 +73,7 @@ CREATE TABLE properties (
 );
 
 -- Valuations table
-CREATE TABLE valuations (
+CREATE TABLE IF NOT EXISTS valuations (
     id BIGSERIAL PRIMARY KEY,
     property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
     valuator_id BIGINT NOT NULL REFERENCES users(id),
@@ -92,7 +92,7 @@ CREATE TABLE valuations (
 );
 
 -- Subscriptions table
-CREATE TABLE subscriptions (
+CREATE TABLE IF NOT EXISTS subscriptions (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     plan_type VARCHAR(50) NOT NULL CHECK (plan_type IN ('free', 'basic', 'professional', 'ultimate')),
@@ -108,7 +108,7 @@ CREATE TABLE subscriptions (
 );
 
 -- Transactions table (Payments)
-CREATE TABLE transactions (
+CREATE TABLE IF NOT EXISTS transactions (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     subscription_id BIGINT REFERENCES subscriptions(id),
@@ -125,7 +125,7 @@ CREATE TABLE transactions (
 );
 
 -- Marketplace listings
-CREATE TABLE marketplace_listings (
+CREATE TABLE IF NOT EXISTS marketplace_listings (
     id BIGSERIAL PRIMARY KEY,
     property_id BIGINT REFERENCES properties(id) ON DELETE SET NULL,
     api_name VARCHAR(100) NOT NULL,
@@ -142,7 +142,7 @@ CREATE TABLE marketplace_listings (
 );
 
 -- Activity logs
-CREATE TABLE activity_logs (
+CREATE TABLE IF NOT EXISTS activity_logs (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
     action VARCHAR(100) NOT NULL,
@@ -155,7 +155,7 @@ CREATE TABLE activity_logs (
 );
 
 -- Analytics events  
-CREATE TABLE analytics_events (
+CREATE TABLE IF NOT EXISTS analytics_events (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
     event_type VARCHAR(100) NOT NULL,
@@ -165,7 +165,7 @@ CREATE TABLE analytics_events (
 );
 
 -- Search queries log
-CREATE TABLE search_queries (
+CREATE TABLE IF NOT EXISTS search_queries (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
     query_text VARCHAR(500),
@@ -177,7 +177,7 @@ CREATE TABLE search_queries (
 );
 
 -- User saved properties
-CREATE TABLE user_saved_properties (
+CREATE TABLE IF NOT EXISTS user_saved_properties (
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -185,27 +185,27 @@ CREATE TABLE user_saved_properties (
 );
 
 -- Create indexes
-CREATE INDEX idx_properties_owner ON properties(owner_id);
-CREATE INDEX idx_properties_status ON properties(status);
-CREATE INDEX idx_properties_type ON properties(property_type);
-CREATE INDEX idx_properties_district ON properties(district);
-CREATE INDEX idx_valuations_property ON valuations(property_id);
-CREATE INDEX idx_valuations_valuator ON valuations(valuator_id);
-CREATE INDEX idx_subscriptions_user ON subscriptions(user_id);
-CREATE INDEX idx_subscriptions_status ON subscriptions(status);
-CREATE INDEX idx_transactions_user ON transactions(user_id);
-CREATE INDEX idx_transactions_status ON transactions(status);
-CREATE INDEX idx_marketplace_property ON marketplace_listings(property_id);
-CREATE INDEX idx_marketplace_api ON marketplace_listings(api_name);
-CREATE UNIQUE INDEX idx_marketplace_property_api ON marketplace_listings(property_id, api_name);
-CREATE INDEX idx_activity_logs_user ON activity_logs(user_id);
-CREATE INDEX idx_activity_logs_action ON activity_logs(action);
-CREATE INDEX idx_analytics_events_user ON analytics_events(user_id);
-CREATE INDEX idx_analytics_events_type ON analytics_events(event_type);
-CREATE INDEX idx_analytics_events_timestamp ON analytics_events(timestamp);
-CREATE INDEX idx_search_queries_user ON search_queries(user_id);
-CREATE INDEX idx_user_saved_properties_user ON user_saved_properties(user_id);
-CREATE INDEX idx_user_saved_properties_property ON user_saved_properties(property_id);
+CREATE INDEX IF NOT EXISTS idx_properties_owner ON properties(owner_id);
+CREATE INDEX IF NOT EXISTS idx_properties_status ON properties(status);
+CREATE INDEX IF NOT EXISTS idx_properties_type ON properties(property_type);
+CREATE INDEX IF NOT EXISTS idx_properties_district ON properties(district);
+CREATE INDEX IF NOT EXISTS idx_valuations_property ON valuations(property_id);
+CREATE INDEX IF NOT EXISTS idx_valuations_valuator ON valuations(valuator_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
+CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(status);
+CREATE INDEX IF NOT EXISTS idx_marketplace_property ON marketplace_listings(property_id);
+CREATE INDEX IF NOT EXISTS idx_marketplace_api ON marketplace_listings(api_name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_marketplace_property_api ON marketplace_listings(property_id, api_name);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_user ON activity_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON activity_logs(action);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_user ON analytics_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_type ON analytics_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_timestamp ON analytics_events(timestamp);
+CREATE INDEX IF NOT EXISTS idx_search_queries_user ON search_queries(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_saved_properties_user ON user_saved_properties(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_saved_properties_property ON user_saved_properties(property_id);
 
 -- Create trigger function for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -217,9 +217,50 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Apply triggers
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_properties_updated_at BEFORE UPDATE ON properties FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_valuations_updated_at BEFORE UPDATE ON valuations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON subscriptions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_transactions_updated_at BEFORE UPDATE ON transactions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_marketplace_listings_updated_at BEFORE UPDATE ON marketplace_listings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_users_updated_at') THEN
+        CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END;
+$$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_properties_updated_at') THEN
+        CREATE TRIGGER update_properties_updated_at BEFORE UPDATE ON properties FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END;
+$$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_valuations_updated_at') THEN
+        CREATE TRIGGER update_valuations_updated_at BEFORE UPDATE ON valuations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END;
+$$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_subscriptions_updated_at') THEN
+        CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON subscriptions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END;
+$$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_transactions_updated_at') THEN
+        CREATE TRIGGER update_transactions_updated_at BEFORE UPDATE ON transactions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END;
+$$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_marketplace_listings_updated_at') THEN
+        CREATE TRIGGER update_marketplace_listings_updated_at BEFORE UPDATE ON marketplace_listings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END;
+$$;

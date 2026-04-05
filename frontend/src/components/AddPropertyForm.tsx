@@ -6,6 +6,7 @@ interface PropertyFormData {
   title: string;
   description: string;
   propertyType: string;
+  visibility: 'public' | 'registered' | 'only_me';
   district: string;
   sector: string;
   cell: string;
@@ -37,9 +38,10 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
   const documentInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<PropertyFormData>({
-    title: '',
+    title: 'Residential Land',
     description: '',
     propertyType: 'residential',
+    visibility: 'public',
     district: '',
     sector: '',
     cell: '',
@@ -105,6 +107,17 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    if (name === 'propertyType') {
+      const selected = propertyTypes.find((type) => type.value === value);
+      setFormData((prev) => ({
+        ...prev,
+        propertyType: value,
+        title: selected ? selected.label : prev.title,
+      }));
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -234,6 +247,28 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
     setError('');
     setSuccess('');
 
+     // Function to upload a single image
+     const uploadImage = async (file: File, accessToken: string): Promise<string> => {
+       const formData = new FormData();
+       formData.append('image', file);
+     
+       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/files/upload-image`, {
+         method: 'POST',
+         headers: {
+           Authorization: `Bearer ${accessToken}`,
+         },
+         body: formData,
+       });
+     
+       if (!response.ok) {
+         const errorData = await response.json().catch(() => ({}));
+         throw new Error(errorData?.error || 'Failed to upload image');
+       }
+     
+       const data = await response.json();
+       return data.data?.url || '';
+     };
+
     try {
       if (onSubmit) {
         await onSubmit(formData, images, documents);
@@ -244,34 +279,82 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
       } else {
         // Default API call
         const accessToken = localStorage.getItem('access_token');
-        
-        const formDataToSend = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-          if (Array.isArray(value)) {
-            formDataToSend.append(key, JSON.stringify(value));
-          } else {
-            formDataToSend.append(key, value);
-          }
-        });
+        if (!accessToken) {
+          throw new Error('Please log in first to add a property.');
+        }
 
-        images.forEach((image, index) => {
-          formDataToSend.append(`images`, image);
-        });
+        const landSize = Number(formData.landSize);
+        const price = Number(formData.price);
+        const latitude = formData.latitude ? Number(formData.latitude) : 0;
+        const longitude = formData.longitude ? Number(formData.longitude) : 0;
 
-        documents.forEach((doc, index) => {
-          formDataToSend.append(`documents`, doc);
-        });
+        if (!Number.isFinite(landSize) || landSize <= 0) {
+          throw new Error('Land size must be a valid number greater than 0.');
+        }
+        if (!Number.isFinite(price) || price <= 0) {
+          throw new Error('Price must be a valid number greater than 0.');
+        }
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/properties`, {
+         // Upload images and collect URLs
+         let imageUrls: string[] = [];
+         if (images.length > 0) {
+           toast.loading('Uploading images...');
+           for (const image of images) {
+             try {
+               const url = await uploadImage(image, accessToken);
+               if (url) {
+                 imageUrls.push(url);
+               }
+             } catch (err: any) {
+               toast.error(`Failed to upload ${image.name}: ${err.message}`);
+             }
+           }
+           toast.dismiss();
+         }
+
+        const payload = {
+          title: formData.title,
+          description: formData.description,
+          property_type: formData.propertyType,
+          visibility: formData.visibility,
+          upi: formData.parcelId,
+          district: formData.district,
+          sector: formData.sector,
+          address: formData.address,
+          latitude,
+          longitude,
+          land_size: landSize,
+          size_unit: formData.sizeUnit,
+          gazette_reference: formData.gazetteReference,
+          price,
+          currency: 'RWF',
+          features: formData.features,
+           images: imageUrls,
+           documents: [],
+        };
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/properties`, {
           method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${accessToken}`,
           },
-          body: formDataToSend,
+          body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
-          throw new Error('Failed to add property');
+          let message = 'Failed to add property';
+          try {
+            const errorData = await response.json();
+            message =
+              errorData?.error?.details ||
+              errorData?.error?.message ||
+              errorData?.message ||
+              message;
+          } catch {
+            // Keep fallback message when response body is not JSON.
+          }
+          throw new Error(message);
         }
 
         setSuccess('Property added successfully!');
@@ -372,21 +455,6 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Property Title *
               </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                placeholder="e.g., Prime residential land in Kigali"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Property Type *
-              </label>
               <select
                 name="propertyType"
                 value={formData.propertyType}
@@ -399,6 +467,23 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
                     {type.label}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Who Can View This Plot? *
+              </label>
+              <select
+                name="visibility"
+                value={formData.visibility}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                <option value="public">Public (everyone)</option>
+                <option value="registered">Registered users only</option>
+                <option value="only_me">Only me</option>
               </select>
             </div>
 

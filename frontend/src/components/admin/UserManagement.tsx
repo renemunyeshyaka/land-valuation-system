@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
+import { refreshAccessToken } from '../../utils/tokenRefresh';
 
 
 type User = {
@@ -17,6 +18,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [limit] = useState(10);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -51,69 +55,127 @@ const UserManagement: React.FC = () => {
 
 
   // Fetch users with optional search
-  const fetchUsers = async (searchQuery?: string) => {
+  const fetchUsers = async (searchQuery?: string, page = currentPage, allowRetry = true) => {
     setLoading(true);
     setError(null);
     try {
+      let token = getAuthToken();
+      if (!token) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) token = getAuthToken();
+      }
+      if (!token) {
+        setUsers([]);
+        setError('Authentication token missing. Please log in again.');
+        setLoading(false);
+        return;
+      }
+
       const params: any = {};
       if (typeof searchQuery === 'string' && searchQuery.trim() !== '') {
         params.search = searchQuery.trim();
       }
+      params.page = page;
+      params.limit = limit;
       const res = await axios.get(`${API_BASE_URL}/api/v1/admin/users`, {
         ...getAuthConfig(),
         params,
       });
-      // Accept both data.data.users and data.users for compatibility
-      let usersArr = res.data.data?.users || res.data.users || res.data.data || [];
+      let usersArr = res.data?.data?.data || res.data?.data?.users || res.data?.users || res.data?.data || [];
       if (!Array.isArray(usersArr)) usersArr = [];
       setUsers(usersArr);
+      setCurrentPage(Number(res.data?.data?.page || page));
+      setTotal(Number(res.data?.data?.total || usersArr.length || 0));
     } catch (err: any) {
+      if (allowRetry && err?.response?.status === 401) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          await fetchUsers(searchQuery, page, false);
+          return;
+        }
+      }
       setUsers([]); // Always set an array to avoid .map errors
-      setError('Failed to fetch users');
+      setError(err?.response?.data?.error?.message || err?.message || 'Failed to fetch users');
     }
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchUsers(search, currentPage);
+  }, [session, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchUsers(search, 1);
+  }, [search]);
 
   // Add user
   const onAdd = async (data: User) => {
-    try {
-      await axios.post(`${API_BASE_URL}/api/v1/admin/users`, data, getAuthConfig());
-      setShowAdd(false);
-      reset();
-      fetchUsers();
-    } catch (err) {
-      setError('Failed to add user');
-    }
+    const run = async (allowRetry: boolean) => {
+      try {
+        await axios.post(`${API_BASE_URL}/api/v1/admin/users`, data, getAuthConfig());
+        setShowAdd(false);
+        reset();
+        fetchUsers(search, currentPage);
+      } catch (err: any) {
+        if (allowRetry && err?.response?.status === 401) {
+          const refreshed = await refreshAccessToken();
+          if (refreshed) {
+            await run(false);
+            return;
+          }
+        }
+        setError('Failed to add user');
+      }
+    };
+
+    await run(true);
   };
 
   // Edit user
   const onEdit = async (data: User) => {
     if (!editUser) return;
-    try {
-      await axios.put(`${API_BASE_URL}/api/v1/admin/users/${editUser.id}`, data, getAuthConfig());
-      setShowEdit(false);
-      setEditUser(null);
-      reset();
-      fetchUsers();
-    } catch (err) {
-      setError('Failed to edit user');
-    }
+    const run = async (allowRetry: boolean) => {
+      try {
+        await axios.put(`${API_BASE_URL}/api/v1/admin/users/${editUser.id}`, data, getAuthConfig());
+        setShowEdit(false);
+        setEditUser(null);
+        reset();
+        fetchUsers(search, currentPage);
+      } catch (err: any) {
+        if (allowRetry && err?.response?.status === 401) {
+          const refreshed = await refreshAccessToken();
+          if (refreshed) {
+            await run(false);
+            return;
+          }
+        }
+        setError('Failed to edit user');
+      }
+    };
+
+    await run(true);
   };
 
   // Delete user
-  const onDelete = async (id: string) => {
+  const onDelete = async (id: string, allowRetry = true) => {
     try {
       await axios.delete(`${API_BASE_URL}/api/v1/admin/users/${id}`, getAuthConfig());
       setDeleteUserId(null);
-      fetchUsers();
-    } catch (err) {
+      fetchUsers(search, currentPage);
+    } catch (err: any) {
+      if (allowRetry && err?.response?.status === 401) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          await onDelete(id, false);
+          return;
+        }
+      }
       setError('Failed to delete user');
     }
   };
+
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
     <div style={{ maxWidth: 900, margin: '2rem auto', background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px #0001', padding: '2rem' }}>
@@ -133,13 +195,13 @@ const UserManagement: React.FC = () => {
           style={{ width: 320, padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
         />
         <button
-          onClick={() => fetchUsers(search)}
+          onClick={() => fetchUsers(search, 1)}
           style={{ background: '#2d6a4f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}
         >
           Search
         </button>
         <button
-          onClick={() => { setSearch(''); fetchUsers(''); }}
+          onClick={() => { setSearch(''); setCurrentPage(1); fetchUsers('', 1); }}
           style={{ background: '#eee', color: '#222', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}
         >
           Clear
@@ -150,31 +212,68 @@ const UserManagement: React.FC = () => {
         {loading ? (
           <p>Loading users...</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
-            <thead>
-              <tr style={{ background: '#f3f4f6' }}>
-                <th style={{ padding: 8, border: '1px solid #eee' }}>First Name</th>
-                <th style={{ padding: 8, border: '1px solid #eee' }}>Last Name</th>
-                <th style={{ padding: 8, border: '1px solid #eee' }}>Email</th>
-                <th style={{ padding: 8, border: '1px solid #eee' }}>Status</th>
-                <th style={{ padding: 8, border: '1px solid #eee' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map(user => (
-                <tr key={user.id}>
-                  <td style={{ padding: 8, border: '1px solid #eee' }}>{user.first_name}</td>
-                  <td style={{ padding: 8, border: '1px solid #eee' }}>{user.last_name}</td>
-                  <td style={{ padding: 8, border: '1px solid #eee' }}>{user.email}</td>
-                  <td style={{ padding: 8, border: '1px solid #eee' }}>{user.status || '-'}</td>
-                  <td style={{ padding: 8, border: '1px solid #eee' }}>
-                    <button onClick={() => { setEditUser(user); setShowEdit(true); reset(user); }} style={{ marginRight: 8, background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                    <button onClick={() => setDeleteUserId(user.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
-                  </td>
+          <>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
+              <thead>
+                <tr style={{ background: '#f3f4f6' }}>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>First Name</th>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Last Name</th>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Email</th>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Status</th>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {users.map(user => (
+                  <tr key={user.id}>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>{user.first_name}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>{user.last_name}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>{user.email}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>{user.status || '-'}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>
+                      <button onClick={() => { setEditUser(user); setShowEdit(true); reset(user); }} style={{ marginRight: 8, background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => setDeleteUserId(user.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 14, color: '#666' }}>Page {currentPage} of {totalPages}</span>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage <= 1}
+                  style={{ background: currentPage <= 1 ? '#ddd' : '#eee', color: '#222', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: currentPage <= 1 ? 'not-allowed' : 'pointer' }}
+                >
+                  Previous
+                </button>
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, idx) => {
+                  let pageNum = idx + 1;
+                  if (totalPages > 7 && currentPage > 4) {
+                    pageNum = currentPage - 3 + idx;
+                    if (pageNum > totalPages) pageNum = totalPages - (6 - idx);
+                  }
+                  return (
+                    <button
+                      key={`user-page-${pageNum}`}
+                      onClick={() => setCurrentPage(pageNum)}
+                      style={{ background: pageNum === currentPage ? '#2d6a4f' : '#f3f4f6', color: pageNum === currentPage ? '#fff' : '#222', border: 'none', borderRadius: 6, padding: '0.45rem 0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage >= totalPages}
+                  style={{ background: currentPage >= totalPages ? '#ddd' : '#2d6a4f', color: currentPage >= totalPages ? '#666' : '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer' }}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
 

@@ -17,12 +17,27 @@ type EmailService struct {
 }
 
 func NewEmailService() *EmailService {
+	emailUser := os.Getenv("SMTP_USER")
+	if emailUser == "" {
+		emailUser = os.Getenv("EMAIL_USER")
+	}
+
+	from := os.Getenv("EMAIL_FROM")
+	if from == "" {
+		from = os.Getenv("SMTP_FROM")
+	}
+
+	password := os.Getenv("SMTP_PASSWORD")
+	if password == "" {
+		password = os.Getenv("EMAIL_PASS")
+	}
+
 	return &EmailService{
 		smtpHost:  os.Getenv("SMTP_HOST"),
 		smtpPort:  os.Getenv("SMTP_PORT"),
-		emailUser: os.Getenv("EMAIL_USER"),
-		from:      os.Getenv("SMTP_FROM"),
-		password:  os.Getenv("EMAIL_PASS"),
+		emailUser: emailUser,
+		from:      from,
+		password:  password,
 	}
 }
 

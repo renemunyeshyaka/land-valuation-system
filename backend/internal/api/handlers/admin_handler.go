@@ -322,3 +322,22 @@ func (h *AdminHandler) RejectProperty(c *gin.Context) {
 
 	utils.SuccessResponse(c, http.StatusOK, "Property rejected", nil)
 }
+
+// GetAllProperties retrieves all properties (admin only)
+// @Router /admin/properties [get]
+func (h *AdminHandler) GetAllProperties(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	status := c.Query("status")
+	propertyType := c.Query("property_type")
+	visibility := c.Query("visibility")
+	search := c.Query("search")
+
+	properties, total, err := h.adminService.GetAllProperties(c.Request.Context(), page, limit, status, propertyType, visibility, search)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve properties", err.Error())
+		return
+	}
+
+	utils.SuccessPaginatedResponse(c, http.StatusOK, "Properties retrieved", properties, total, page, limit)
+}

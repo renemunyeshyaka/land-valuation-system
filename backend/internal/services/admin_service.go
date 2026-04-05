@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strings"
 
 	"backend/internal/models"
 	"backend/internal/repository"
@@ -94,22 +95,58 @@ func (s *AdminService) UpdateSystemConfig(ctx context.Context, config map[string
 	return nil
 }
 
-// GetAuditLogs retrieves audit logs
+// GetAuditLogs retrieves audit logs from the activity_logs table
 func (s *AdminService) GetAuditLogs(ctx context.Context, page, limit int, action, userID string) ([]map[string]interface{}, int, error) {
-	// TODO: Query activity_logs table
-	_ = action
-	_ = userID
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 50
+	}
+	offset := (page - 1) * limit
 
-	logs := []map[string]interface{}{
-		{
-			"id":        "log_1",
-			"user_id":   "user_1",
-			"action":    "user.created",
-			"timestamp": "2026-02-25T10:00:00Z",
-		},
+	type ActivityRow struct {
+		ID           int64  `json:"id"`
+		UserID       int64  `json:"user_id"`
+		Action       string `json:"action"`
+		ResourceType string `json:"resource_type"`
+		ResourceID   *int64 `json:"resource_id"`
+		IPAddress    string `json:"ip_address"`
+		CreatedAt    string `json:"created_at"`
 	}
 
-	return logs, 1, nil
+	query := s.db.WithContext(ctx).Table("activity_logs")
+	if action != "" {
+		query = query.Where("action = ?", action)
+	}
+	if userID != "" {
+		query = query.Where("user_id = ?", userID)
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var rows []ActivityRow
+	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Scan(&rows).Error; err != nil {
+		return nil, 0, err
+	}
+
+	result := make([]map[string]interface{}, len(rows))
+	for i, r := range rows {
+		result[i] = map[string]interface{}{
+			"id":            r.ID,
+			"user_id":       r.UserID,
+			"action":        r.Action,
+			"resource_type": r.ResourceType,
+			"resource_id":   r.ResourceID,
+			"ip_address":    r.IPAddress,
+			"timestamp":     r.CreatedAt,
+		}
+	}
+
+	return result, int(total), nil
 }
 
 // GetSystemHealth retrieves system health status
@@ -126,22 +163,63 @@ func (s *AdminService) GetSystemHealth(ctx context.Context) (map[string]interfac
 	return health, nil
 }
 
-// GetSubscriptions retrieves all subscriptions
+// GetSubscriptions retrieves all subscriptions from the database
 func (s *AdminService) GetSubscriptions(ctx context.Context, page, limit int, status string) ([]map[string]interface{}, int, error) {
-	// TODO: Query subscriptions table
-	_ = status
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+	offset := (page - 1) * limit
 
-	subscriptions := []map[string]interface{}{
-		{
-			"id":         "sub_1",
-			"user_id":    "user_1",
-			"plan_type":  "professional",
-			"status":     "active",
-			"start_date": "2026-01-01",
-		},
+	type SubscriptionRow struct {
+		ID            int64   `json:"id"`
+		UserID        int64   `json:"user_id"`
+		Tier          string  `json:"tier"`
+		PlanType      string  `json:"plan_type"`
+		Status        string  `json:"status"`
+		StartDate     *string `json:"start_date"`
+		EndDate       *string `json:"end_date"`
+		Amount        float64 `json:"amount"`
+		Currency      string  `json:"currency"`
+		PaymentMethod string  `json:"payment_method"`
+		AutoRenew     bool    `json:"auto_renew"`
 	}
 
-	return subscriptions, 1, nil
+	query := s.db.WithContext(ctx).Table("subscriptions")
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var rows []SubscriptionRow
+	if err := query.Order("id DESC").Offset(offset).Limit(limit).Scan(&rows).Error; err != nil {
+		return nil, 0, err
+	}
+
+	result := make([]map[string]interface{}, len(rows))
+	for i, r := range rows {
+		result[i] = map[string]interface{}{
+			"id":             r.ID,
+			"user_id":        r.UserID,
+			"tier":           r.Tier,
+			"plan_type":      r.PlanType,
+			"status":         r.Status,
+			"start_date":     r.StartDate,
+			"end_date":       r.EndDate,
+			"amount":         r.Amount,
+			"currency":       r.Currency,
+			"payment_method": r.PaymentMethod,
+			"auto_renew":     r.AutoRenew,
+		}
+	}
+
+	return result, int(total), nil
 }
 
 // ApproveProperty approves property listing
@@ -155,4 +233,46 @@ func (s *AdminService) RejectProperty(ctx context.Context, propertyID, reason st
 	// TODO: Update property status to rejected and store reason
 	_ = reason
 	return nil
+}
+
+// GetAllProperties retrieves all properties for admin management.
+func (s *AdminService) GetAllProperties(ctx context.Context, page, limit int, status, propertyType, visibility, search string) ([]*models.Property, int, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+
+	offset := (page - 1) * limit
+	query := s.db.WithContext(ctx).Model(&models.Property{})
+
+	if status != "" {
+		query = query.Where("LOWER(status) = ?", strings.ToLower(status))
+	}
+	if propertyType != "" {
+		query = query.Where("LOWER(property_type) = ?", strings.ToLower(propertyType))
+	}
+	if visibility != "" {
+		query = query.Where("LOWER(visibility) = ?", strings.ToLower(visibility))
+	}
+	if search != "" {
+		q := "%" + strings.ToLower(search) + "%"
+		query = query.Where(
+			"LOWER(title) LIKE ? OR LOWER(description) LIKE ? OR LOWER(district) LIKE ? OR LOWER(sector) LIKE ? OR LOWER(address) LIKE ? OR LOWER(upi) LIKE ?",
+			q, q, q, q, q, q,
+		)
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var properties []*models.Property
+	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&properties).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return properties, int(total), nil
 }
