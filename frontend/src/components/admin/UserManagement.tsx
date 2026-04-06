@@ -29,7 +29,7 @@ const UserManagement: React.FC = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
-  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [deleteUserId, setDeleteUserId] = useState<string | number | null>(null);
 
   const { register, handleSubmit, reset } = useForm<User>();
 
@@ -161,7 +161,7 @@ const UserManagement: React.FC = () => {
   };
 
   // Delete user
-  const onDelete = async (id: string, allowRetry = true) => {
+  const onDelete = async (id: string | number, allowRetry = true) => {
     try {
       const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
       if (storedUser) {
