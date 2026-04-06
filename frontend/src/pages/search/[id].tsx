@@ -23,6 +23,9 @@ const PropertyDetail: React.FC = () => {
   const { data: session, status } = useSession();
   const { id } = router.query;
   const [loading, setLoading] = useState(true);
+  const [hasAccess, setHasAccess] = useState(false);
+  const [accessMessage, setAccessMessage] = useState<string | null>(null);
+  const [remoteProperty, setRemoteProperty] = useState<any | null>(null);
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactMessage, setContactMessage] = useState('');
@@ -81,7 +84,7 @@ const PropertyDetail: React.FC = () => {
     },
   };
 
-  const property = propertyData[String(id)] || null;
+  const property = propertyData[String(id)] || remoteProperty || null;
 
   // Get similar properties (different property types)
   const similarProperties = [
@@ -91,12 +94,110 @@ const PropertyDetail: React.FC = () => {
   ];
 
   useEffect(() => {
-    if (id && property) {
-      setLoading(false);
-    } else if (id) {
-      setLoading(false);
+    if (!router.isReady || !id) {
+      return;
     }
-  }, [id, property]);
+
+    const checkAccess = async () => {
+      const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+      if (!accessToken) {
+        setAccessMessage('Please log in to view property details.');
+        router.replace(`/auth/login?next=${encodeURIComponent(router.asPath)}`);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+        const response = await fetch(`${apiBaseUrl}/api/v1/users/profile`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          setAccessMessage('Your session has expired. Please log in again.');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('user');
+          router.replace(`/auth/login?next=${encodeURIComponent(router.asPath)}`);
+          setLoading(false);
+          return;
+        }
+
+        const payload = await response.json();
+        const userData = payload?.data || {};
+        const userTier = String(userData.subscription_tier || 'free').toLowerCase();
+        const allowedTiers = ['basic', 'professional', 'ultimate', 'enterprise'];
+
+        if (!allowedTiers.includes(userTier)) {
+          setAccessMessage('Property details are available on Basic, Professional, or Ultimate plans.');
+          setHasAccess(false);
+          setLoading(false);
+          return;
+        }
+
+        // Load the selected marketplace property by id to support real listings.
+        try {
+          const listingResponse = await fetch(`${apiBaseUrl}/api/v1/marketplace/properties-for-sale?t=${Date.now()}`, {
+            cache: 'no-store',
+          });
+          if (listingResponse.ok) {
+            const listingPayload = await listingResponse.json();
+            const listingArray = listingPayload?.data?.data;
+            if (Array.isArray(listingArray)) {
+              const selected = listingArray.find((item: any) => String(item.id) === String(id));
+              if (selected) {
+                const images = Array.isArray(selected.images)
+                  ? selected.images
+                  : (selected.images ? [selected.images] : []);
+                const parsedSize = Number(selected.plot_size_sqm || selected.land_size || 0);
+                const normalizedLocation = [selected.district, selected.sector, selected.cell]
+                  .filter(Boolean)
+                  .join(', ');
+                const normalizedPrice = Number(selected.price || 0);
+
+                setRemoteProperty({
+                  id: String(selected.id),
+                  location: selected.title || normalizedLocation || `Property ${selected.id}`,
+                  district: selected.district || 'N/A',
+                  sector: selected.sector || 'N/A',
+                  cell: selected.cell || 'N/A',
+                  propertyType: selected.property_type || 'Land',
+                  size: Number.isFinite(parsedSize) ? parsedSize : 0,
+                  price: Number.isFinite(normalizedPrice) ? normalizedPrice : 0,
+                  image: images[0] || '',
+                  images,
+                  valuation: Number(selected.valuation || normalizedPrice || 0),
+                  valuationDate: selected.valuation_date || new Date().toISOString().slice(0, 10),
+                  valuationExpiry: selected.valuation_expiry || '2027-12-31',
+                  assessor: selected.assessor || 'LandVal Automated Valuation',
+                  description: selected.description || 'No description provided for this property yet.',
+                  features: Array.isArray(selected.features)
+                    ? selected.features
+                    : (selected.features ? [selected.features] : []),
+                  amenities: Array.isArray(selected.amenities)
+                    ? selected.amenities
+                    : (selected.amenities ? [selected.amenities] : []),
+                  featured: Boolean(selected.featured),
+                });
+              }
+            }
+          }
+        } catch (listingError) {
+          console.debug('Failed to load selected listing details:', listingError);
+        }
+
+        setHasAccess(true);
+        setAccessMessage(null);
+      } catch (error) {
+        setAccessMessage('Unable to verify your account right now. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void checkAccess();
+  }, [id, router, router.asPath, router.isReady]);
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,6 +224,38 @@ const PropertyDetail: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <i className="fas fa-spinner fa-spin text-4xl text-emerald-700"></i>
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+        <i className="fas fa-lock text-5xl text-amber-500 mb-4"></i>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">Access Restricted</h1>
+        <p className="text-gray-600 mb-6 text-center max-w-xl">
+          {accessMessage || 'You need an active subscription to view this property details page.'}
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href="/auth/login"
+            className="px-6 py-3 bg-emerald-700 text-white font-medium rounded-lg hover:bg-emerald-800 transition-colors"
+          >
+            Log in
+          </Link>
+          <Link
+            href="/dashboard/subscription"
+            className="px-6 py-3 bg-white text-emerald-700 border border-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors"
+          >
+            Upgrade Plan
+          </Link>
+          <Link
+            href="/marketplace"
+            className="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            Back to Marketplace
+          </Link>
+        </div>
       </div>
     );
   }

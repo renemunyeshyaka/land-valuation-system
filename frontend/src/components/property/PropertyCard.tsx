@@ -90,7 +90,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       </div>
 
       <div className="p-5">
-        <Link href={`/property/${property.id}`}>
+        <Link href={`/search/${property.id}`}>
           <h3 className="font-semibold text-gray-900 hover:text-green-600 transition mb-2 line-clamp-1">
             {property.title}
           </h3>
@@ -159,7 +159,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-2 mt-4">
-          <Link href={`/property/${property.id}`}>
+          <Link href={`/search/${property.id}`}>
             <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center justify-center">
               <Search className="w-4 h-4 mr-1" />
               View Details
