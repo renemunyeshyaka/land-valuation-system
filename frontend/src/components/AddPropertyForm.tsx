@@ -1,12 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import adminHierarchyRaw from '../data/land_admin_hierarchy_from_csv.json';
 
 interface PropertyFormData {
   title: string;
   description: string;
   propertyType: string;
   visibility: 'public' | 'registered' | 'only_me';
+  province: string;
   district: string;
   sector: string;
   cell: string;
@@ -37,11 +39,25 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
   const imageInputRef = useRef<HTMLInputElement>(null);
   const documentInputRef = useRef<HTMLInputElement>(null);
 
+  // Cascading location hierarchy
+  type AdminHierarchy = {
+    [province: string]: {
+      [district: string]: {
+        [sector: string]: {
+          [cell: string]: string[];
+        };
+      };
+    };
+  };
+  const adminHierarchy: AdminHierarchy = adminHierarchyRaw as AdminHierarchy;
+  const provinceNames = Object.keys(adminHierarchy);
+
   const [formData, setFormData] = useState<PropertyFormData>({
     title: 'Residential Land',
     description: '',
     propertyType: 'residential',
     visibility: 'public',
+    province: '',
     district: '',
     sector: '',
     cell: '',
@@ -86,16 +102,11 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
     return (bytes / (1024 * 1024)).toFixed(2);
   };
 
-  const districts = [
-    'Kigali City',
-    'Musanze',
-    'Rubavu',
-    'Huye',
-    'Nyagatare',
-    'Rusizi',
-    'Muhanga',
-    'Karongi'
-  ];
+  // Cascading options derived from selected values
+  const districtNames = formData.province ? Object.keys(adminHierarchy[formData.province] || {}) : [];
+  const sectorNames = formData.province && formData.district ? Object.keys((adminHierarchy[formData.province] || {})[formData.district] || {}) : [];
+  const cellNames = formData.province && formData.district && formData.sector ? Object.keys(((adminHierarchy[formData.province] || {})[formData.district] || {})[formData.sector] || {}) : [];
+  const villageNames = formData.province && formData.district && formData.sector && formData.cell ? (((adminHierarchy[formData.province] || {})[formData.district] || {})[formData.sector] || {})[formData.cell] || [] : [];
 
   const propertyTypes = [
     { value: 'residential', label: 'Residential Land' },
@@ -115,6 +126,24 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
         propertyType: value,
         title: selected ? selected.label : prev.title,
       }));
+      return;
+    }
+
+    // Cascade reset downstream location fields
+    if (name === 'province') {
+      setFormData(prev => ({ ...prev, province: value, district: '', sector: '', cell: '', village: '' }));
+      return;
+    }
+    if (name === 'district') {
+      setFormData(prev => ({ ...prev, district: value, sector: '', cell: '', village: '' }));
+      return;
+    }
+    if (name === 'sector') {
+      setFormData(prev => ({ ...prev, sector: value, cell: '', village: '' }));
+      return;
+    }
+    if (name === 'cell') {
+      setFormData(prev => ({ ...prev, cell: value, village: '' }));
       return;
     }
 
@@ -318,8 +347,11 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
           property_type: formData.propertyType,
           visibility: formData.visibility,
           upi: formData.parcelId,
+          province: formData.province,
           district: formData.district,
           sector: formData.sector,
+          cell: formData.cell,
+          village: formData.village,
           address: formData.address,
           latitude,
           longitude,
@@ -581,66 +613,97 @@ export default function AddPropertyForm({ onSubmit, isAdmin = false }: AddProper
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Province *
+                </label>
+                <select
+                  name="province"
+                  value={formData.province}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Select Province</option>
+                  {provinceNames.map(p => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   District *
                 </label>
                 <select
                   name="district"
                   value={formData.district}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={!formData.province}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
                   required
                 >
                   <option value="">Select District</option>
-                  {districts.map(district => (
-                    <option key={district} value={district}>
-                      {district}
-                    </option>
+                  {districtNames.map(d => (
+                    <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sector *
-                </label>
-                <input
-                  type="text"
-                  name="sector"
-                  value={formData.sector}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Nyarugenge"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cell
+                  Sector *
                 </label>
-                <input
-                  type="text"
-                  name="cell"
-                  value={formData.cell}
+                <select
+                  name="sector"
+                  value={formData.sector}
                   onChange={handleInputChange}
-                  placeholder="e.g., Muhima"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                  disabled={!formData.district}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+                  required
+                >
+                  <option value="">Select Sector</option>
+                  {sectorNames.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Village
+                  Cell *
                 </label>
-                <input
-                  type="text"
-                  name="village"
-                  value={formData.village}
+                <select
+                  name="cell"
+                  value={formData.cell}
                   onChange={handleInputChange}
-                  placeholder="e.g., Akagera"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                  disabled={!formData.sector}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+                  required
+                >
+                  <option value="">Select Cell</option>
+                  {cellNames.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Village *
+              </label>
+              <select
+                name="village"
+                value={formData.village}
+                onChange={handleInputChange}
+                disabled={!formData.cell}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+                required
+              >
+                <option value="">Select Village</option>
+                {villageNames.map(v => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </select>
             </div>
 
             <div>
