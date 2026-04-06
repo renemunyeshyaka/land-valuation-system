@@ -7,16 +7,16 @@
 
 ---
 
-## 🚀 Status: MVP in Progress (Week 1 Complete)
+## 🚀 Status: MVP in Progress (April 2026 Snapshot)
 
 | Phase | Status | Completion | ETA |
 |-------|--------|-----------|-----|
 | **Week 1:** Backend + Auth | ✅ Complete | 95% | Mar 6 ✓ |
-| **Week 2:** Frontend + Payments | 🔄 In Progress | 40% | Mar 13 |
-| **Week 3:** Testing + Polish | 📅 Planned | 0% | Mar 20 |
-| **Week 4:** Deployment + Launch | 📅 Planned | 0% | Apr 13 |
+| **Week 2:** Frontend + Payments | 🔄 In Progress | 70% | Revalidated in April |
+| **Week 3:** Testing + Polish | 🔄 In Progress | 45% | Revalidated in April |
+| **Week 4:** Deployment + Launch | ⏳ Pending Final Validation | 20% | Launch window under review |
 
-**🎯 Launch Target:** April 13, 2026 | **Mode:** Solo Developer (40-50 hrs/week)
+**🎯 Launch Target:** Under active revalidation (April 2026) | **Mode:** Solo Developer (40-50 hrs/week)
 
 ### 📚 **START HERE:**
 - 👉 **[START_HERE.md](docs/START_HERE.md)** — Quick start in 5 minutes

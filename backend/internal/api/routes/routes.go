@@ -244,6 +244,7 @@ func setupAdminRoutes(router *gin.Engine, db *gorm.DB) {
 		admin.GET("/users", adminHandler.GetAllUsers)
 		admin.GET("/users/list", userHandler.ListUsers) // New paginated/filterable endpoint
 		admin.GET("/users/:id", adminHandler.GetUser)
+		admin.DELETE("/users/:id", adminHandler.DeleteUser)
 		admin.GET("/users/export", userHandler.ExportUsers) // Export users as CSV/PDF
 		admin.POST("/users/:id/verify-kyc", adminHandler.VerifyUserKYC)
 		admin.POST("/users/:id/suspend", adminHandler.SuspendUser)

@@ -59,6 +59,36 @@ func (h *AdminHandler) GetUser(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "User retrieved", user)
 }
 
+// DeleteUser soft-deletes a user account (admin only)
+// @Router /admin/users/{id} [delete]
+func (h *AdminHandler) DeleteUser(c *gin.Context) {
+	userID := c.Param("id")
+	requestUserID := c.GetString("user_id")
+
+	if userID == "" {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid user ID", "")
+		return
+	}
+
+	if requestUserID != "" && requestUserID == userID {
+		utils.ErrorResponse(c, http.StatusForbidden, "User deletion failed", "Admins cannot delete their own account from the admin panel")
+		return
+	}
+
+	if err := h.adminService.DeleteUser(c.Request.Context(), userID); err != nil {
+		if err.Error() == "user not found" {
+			utils.ErrorResponse(c, http.StatusNotFound, "User deletion failed", err.Error())
+			return
+		}
+		utils.ErrorResponse(c, http.StatusInternalServerError, "User deletion failed", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "User deleted", gin.H{
+		"user_id": userID,
+	})
+}
+
 // VerifyUserKYC verifies user KYC (admin only)
 // @Summary Verify user KYC (Admin)
 // @Description Approve or reject the KYC verification submitted by a user (admin only)

@@ -160,6 +160,20 @@ const UserManagement: React.FC = () => {
   // Delete user
   const onDelete = async (id: string, allowRetry = true) => {
     try {
+      const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+      if (storedUser) {
+        try {
+          const currentUser = JSON.parse(storedUser);
+          if (String(currentUser?.id) === String(id)) {
+            setDeleteUserId(null);
+            setError('You cannot delete your own admin account from this screen.');
+            return;
+          }
+        } catch (parseError) {
+          console.debug('Failed to parse stored user during delete check:', parseError);
+        }
+      }
+
       await axios.delete(`${API_BASE_URL}/api/v1/admin/users/${id}`, getAuthConfig());
       setDeleteUserId(null);
       fetchUsers(search, currentPage);
@@ -171,7 +185,7 @@ const UserManagement: React.FC = () => {
           return;
         }
       }
-      setError('Failed to delete user');
+      setError(err?.response?.data?.error?.message || err?.response?.data?.message || 'Failed to delete user');
     }
   };
 
