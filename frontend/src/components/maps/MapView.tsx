@@ -58,7 +58,7 @@ export default function MapView({ properties, center, onLocationSelect }: MapVie
         <div class="p-3 min-w-[200px]">
           <h3 class="font-semibold text-gray-900 mb-1">${property.title}</h3>
           <p class="text-sm text-gray-600 mb-2">${property.district}</p>
-          <p class="text-lg font-bold text-green-600">RWF ${property.price.toLocaleString()}</p>
+          <p class="text-lg font-bold text-green-600">RWF ${Number(property.price).toLocaleString()}</p>
           <p class="text-xs text-gray-500 mt-2">${property.landSize} ${property.sizeUnit}</p>
           <a href="/property/${property.id}" class="mt-2 inline-block text-sm text-blue-600 hover:underline">View Details →</a>
         </div>

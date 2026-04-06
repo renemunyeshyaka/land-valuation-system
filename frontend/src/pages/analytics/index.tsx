@@ -66,11 +66,11 @@ const Analytics: React.FC = () => {
 
   // Mock top locations
   const topLocations = [
-    { location: 'Kigali Central', valuations: 487, avgPrice: 'FRW 85.2M', trend: '+18%' },
-    { location: 'Nyarutarama', valuations: 342, avgPrice: 'FRW 52.6M', trend: '+12%' },
-    { location: 'Kimironko', valuations: 298, avgPrice: 'FRW 45.3M', trend: '+8%' },
-    { location: 'Rebero', valuations: 214, avgPrice: 'FRW 38.9M', trend: '+5%' },
-    { location: 'Gisozi', valuations: 187, avgPrice: 'FRW 32.1M', trend: '+3%' },
+    { location: 'Kigali Central', valuations: 487, avgPrice: 'RWF 85.2M', trend: '+18%' },
+    { location: 'Nyarutarama', valuations: 342, avgPrice: 'RWF 52.6M', trend: '+12%' },
+    { location: 'Kimironko', valuations: 298, avgPrice: 'RWF 45.3M', trend: '+8%' },
+    { location: 'Rebero', valuations: 214, avgPrice: 'RWF 38.9M', trend: '+5%' },
+    { location: 'Gisozi', valuations: 187, avgPrice: 'RWF 32.1M', trend: '+3%' },
   ];
 
   // Mock property types
@@ -235,7 +235,7 @@ const Analytics: React.FC = () => {
                     <div key={idx}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-gray-700">{item.month}</span>
-                        <span className="text-sm font-semibold text-emerald-700">FRW {(item.revenue / 100).toFixed(0)}k</span>
+                        <span className="text-sm font-semibold text-emerald-700">RWF {(item.revenue / 100).toFixed(0)}k</span>
                       </div>
                       <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
                         <div
@@ -243,14 +243,14 @@ const Analytics: React.FC = () => {
                           style={{ width: `${(item.revenue / 4000) * 100}%` }}
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Profit: FRW {(item.revenue - item.costs)}k</p>
+                      <p className="text-xs text-gray-500 mt-1">Profit: RWF {(item.revenue - item.costs)}k</p>
                     </div>
                   ))}
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <p className="text-sm text-gray-600">Total Revenue (3M)</p>
-                  <p className="text-3xl font-bold text-emerald-700 mt-1">FRW 9.3M</p>
+                  <p className="text-3xl font-bold text-emerald-700 mt-1">RWF 9.3M</p>
                   <p className="text-xs text-green-600 mt-2">
                     <i className="fas fa-arrow-up mr-1"></i>
                     +58.3% from previous quarter

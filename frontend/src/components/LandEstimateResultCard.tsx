@@ -19,22 +19,22 @@ const LandEstimateResultCard: React.FC<LandEstimateResultCardProps> = ({ estimat
         <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
           <i className="fas fa-arrow-down text-blue-500" title="Lowest comparable value per sqm"></i>
           <span className="font-medium text-blue-700" title="Lowest comparable value per sqm">Min Value/sqm</span>
-          <span className="ml-auto text-blue-900 font-bold" title={`${Number(estimateResult.min_value_per_sqm).toLocaleString()} FRW/sqm`}>
-            FRW {Number(estimateResult.min_value_per_sqm).toLocaleString()}
+          <span className="ml-auto text-blue-900 font-bold" title={`${Number(estimateResult.min_value_per_sqm).toLocaleString()} RWF/sqm`}>
+            RWF {Number(estimateResult.min_value_per_sqm).toLocaleString()}
           </span>
         </div>
         <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
           <i className="fas fa-balance-scale text-emerald-500" title="Weighted average value per sqm"></i>
           <span className="font-medium text-emerald-700" title="Weighted average value per sqm">Weighted Avg/sqm</span>
-          <span className="ml-auto text-emerald-900 font-bold" title={`${Number(estimateResult.weighted_avg_value_per_sqm).toLocaleString()} FRW/sqm`}>
-            FRW {Number(estimateResult.weighted_avg_value_per_sqm).toLocaleString()}
+          <span className="ml-auto text-emerald-900 font-bold" title={`${Number(estimateResult.weighted_avg_value_per_sqm).toLocaleString()} RWF/sqm`}>
+            RWF {Number(estimateResult.weighted_avg_value_per_sqm).toLocaleString()}
           </span>
         </div>
         <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-lg p-3">
           <i className="fas fa-arrow-up text-rose-500" title="Highest comparable value per sqm"></i>
           <span className="font-medium text-rose-700" title="Highest comparable value per sqm">Max Value/sqm</span>
-          <span className="ml-auto text-rose-900 font-bold" title={`${Number(estimateResult.max_value_per_sqm).toLocaleString()} FRW/sqm`}>
-            FRW {Number(estimateResult.max_value_per_sqm).toLocaleString()}
+          <span className="ml-auto text-rose-900 font-bold" title={`${Number(estimateResult.max_value_per_sqm).toLocaleString()} RWF/sqm`}>
+            RWF {Number(estimateResult.max_value_per_sqm).toLocaleString()}
           </span>
         </div>
       </div>
@@ -42,29 +42,29 @@ const LandEstimateResultCard: React.FC<LandEstimateResultCardProps> = ({ estimat
         <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
           <i className="fas fa-arrow-down text-blue-500" title="Total minimum value estimate"></i>
           <span className="font-medium text-blue-700" title="Total minimum value estimate">Total Min Value</span>
-          <span className="ml-auto text-blue-900 font-bold" title={`${Number(estimateResult.total_min_value).toLocaleString()} FRW`}>
-            FRW {Number(estimateResult.total_min_value).toLocaleString()}
+          <span className="ml-auto text-blue-900 font-bold" title={`${Number(estimateResult.total_min_value).toLocaleString()} RWF`}>
+            RWF {Number(estimateResult.total_min_value).toLocaleString()}
           </span>
         </div>
         <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
           <i className="fas fa-balance-scale text-emerald-500" title="Total weighted average value estimate"></i>
           <span className="font-medium text-emerald-700" title="Total weighted average value estimate">Total Weighted Avg</span>
-          <span className="ml-auto text-emerald-900 font-bold" title={`${Number(estimateResult.total_weighted_avg_value).toLocaleString()} FRW`}>
-            FRW {Number(estimateResult.total_weighted_avg_value).toLocaleString()}
+          <span className="ml-auto text-emerald-900 font-bold" title={`${Number(estimateResult.total_weighted_avg_value).toLocaleString()} RWF`}>
+            RWF {Number(estimateResult.total_weighted_avg_value).toLocaleString()}
           </span>
         </div>
         <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-lg p-3">
           <i className="fas fa-arrow-up text-rose-500" title="Total maximum value estimate"></i>
           <span className="font-medium text-rose-700" title="Total maximum value estimate">Total Max Value</span>
-          <span className="ml-auto text-rose-900 font-bold" title={`${Number(estimateResult.total_max_value).toLocaleString()} FRW`}>
-            FRW {Number(estimateResult.total_max_value).toLocaleString()}
+          <span className="ml-auto text-rose-900 font-bold" title={`${Number(estimateResult.total_max_value).toLocaleString()} RWF`}>
+            RWF {Number(estimateResult.total_max_value).toLocaleString()}
           </span>
         </div>
       </div>
       <div className="mt-4 text-xs text-gray-500 flex items-center gap-2">
         <i className="fas fa-info-circle"></i>
         <span>
-          <b>Tip:</b> Weighted average is highlighted as the most reliable estimate. All values are in Rwandan Francs (FRW) and formatted for clarity.
+          <b>Tip:</b> Weighted average is highlighted as the most reliable estimate. All values are in Rwandan Francs (RWF) and formatted for clarity.
         </span>
       </div>
       {/* Important Note: 6 conditions for maximum price */}

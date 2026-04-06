@@ -700,7 +700,7 @@ const Dashboard: React.FC = () => {
                       <h3 className="text-sm font-medium text-gray-600">Avg Value</h3>
                       <i className="fas fa-coins text-yellow-600 text-lg"></i>
                     </div>
-                    <p className="text-3xl font-bold text-gray-800">FRW 140M</p>
+                    <p className="text-3xl font-bold text-gray-800">RWF 140M</p>
                     <p className="text-xs text-gray-500 mt-2">Average valuation price</p>
                   </div>
                 </div>
@@ -726,7 +726,7 @@ const Dashboard: React.FC = () => {
                               <td className="py-3 px-2 text-gray-800">{valuation.location}</td>
                               <td className="py-3 px-2 text-gray-700">{valuation.area.toLocaleString('en-US')}</td>
                               <td className="py-3 px-2 text-right font-medium text-emerald-700">
-                                FRW {(valuation.valuationPrice / 1000000).toFixed(0)}M
+                                RWF {(valuation.valuationPrice / 1000000).toFixed(0)}M
                               </td>
                               <td className="py-3 px-2 text-gray-600">
                                 {new Date(valuation.createdAt).toLocaleDateString('en-US', { 
@@ -884,7 +884,7 @@ const Dashboard: React.FC = () => {
                       <p className="text-gray-600">Referrals</p>
                     </div>
                     <div className="p-2.5 bg-gray-50 rounded">
-                      <p className="text-xl font-bold text-emerald-700">FRW 0</p>
+                      <p className="text-xl font-bold text-emerald-700">RWF 0</p>
                       <p className="text-gray-600">Earned</p>
                     </div>
                   </div>
