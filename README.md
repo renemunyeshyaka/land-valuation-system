@@ -317,7 +317,7 @@ Registered users can advertise their land or property for sale on the platform:
 
 All properties listed by users are displayed on the `/marketplace` page.
 
-- The Marketplace shows 12 properties per page, with pagination controls (Previous, page numbers, Next) for easy navigation.
+- The Marketplace shows 16 properties per page, with pagination controls (Previous, page numbers, Next) for easy navigation.
 - Properties are displayed in a responsive grid (4 columns on large screens, 3 on medium, 2 on small, 1 on mobile).
 - Users can browse, search, and view property details directly from the Marketplace.
 

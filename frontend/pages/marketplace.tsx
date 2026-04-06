@@ -33,7 +33,7 @@ export default function Marketplace() {
   const [error, setError] = useState<string | null>(null);
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(9); // Properties per page
+  const [pageSize] = useState(16); // Properties per page
   const [search, setSearch] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
