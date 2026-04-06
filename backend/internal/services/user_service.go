@@ -1,8 +1,8 @@
-
 package services
 
 import (
 	"context"
+	"strings"
 
 	"backend/internal/models"
 	"backend/internal/repository"
@@ -62,6 +62,35 @@ func (s *UserService) UpdateUser(ctx context.Context, userID string, updates *mo
 	}
 	if updates.Country != "" {
 		user.Country = updates.Country
+	}
+
+	return s.userRepo.Update(ctx, user)
+}
+
+// UpdateUserByAdmin updates user profile and high-level status from the admin panel.
+func (s *UserService) UpdateUserByAdmin(ctx context.Context, userID, firstName, lastName, email, status string) (*models.User, error) {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if firstName != "" {
+		user.FirstName = firstName
+	}
+	if lastName != "" {
+		user.LastName = lastName
+	}
+	if email != "" {
+		user.Email = email
+	}
+
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case "active":
+		user.IsActive = true
+		user.KYCStatus = "active"
+	case "pending":
+		user.IsActive = false
+		user.KYCStatus = "pending"
 	}
 
 	return s.userRepo.Update(ctx, user)

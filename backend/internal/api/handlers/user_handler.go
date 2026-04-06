@@ -71,6 +71,13 @@ type UserHandler struct {
 	userService *services.UserService
 }
 
+type AdminUpdateUserRequest struct {
+	FirstName string `json:"first_name" binding:"required,min=1"`
+	LastName  string `json:"last_name" binding:"required,min=1"`
+	Email     string `json:"email" binding:"required,email"`
+	Status    string `json:"status" binding:"omitempty,oneof=pending active"`
+}
+
 // ExportUsers allows admin to export user data as CSV or PDF
 // @Summary Export users (admin)
 // @Description Export all users as CSV or PDF
@@ -149,6 +156,36 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 	return &UserHandler{
 		userService: userService,
 	}
+}
+
+// UpdateUserByAdmin allows admin to update basic user profile fields and status.
+func (h *UserHandler) UpdateUserByAdmin(c *gin.Context) {
+	userID := c.Param("id")
+	if userID == "" {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid user ID", "")
+		return
+	}
+
+	var req AdminUpdateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		return
+	}
+
+	updatedUser, err := h.userService.UpdateUserByAdmin(
+		c.Request.Context(),
+		userID,
+		req.FirstName,
+		req.LastName,
+		req.Email,
+		req.Status,
+	)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Failed to update user", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "User updated", updatedUser)
 }
 
 // GetProfile retrieves user profile

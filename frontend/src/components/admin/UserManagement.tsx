@@ -57,6 +57,16 @@ const UserManagement: React.FC = () => {
   };
 
 
+  const getApiErrorMessage = (err: any, fallback: string) => {
+    return (
+      err?.response?.data?.error?.message ||
+      err?.response?.data?.error ||
+      err?.response?.data?.message ||
+      err?.message ||
+      fallback
+    );
+  };
+
   // Fetch users with optional search
   const fetchUsers = async (searchQuery?: string, page = currentPage, allowRetry = true) => {
     setLoading(true);
@@ -98,7 +108,7 @@ const UserManagement: React.FC = () => {
         }
       }
       setUsers([]); // Always set an array to avoid .map errors
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to fetch users');
+      setError(getApiErrorMessage(err, 'Failed to fetch users'));
     }
     setLoading(false);
   };
@@ -128,7 +138,7 @@ const UserManagement: React.FC = () => {
             return;
           }
         }
-        setError('Failed to add user');
+        setError(getApiErrorMessage(err, 'Failed to add user'));
       }
     };
 
@@ -140,7 +150,13 @@ const UserManagement: React.FC = () => {
     if (!editUser) return;
     const run = async (allowRetry: boolean) => {
       try {
-        await axios.put(`${API_BASE_URL}/api/v1/admin/users/${editUser.id}`, data, getAuthConfig());
+        const payload = {
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          status: (data.status || 'pending').toLowerCase() === 'active' ? 'active' : 'pending',
+        };
+        await axios.put(`${API_BASE_URL}/api/v1/admin/users/${editUser.id}`, payload, getAuthConfig());
         setShowEdit(false);
         setEditUser(null);
         reset();
@@ -153,7 +169,7 @@ const UserManagement: React.FC = () => {
             return;
           }
         }
-        setError('Failed to edit user');
+        setError(getApiErrorMessage(err, 'Failed to edit user'));
       }
     };
 
@@ -188,7 +204,7 @@ const UserManagement: React.FC = () => {
           return;
         }
       }
-      setError(err?.response?.data?.error?.message || err?.response?.data?.message || 'Failed to delete user');
+      setError(getApiErrorMessage(err, 'Failed to delete user'));
     }
   };
 
@@ -200,6 +216,13 @@ const UserManagement: React.FC = () => {
     if (user.subscription_status && String(user.subscription_status).trim() !== '') return String(user.subscription_status);
     if (typeof user.is_active === 'boolean') return user.is_active ? 'active' : 'inactive';
     return '-';
+  };
+
+  const getEditableStatus = (user: User): 'pending' | 'active' => {
+    const status = getUserStatusLabel(user).toLowerCase();
+    if (status === 'active') return 'active';
+    if (typeof user.is_active === 'boolean') return user.is_active ? 'active' : 'pending';
+    return 'pending';
   };
 
   return (
@@ -258,7 +281,7 @@ const UserManagement: React.FC = () => {
                     <td style={{ padding: 8, border: '1px solid #eee' }}>{user.email}</td>
                     <td style={{ padding: 8, border: '1px solid #eee' }}>{getUserStatusLabel(user)}</td>
                     <td style={{ padding: 8, border: '1px solid #eee' }}>
-                      <button onClick={() => { setEditUser(user); setShowEdit(true); reset(user); }} style={{ marginRight: 8, background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => { setEditUser(user); setShowEdit(true); reset({ ...user, status: getEditableStatus(user) }); }} style={{ marginRight: 8, background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                       <button onClick={() => setDeleteUserId(user.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                     </td>
                   </tr>
@@ -328,6 +351,10 @@ const UserManagement: React.FC = () => {
             <input {...register('first_name', { required: true })} placeholder="First Name" style={{ width: '100%', marginBottom: 12, padding: 8 }} />
             <input {...register('last_name', { required: true })} placeholder="Last Name" style={{ width: '100%', marginBottom: 12, padding: 8 }} />
             <input {...register('email', { required: true })} placeholder="Email" type="email" style={{ width: '100%', marginBottom: 12, padding: 8 }} />
+            <select {...register('status', { required: true })} style={{ width: '100%', marginBottom: 12, padding: 8 }}>
+              <option value="pending">Pending</option>
+              <option value="active">Active</option>
+            </select>
             <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
               <button type="submit" style={{ background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Save</button>
               <button type="button" onClick={() => { setShowEdit(false); setEditUser(null); }} style={{ background: '#eee', color: '#222', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
