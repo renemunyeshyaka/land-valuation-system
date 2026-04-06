@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { resolveImageUrl } from '../../utils/image';
+import adminHierarchyRaw from '../../data/land_admin_hierarchy_from_csv.json';
 
 type Property = {
   id: number;
@@ -11,8 +12,13 @@ type Property = {
   title: string;
   description?: string;
   property_type: string;
+  province?: string;
   district: string;
   sector: string;
+  cell?: string;
+  village?: string;
+  latitude?: number;
+  longitude?: number;
   price: number;
   status: string;
   visibility: 'public' | 'registered' | 'only_me';
@@ -25,6 +31,13 @@ type EditableProperty = {
   title: string;
   description: string;
   property_type: string;
+  province: string;
+  district: string;
+  sector: string;
+  cell: string;
+  village: string;
+  latitude: string;
+  longitude: string;
   price: string;
   status: string;
   visibility: 'public' | 'registered' | 'only_me';
@@ -34,8 +47,20 @@ type EditableProperty = {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 const CARD_PLACEHOLDER = 'https://placehold.co/192x192/e5e7eb/6b7280?text=No+Image';
 
+type AdminHierarchy = {
+  [province: string]: {
+    [district: string]: {
+      [sector: string]: {
+        [cell: string]: string[];
+      };
+    };
+  };
+};
+
 export default function DashboardPropertiesPage() {
   const router = useRouter();
+  const adminHierarchy: AdminHierarchy = adminHierarchyRaw as AdminHierarchy;
+  const provinceNames = Object.keys(adminHierarchy);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -45,6 +70,11 @@ export default function DashboardPropertiesPage() {
   const [editingImages, setEditingImages] = useState<string[]>([]);
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+
+  const districtNames = editing?.province ? Object.keys(adminHierarchy[editing.province] || {}) : [];
+  const sectorNames = editing?.province && editing?.district ? Object.keys((adminHierarchy[editing.province] || {})[editing.district] || {}) : [];
+  const cellNames = editing?.province && editing?.district && editing?.sector ? Object.keys(((adminHierarchy[editing.province] || {})[editing.district] || {})[editing.sector] || {}) : [];
+  const villageNames = editing?.province && editing?.district && editing?.sector && editing?.cell ? (((adminHierarchy[editing.province] || {})[editing.district] || {})[editing.sector] || {})[editing.cell] || [] : [];
 
   const accessToken = useMemo(() => {
     if (typeof window === 'undefined') {
@@ -109,6 +139,13 @@ export default function DashboardPropertiesPage() {
       title: property.title,
       description: property.description || '',
       property_type: property.property_type,
+      province: property.province || '',
+      district: property.district || '',
+      sector: property.sector || '',
+      cell: property.cell || '',
+      village: property.village || '',
+      latitude: property.latitude != null ? String(property.latitude) : '',
+      longitude: property.longitude != null ? String(property.longitude) : '',
       price: String(property.price),
       status: property.status,
       visibility: property.visibility || 'public',
@@ -221,6 +258,13 @@ export default function DashboardPropertiesPage() {
           title: editing.title,
           description: editing.description,
           property_type: editing.property_type,
+          province: editing.province,
+          district: editing.district,
+          sector: editing.sector,
+          cell: editing.cell,
+          village: editing.village,
+          latitude: editing.latitude !== '' ? Number(editing.latitude) : undefined,
+          longitude: editing.longitude !== '' ? Number(editing.longitude) : undefined,
           price: numericPrice,
           status: editing.status,
           visibility: editing.visibility,
@@ -400,6 +444,86 @@ export default function DashboardPropertiesPage() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
                   placeholder="Property type"
                 />
+                <select
+                  value={editing.province}
+                  onChange={(e) =>
+                    setEditing({ ...editing, province: e.target.value, district: '', sector: '', cell: '', village: '' })
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                >
+                  <option value="">Select Province</option>
+                  {provinceNames.map((province) => (
+                    <option key={province} value={province}>
+                      {province}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={editing.district}
+                  onChange={(e) => setEditing({ ...editing, district: e.target.value, sector: '', cell: '', village: '' })}
+                  disabled={!editing.province}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:text-gray-400"
+                >
+                  <option value="">Select District</option>
+                  {districtNames.map((district) => (
+                    <option key={district} value={district}>
+                      {district}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={editing.sector}
+                  onChange={(e) => setEditing({ ...editing, sector: e.target.value, cell: '', village: '' })}
+                  disabled={!editing.district}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:text-gray-400"
+                >
+                  <option value="">Select Sector</option>
+                  {sectorNames.map((sector) => (
+                    <option key={sector} value={sector}>
+                      {sector}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={editing.cell}
+                  onChange={(e) => setEditing({ ...editing, cell: e.target.value, village: '' })}
+                  disabled={!editing.sector}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:text-gray-400"
+                >
+                  <option value="">Select Cell</option>
+                  {cellNames.map((cell) => (
+                    <option key={cell} value={cell}>
+                      {cell}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={editing.village}
+                  onChange={(e) => setEditing({ ...editing, village: e.target.value })}
+                  disabled={!editing.cell}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:text-gray-400"
+                >
+                  <option value="">Select Village</option>
+                  {villageNames.map((village) => (
+                    <option key={village} value={village}>
+                      {village}
+                    </option>
+                  ))}
+                </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    value={editing.latitude}
+                    onChange={(e) => setEditing({ ...editing, latitude: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    placeholder="Latitude"
+                  />
+                  <input
+                    value={editing.longitude}
+                    onChange={(e) => setEditing({ ...editing, longitude: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    placeholder="Longitude"
+                  />
+                </div>
                 <input
                   value={editing.price}
                   onChange={(e) => setEditing({ ...editing, price: e.target.value })}
