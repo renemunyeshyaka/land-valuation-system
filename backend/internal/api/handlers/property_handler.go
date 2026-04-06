@@ -191,8 +191,11 @@ func (h *PropertyHandler) CreateProperty(c *gin.Context) {
 		Status           string   `json:"status"`
 		Visibility       string   `json:"visibility"`
 		UPI              string   `json:"upi" binding:"required"`
+		Province         string   `json:"province"`
 		District         string   `json:"district" binding:"required"`
 		Sector           string   `json:"sector" binding:"required"`
+		Cell             string   `json:"cell"`
+		Village          string   `json:"village"`
 		Address          string   `json:"address"`
 		Latitude         float64  `json:"latitude"`
 		Longitude        float64  `json:"longitude"`
@@ -213,8 +216,11 @@ func (h *PropertyHandler) CreateProperty(c *gin.Context) {
 	}
 
 	property := &models.Property{
+		Province:         req.Province,
 		District:         req.District,
 		Sector:           req.Sector,
+		Cell:             req.Cell,
+		Village:          req.Village,
 		Title:            req.Title,
 		Description:      req.Description,
 		PropertyType:     req.PropertyType,
@@ -293,6 +299,13 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 		Title        string   `json:"title"`
 		Description  string   `json:"description"`
 		PropertyType string   `json:"property_type"`
+		Province     string   `json:"province"`
+		District     string   `json:"district"`
+		Sector       string   `json:"sector"`
+		Cell         string   `json:"cell"`
+		Village      string   `json:"village"`
+		Latitude     *float64 `json:"latitude"`
+		Longitude    *float64 `json:"longitude"`
 		Price        float64  `json:"price"`
 		Status       string   `json:"status"`
 		Visibility   string   `json:"visibility"`
@@ -314,6 +327,27 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 	}
 	if req.PropertyType != "" {
 		property.PropertyType = req.PropertyType
+	}
+	if req.Province != "" {
+		property.Province = req.Province
+	}
+	if req.District != "" {
+		property.District = req.District
+	}
+	if req.Sector != "" {
+		property.Sector = req.Sector
+	}
+	if req.Cell != "" {
+		property.Cell = req.Cell
+	}
+	if req.Village != "" {
+		property.Village = req.Village
+	}
+	if req.Latitude != nil {
+		property.Latitude = *req.Latitude
+	}
+	if req.Longitude != nil {
+		property.Longitude = *req.Longitude
 	}
 	if req.Price > 0 {
 		property.Price = req.Price

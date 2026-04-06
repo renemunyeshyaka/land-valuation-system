@@ -3,10 +3,38 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { resolveImageUrl } from '../../utils/image';
+import adminHierarchyRaw from '../../data/land_admin_hierarchy_from_csv.json';
 import { useSession } from 'next-auth/react';
 import { refreshAccessToken } from '../../utils/tokenRefresh';
 
+type AdminHierarchy = {
+  [province: string]: {
+    [district: string]: {
+      [sector: string]: {
+        [cell: string]: string[];
+      };
+    };
+  };
+};
+
+type MarketplaceEditForm = {
+  title: string;
+  description: string;
+  property_type: string;
+  status: string;
+  visibility: string;
+  province: string;
+  district: string;
+  sector: string;
+  cell: string;
+  village: string;
+  latitude: string;
+  longitude: string;
+};
+
 const MarketplaceManagement = () => {
+  const adminHierarchy: AdminHierarchy = adminHierarchyRaw as AdminHierarchy;
+  const provinceNames = Object.keys(adminHierarchy);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState('');
@@ -22,6 +50,20 @@ const MarketplaceManagement = () => {
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [galleryTitle, setGalleryTitle] = useState('Property Images');
+  const [editForm, setEditForm] = useState<MarketplaceEditForm>({
+    title: '',
+    description: '',
+    property_type: '',
+    status: 'available',
+    visibility: 'public',
+    province: '',
+    district: '',
+    sector: '',
+    cell: '',
+    village: '',
+    latitude: '',
+    longitude: '',
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [limit] = useState(9);
@@ -106,6 +148,50 @@ const MarketplaceManagement = () => {
       return addressParts.join(', ');
     }
     return listing?.location || '-';
+  };
+
+  const districtNames = editForm.province ? Object.keys(adminHierarchy[editForm.province] || {}) : [];
+  const sectorNames = editForm.province && editForm.district ? Object.keys((adminHierarchy[editForm.province] || {})[editForm.district] || {}) : [];
+  const cellNames = editForm.province && editForm.district && editForm.sector ? Object.keys(((adminHierarchy[editForm.province] || {})[editForm.district] || {})[editForm.sector] || {}) : [];
+  const villageNames = editForm.province && editForm.district && editForm.sector && editForm.cell ? (((adminHierarchy[editForm.province] || {})[editForm.district] || {})[editForm.sector] || {})[editForm.cell] || [] : [];
+
+  const openEditModal = (listing: any) => {
+    setEditListing(listing);
+    setEditForm({
+      title: listing?.title || '',
+      description: listing?.description || '',
+      property_type: listing?.property_type || listing?.type || '',
+      status: listing?.status || 'available',
+      visibility: listing?.visibility || 'public',
+      province: listing?.province || '',
+      district: listing?.district || '',
+      sector: listing?.sector || '',
+      cell: listing?.cell || '',
+      village: listing?.village || '',
+      latitude: listing?.latitude != null ? String(listing.latitude) : '',
+      longitude: listing?.longitude != null ? String(listing.longitude) : '',
+    });
+    setShowEdit(true);
+  };
+
+  const handleEditFormChange = (name: keyof MarketplaceEditForm, value: string) => {
+    if (name === 'province') {
+      setEditForm((prev) => ({ ...prev, province: value, district: '', sector: '', cell: '', village: '' }));
+      return;
+    }
+    if (name === 'district') {
+      setEditForm((prev) => ({ ...prev, district: value, sector: '', cell: '', village: '' }));
+      return;
+    }
+    if (name === 'sector') {
+      setEditForm((prev) => ({ ...prev, sector: value, cell: '', village: '' }));
+      return;
+    }
+    if (name === 'cell') {
+      setEditForm((prev) => ({ ...prev, cell: value, village: '' }));
+      return;
+    }
+    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
   // Fetch listings
@@ -372,7 +458,7 @@ const MarketplaceManagement = () => {
                     )}
                   </td>
                   <td style={{ padding: 8, border: '1px solid #eee' }}>
-                    <button onClick={() => { setEditListing(listing); setShowEdit(true); }} style={{ marginRight: 8, background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                    <button onClick={() => openEditModal(listing)} style={{ marginRight: 8, background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                     <button onClick={() => setDeleteId(listing.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                   </td>
                 </tr>
@@ -449,19 +535,139 @@ const MarketplaceManagement = () => {
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <form onSubmit={e => {
             e.preventDefault();
-            const form = e.target as HTMLFormElement;
             onEdit({
-              title: (form.elements.namedItem('title') as HTMLInputElement).value,
-              location: (form.elements.namedItem('location') as HTMLInputElement).value,
-              type: (form.elements.namedItem('type') as HTMLInputElement).value,
-              status: (form.elements.namedItem('status') as HTMLInputElement).value
+              title: editForm.title,
+              description: editForm.description,
+              property_type: editForm.property_type,
+              status: editForm.status,
+              visibility: editForm.visibility,
+              province: editForm.province,
+              district: editForm.district,
+              sector: editForm.sector,
+              cell: editForm.cell,
+              village: editForm.village,
+              latitude: editForm.latitude !== '' ? Number(editForm.latitude) : undefined,
+              longitude: editForm.longitude !== '' ? Number(editForm.longitude) : undefined,
             });
           }} style={{ background: '#fff', padding: 32, borderRadius: 12, minWidth: 320 }}>
             <h3 style={{ marginBottom: 16 }}>Edit Listing</h3>
-            <input name="title" defaultValue={editListing.title} placeholder="Title" style={{ width: '100%', marginBottom: 12, padding: 8 }} required />
-            <input name="location" defaultValue={editListing.location} placeholder="Location" style={{ width: '100%', marginBottom: 12, padding: 8 }} required />
-            <input name="type" defaultValue={editListing.type} placeholder="Type" style={{ width: '100%', marginBottom: 12, padding: 8 }} required />
-            <input name="status" defaultValue={editListing.status} placeholder="Status" style={{ width: '100%', marginBottom: 12, padding: 8 }} required />
+            <input
+              name="title"
+              value={editForm.title}
+              onChange={(e) => handleEditFormChange('title', e.target.value)}
+              placeholder="Title"
+              style={{ width: '100%', marginBottom: 12, padding: 8 }}
+              required
+            />
+            <textarea
+              name="description"
+              value={editForm.description}
+              onChange={(e) => handleEditFormChange('description', e.target.value)}
+              placeholder="Description"
+              style={{ width: '100%', marginBottom: 12, padding: 8 }}
+              rows={3}
+            />
+            <input
+              name="property_type"
+              value={editForm.property_type}
+              onChange={(e) => handleEditFormChange('property_type', e.target.value)}
+              placeholder="Type"
+              style={{ width: '100%', marginBottom: 12, padding: 8 }}
+              required
+            />
+            <select
+              name="visibility"
+              value={editForm.visibility}
+              onChange={(e) => handleEditFormChange('visibility', e.target.value)}
+              style={{ width: '100%', marginBottom: 12, padding: 8 }}
+            >
+              <option value="public">public</option>
+              <option value="registered">registered</option>
+              <option value="only_me">only_me</option>
+            </select>
+            <select
+              name="province"
+              value={editForm.province}
+              onChange={(e) => handleEditFormChange('province', e.target.value)}
+              style={{ width: '100%', marginBottom: 12, padding: 8 }}
+            >
+              <option value="">Select Province</option>
+              {provinceNames.map((province) => (
+                <option key={province} value={province}>{province}</option>
+              ))}
+            </select>
+            <select
+              name="district"
+              value={editForm.district}
+              onChange={(e) => handleEditFormChange('district', e.target.value)}
+              disabled={!editForm.province}
+              style={{ width: '100%', marginBottom: 12, padding: 8 }}
+            >
+              <option value="">Select District</option>
+              {districtNames.map((district) => (
+                <option key={district} value={district}>{district}</option>
+              ))}
+            </select>
+            <select
+              name="sector"
+              value={editForm.sector}
+              onChange={(e) => handleEditFormChange('sector', e.target.value)}
+              disabled={!editForm.district}
+              style={{ width: '100%', marginBottom: 12, padding: 8 }}
+            >
+              <option value="">Select Sector</option>
+              {sectorNames.map((sector) => (
+                <option key={sector} value={sector}>{sector}</option>
+              ))}
+            </select>
+            <select
+              name="cell"
+              value={editForm.cell}
+              onChange={(e) => handleEditFormChange('cell', e.target.value)}
+              disabled={!editForm.sector}
+              style={{ width: '100%', marginBottom: 12, padding: 8 }}
+            >
+              <option value="">Select Cell</option>
+              {cellNames.map((cell) => (
+                <option key={cell} value={cell}>{cell}</option>
+              ))}
+            </select>
+            <select
+              name="village"
+              value={editForm.village}
+              onChange={(e) => handleEditFormChange('village', e.target.value)}
+              disabled={!editForm.cell}
+              style={{ width: '100%', marginBottom: 12, padding: 8 }}
+            >
+              <option value="">Select Village</option>
+              {villageNames.map((village) => (
+                <option key={village} value={village}>{village}</option>
+              ))}
+            </select>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <input
+                name="latitude"
+                value={editForm.latitude}
+                onChange={(e) => handleEditFormChange('latitude', e.target.value)}
+                placeholder="Latitude"
+                style={{ width: '100%', padding: 8 }}
+              />
+              <input
+                name="longitude"
+                value={editForm.longitude}
+                onChange={(e) => handleEditFormChange('longitude', e.target.value)}
+                placeholder="Longitude"
+                style={{ width: '100%', padding: 8 }}
+              />
+            </div>
+            <input
+              name="status"
+              value={editForm.status}
+              onChange={(e) => handleEditFormChange('status', e.target.value)}
+              placeholder="Status"
+              style={{ width: '100%', marginBottom: 12, padding: 8 }}
+              required
+            />
             <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
               <button type="submit" style={{ background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Save</button>
               <button type="button" onClick={() => { setShowEdit(false); setEditListing(null); }} style={{ background: '#eee', color: '#222', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
