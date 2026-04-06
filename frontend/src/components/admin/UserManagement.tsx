@@ -6,11 +6,14 @@ import { refreshAccessToken } from '../../utils/tokenRefresh';
 
 
 type User = {
-  id: string;
+  id: string | number;
   first_name: string;
   last_name: string;
   email: string;
   status?: string;
+  kyc_status?: string;
+  subscription_status?: string;
+  is_active?: boolean;
 };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
@@ -191,6 +194,14 @@ const UserManagement: React.FC = () => {
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
+  const getUserStatusLabel = (user: User) => {
+    if (user.status && String(user.status).trim() !== '') return String(user.status);
+    if (user.kyc_status && String(user.kyc_status).trim() !== '') return String(user.kyc_status);
+    if (user.subscription_status && String(user.subscription_status).trim() !== '') return String(user.subscription_status);
+    if (typeof user.is_active === 'boolean') return user.is_active ? 'active' : 'inactive';
+    return '-';
+  };
+
   return (
     <div style={{ maxWidth: 900, margin: '2rem auto', background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px #0001', padding: '2rem' }}>
       <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1.5rem', color: '#2d6a4f' }}>User Management</h2>
@@ -230,6 +241,7 @@ const UserManagement: React.FC = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
               <thead>
                 <tr style={{ background: '#f3f4f6' }}>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>User ID</th>
                   <th style={{ padding: 8, border: '1px solid #eee' }}>First Name</th>
                   <th style={{ padding: 8, border: '1px solid #eee' }}>Last Name</th>
                   <th style={{ padding: 8, border: '1px solid #eee' }}>Email</th>
@@ -240,10 +252,11 @@ const UserManagement: React.FC = () => {
               <tbody>
                 {users.map(user => (
                   <tr key={user.id}>
+                    <td style={{ padding: 8, border: '1px solid #eee', fontFamily: 'monospace' }}>{String(user.id)}</td>
                     <td style={{ padding: 8, border: '1px solid #eee' }}>{user.first_name}</td>
                     <td style={{ padding: 8, border: '1px solid #eee' }}>{user.last_name}</td>
                     <td style={{ padding: 8, border: '1px solid #eee' }}>{user.email}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee' }}>{user.status || '-'}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>{getUserStatusLabel(user)}</td>
                     <td style={{ padding: 8, border: '1px solid #eee' }}>
                       <button onClick={() => { setEditUser(user); setShowEdit(true); reset(user); }} style={{ marginRight: 8, background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                       <button onClick={() => setDeleteUserId(user.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
