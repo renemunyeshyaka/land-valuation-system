@@ -11,7 +11,6 @@ import Link from 'next/link';
 import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '../../utils/tokenRefresh';
 import FourStepProcess from '../../components/FourStepProcess';
 import SubscriptionSelector from '../../components/SubscriptionSelector';
-import MainNavbar from '../../components/MainNavbar';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
@@ -680,8 +679,7 @@ const Dashboard: React.FC = () => {
                     </Link>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <MainNavbar />
+                  <div>
                     <p className="text-3xl font-bold text-gray-800">{user.recentValuations.length}</p>
                     <p className="text-xs text-gray-500 mt-2">Lifetime property assessments</p>
                   </div>
