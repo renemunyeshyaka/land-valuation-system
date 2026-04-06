@@ -30,6 +30,7 @@ const NAV = [
 
 function AdminDashboard() {
   const [active, setActive] = useState('overview');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
   const [profile, setProfile] = useState<{ fullName: string; firstName: string; email: string } | null>(null);
@@ -227,7 +228,7 @@ function AdminDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="admin-sidebar w-72 bg-white border-r border-gray-200 shadow-xl z-20 flex-shrink-0 overflow-y-auto hidden md:block">
+      <aside className="admin-sidebar w-72 bg-white border-r border-gray-200 shadow-xl z-20 flex-shrink-0 overflow-y-auto hidden lg:block">
         <div className="px-6 py-6 flex items-center gap-2 border-b border-gray-100">
           <div className="w-9 h-9 bg-emerald-700 rounded-xl flex items-center justify-center shadow-sm">
             <i className="fas fa-crown text-white text-sm"></i>
@@ -240,7 +241,9 @@ function AdminDashboard() {
             <button
               key={item.key}
               className={`admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl w-full text-left transition font-medium ${active === item.key ? 'bg-emerald-50 text-emerald-800' : 'text-gray-700 hover:bg-gray-50'}`}
-              onClick={() => setActive(item.key)}
+              onClick={() => {
+                setActive(item.key);
+              }}
             >
               <i className={`${item.icon} w-5`}></i>
               <span>{item.label}</span>
@@ -282,12 +285,97 @@ function AdminDashboard() {
         </div>
       </aside>
 
+      {/* Mobile/Tablet Sidebar Overlay */}
+      {mobileNavOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          onClick={() => setMobileNavOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Mobile/Tablet Sidebar Drawer */}
+      <aside className={`fixed top-0 left-0 h-full w-72 bg-white border-r border-gray-200 shadow-xl z-50 flex-shrink-0 overflow-y-auto transform transition-transform duration-200 lg:hidden ${mobileNavOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="px-6 py-6 flex items-center justify-between border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 bg-emerald-700 rounded-xl flex items-center justify-center shadow-sm">
+              <i className="fas fa-crown text-white text-sm"></i>
+            </div>
+            <span className="font-bold text-xl tracking-tight text-emerald-900">Land<span className="text-emerald-600">Val</span></span>
+            <span className="ml-2 text-[11px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">ADMIN</span>
+          </div>
+          <button
+            type="button"
+            className="p-2 rounded-md text-gray-600 hover:text-gray-900"
+            onClick={() => setMobileNavOpen(false)}
+            aria-label="Close admin menu"
+          >
+            <i className="fas fa-times text-lg"></i>
+          </button>
+        </div>
+
+        <nav className="flex-1 px-4 py-6 space-y-1.5">
+          {NAV.map(item => (
+            <button
+              key={`mobile-${item.key}`}
+              className={`admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl w-full text-left transition font-medium ${active === item.key ? 'bg-emerald-50 text-emerald-800' : 'text-gray-700 hover:bg-gray-50'}`}
+              onClick={() => {
+                setActive(item.key);
+                setMobileNavOpen(false);
+              }}
+            >
+              <i className={`${item.icon} w-5`}></i>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="px-5 pb-2">
+          <button
+            className="w-full flex items-center gap-2 px-4 py-2 mt-2 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-medium transition"
+            onClick={() => {
+              setMobileNavOpen(false);
+              switchToUltimateDashboard();
+            }}
+          >
+            <i className="fas fa-exchange-alt"></i>
+            Switch to Ultimate Dashboard
+          </button>
+        </div>
+
+        <div className="border-t border-gray-100 p-5 mt-auto">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 font-bold">
+              {firstName[0]}
+            </div>
+            <div>
+              <p className="text-sm font-semibold">{fullName}</p>
+              <p className="text-xs text-gray-500">{email}</p>
+            </div>
+          </div>
+          <button
+            className="w-full flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 font-medium transition"
+            onClick={() => signOut({ callbackUrl: '/auth/login' })}
+          >
+            <i className="fas fa-sign-out-alt"></i>
+            Logout
+          </button>
+        </div>
+      </aside>
+
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-screen">
         {/* Top header */}
         <header className="bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <button className="md:hidden text-gray-600 text-xl"><i className="fas fa-bars"></i></button>
+            <button
+              type="button"
+              className="lg:hidden text-gray-600 text-xl"
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Open admin menu"
+            >
+              <i className="fas fa-bars"></i>
+            </button>
             <h1 className="text-xl font-semibold text-gray-800">{NAV.find(n => n.key === active)?.label || 'Dashboard'}</h1>
           </div>
           <div className="flex gap-4 items-center">

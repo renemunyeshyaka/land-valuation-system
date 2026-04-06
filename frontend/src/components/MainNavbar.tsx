@@ -34,7 +34,7 @@ export default function MainNavbar() {
             </span>
           </Link>
 
-          <div className="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
+          <div className="hidden lg:flex space-x-7 text-sm font-medium text-gray-700">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -46,9 +46,10 @@ export default function MainNavbar() {
             ))}
           </div>
 
-          <div className="md:hidden flex items-center">
+          <div className="lg:hidden flex items-center">
             <button
               aria-label="Open menu"
+              type="button"
               className="inline-flex items-center justify-center p-2 rounded-md text-emerald-800 hover:text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               onClick={() => setMobileMenuOpen((v) => !v)}
             >
@@ -56,7 +57,7 @@ export default function MainNavbar() {
             </button>
           </div>
 
-          <div className="hidden sm:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3">
             <div className="hidden sm:flex items-center border border-gray-200 rounded-full px-3 py-1.5 text-sm bg-white/80">
               <i className="fas fa-globe text-emerald-600 mr-1 text-xs"></i>
               <span className="font-medium">RW</span>
@@ -73,13 +74,13 @@ export default function MainNavbar() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white/95 border-b border-gray-200/70 shadow-lg absolute left-0 right-0 top-full z-40">
+        <div className="lg:hidden bg-white border-b border-gray-200/70 shadow-lg fixed left-0 right-0 top-16 z-[80] pointer-events-auto">
           <div className="flex flex-col px-6 py-4 space-y-2 text-base font-medium text-gray-800">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={isActive(item.href) ? 'text-emerald-700 font-semibold' : 'hover:text-emerald-700 transition'}
+                className={isActive(item.href) ? 'text-emerald-700 font-semibold py-1' : 'hover:text-emerald-700 transition py-1'}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.label}

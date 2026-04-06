@@ -83,6 +83,7 @@ const Dashboard: React.FC = () => {
   const [estimateLoading, setEstimateLoading] = useState(false);
   const [estimateError, setEstimateError] = useState<string | null>(null);
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
 
   const handleEstimate = async (params: LandEstimateRequest) => {
@@ -121,6 +122,12 @@ const Dashboard: React.FC = () => {
 
     toast.error('Session expired. Please sign in again.');
     router.replace('/auth/login');
+  };
+
+  const handleLogout = async () => {
+    clearAuth();
+    await signOut({ redirect: false });
+    router.push('/auth/login');
   };
 
   const handleProfileFetchError = (error: any) => {
@@ -514,23 +521,79 @@ const Dashboard: React.FC = () => {
                 </div>
               </Link>
               {/* Navigation Menu - Right Side */}
-              <div className="flex items-center gap-2 sm:gap-4">
-                <Link href="/dashboard/profile" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 transition-colors hidden sm:block">
+              <div className="hidden lg:flex items-center gap-2 sm:gap-4">
+                <Link href="/dashboard/profile" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 transition-colors">
                   <i className="fas fa-user-circle mr-1"></i>
                   View Profile
                 </Link>
                 <button
-                  onClick={async () => {
-                    clearAuth();
-                    await signOut({ redirect: false });
-                    router.push('/auth/login');
-                  }}
+                  onClick={handleLogout}
                   className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
                 >
                   Logout
                 </button>
               </div>
+
+              <div className="lg:hidden flex items-center">
+                <button
+                  aria-label="Toggle dashboard menu"
+                  type="button"
+                  className="inline-flex items-center justify-center p-2 rounded-md text-emerald-800 hover:text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  onClick={() => setMobileMenuOpen((open) => !open)}
+                >
+                  {mobileMenuOpen ? <i className="fas fa-times text-2xl"></i> : <i className="fas fa-bars text-2xl"></i>}
+                </button>
+              </div>
             </div>
+
+            {mobileMenuOpen && (
+              <div className="lg:hidden fixed left-0 right-0 top-16 bg-white border-b border-gray-200 shadow-lg z-[80] pointer-events-auto">
+                <div className="flex flex-col gap-2 pt-4">
+                  <Link
+                    href="/dashboard/profile"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <i className="fas fa-user-circle mr-2"></i>
+                    View Profile
+                  </Link>
+                  <Link
+                    href="/dashboard/properties"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <i className="fas fa-list mr-2"></i>
+                    My Properties
+                  </Link>
+                  <Link
+                    href="/properties/add"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <i className="fas fa-plus-circle mr-2"></i>
+                    Add Property
+                  </Link>
+                  <Link
+                    href="/dashboard/subscription"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <i className="fas fa-gem mr-2"></i>
+                    Upgrade Plan
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      setMobileMenuOpen(false);
+                      await handleLogout();
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
+                  >
+                    <i className="fas fa-sign-out-alt mr-2"></i>
+                    Logout
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </nav>
 
