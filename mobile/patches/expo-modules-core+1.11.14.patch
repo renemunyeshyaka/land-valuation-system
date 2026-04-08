@@ -1,0 +1,59 @@
+diff --git a/node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle b/node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
+index e1cc7f5..6b8177b 100644
+--- a/node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
++++ b/node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
+@@ -64,16 +64,38 @@ ext.applyKotlinExpoModulesCorePlugin = {
+   apply plugin: KotlinExpoModulesCorePlugin
+ }
+ 
++ext.useDefaultAndroidSdkVersions = {
++  project.android {
++    compileSdkVersion project.ext.safeExtGet("compileSdkVersion", 34)
++
++    defaultConfig {
++      minSdkVersion project.ext.safeExtGet("minSdkVersion", 23)
++      targetSdkVersion project.ext.safeExtGet("targetSdkVersion", 34)
++    }
++  }
++}
++
+ ext.useExpoPublishing = {
+   if (!project.plugins.hasPlugin('maven-publish')) {
+     apply plugin: 'maven-publish'
+   }
+ 
++  android {
++    publishing {
++      singleVariant("release") {
++        withSourcesJar()
++      }
++    }
++  }
++  
+   afterEvaluate {
+     publishing {
+       publications {
+         release(MavenPublication) {
+-          from components.release
++          def releaseComponent = components.findByName("release")
++          if (releaseComponent != null) {
++            from releaseComponent
++          }
+         }
+       }
+       repositories {
+@@ -83,14 +105,6 @@ ext.useExpoPublishing = {
+       }
+     }
+   }
+-
+-  android {
+-    publishing {
+-      singleVariant("release") {
+-        withSourcesJar()
+-      }
+-    }
+-  }
+ }
+ 
+ ext.useCoreDependencies = {

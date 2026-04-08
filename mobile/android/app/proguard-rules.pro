@@ -1,48 +1,14 @@
--keep class com.facebook.react.** { *; }
--keep class com.facebook.jni.** { *; }
+# Add project specific ProGuard rules here.
+# By default, the flags in this file are appended to flags specified
+# in /usr/local/Cellar/android-sdk/24.3.3/tools/proguard/proguard-android.txt
+# You can edit the include path and order by changing the proguardFiles
+# directive in build.gradle.
+#
+# For more details, see
+#   http://developer.android.com/guide/developing/tools/proguard.html
 
--keepclassmembers class ** {
-    @org.greenrobot.eventbus.Subscribe <methods>;
-}
+# react-native-reanimated
+-keep class com.swmansion.reanimated.** { *; }
+-keep class com.facebook.react.turbomodule.** { *; }
 
--keep enum org.greenrobot.eventbus.ThreadMode { *; }
-
--keepclassmembers class * extends org.greenrobot.eventbus.util.ThrowableFailureEvent {
-    <init>(java.lang.Throwable);
-}
-
-# Gson
--keepattributes Signature
--keepattributes *Annotation*
--dontwarn sun.misc.**
--keep class com.google.gson.stream.** { *; }
--keep class com.google.gson.** { *; }
--keep interface com.google.gson.** { *; }
-
-# Retrofit
--keep class retrofit2.** { *; }
--keep interface retrofit2.** { *; }
--dontwarn retrofit2.**
-
-# OkHttp
--keep class okhttp3.** { *; }
--keep interface okhttp3.** { *; }
--dontwarn okhttp3.**
-
-# Mapbox
--keep class com.mapbox.mapboxsdk.** { *; }
--keep interface com.mapbox.mapboxsdk.** { *; }
-
-# Stripe
--keep class com.stripe.** { *; }
--keep interface com.stripe.** { *; }
-
-# Glide
--keep public class * implements com.bumptech.glide.module.GlideModule
--keep class * extends com.bumptech.glide.module.AppGlideModule {
-    <init>(...);
-}
--keep public enum com.bumptech.glide.load.ImageHeaderParser$** {
-    **[] $VALUES;
-    public *;
-}
+# Add any project specific keep options here:

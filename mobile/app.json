@@ -1,65 +1,66 @@
 {
-  "expo": "50.0.0",
-  "name": "Land Valuation System",
-  "slug": "land-valuation",
-  "version": "1.0.0",
-  "scheme": "landvaluation",
-  "owner": "land-valuation-team",
-  "assetBundlePatterns": [
-    "**/*"
-  ],
-  "ios": {
-    "supportsTabletMode": true,
-    "buildNumber": "1",
-    "bundleIdentifier": "com.landvaluation.app"
-  },
-  "android": {
-    "minSdkVersion": 24,
-    "targetSdkVersion": 34,
-    "versionCode": 1,
-    "versionName": "1.0.0",
-    "package": "com.landvaluation.app",
-    "permissions": [
-      "INTERNET",
-      "ACCESS_COARSE_LOCATION",
-      "ACCESS_FINE_LOCATION",
-      "CAMERA",
-      "READ_EXTERNAL_STORAGE",
-      "WRITE_EXTERNAL_STORAGE",
-      "RECORD_AUDIO"
-    ]
-  },
-  "web": {
-    "favicon": "./assets/favicon.png"
-  },
-  "splash": {
-    "image": "./assets/splash.png",
-    "resizeMode": "contain",
-    "backgroundColor": "#1f2937"
-  },
-  "plugins": [
-    "expo-font",
-    "expo-location",
-    "expo-camera",
-    "expo-file-system",
-    "expo-notifications",
-    [
-      "expo-image-picker",
-      {
-        "photosPermission": "The app accesses your photos to upload property images.",
-        "cameraPermission": "The app needs access to your camera for property verification."
-      }
-    ]
-  ],
-  "updates": {
-    "fallbackToCacheTimeout": 0,
-    "url": "https://u.expo.dev/your-expo-project-id"
-  },
-  "runtimeVersion": {
-    "policy": "nativeVersion"
-  },
-  "orientation": "portrait",
-  "userInterfaceStyle": "dark",
-  "primaryColor": "#1f2937",
-  "icon": "./assets/icon.png"
+  "expo": {
+    "name": "Land Valuation System",
+    "slug": "land-valuation",
+    "version": "1.0.0",
+    "scheme": "landvaluation",
+    "owner": "land-valuation-team",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTabletMode": true,
+      "buildNumber": "1",
+      "bundleIdentifier": "com.landvaluation.app"
+    },
+    "android": {
+      "minSdkVersion": 24,
+      "targetSdkVersion": 34,
+      "versionCode": 1,
+      "versionName": "1.0.0",
+      "package": "com.anonymous.landvaluationmobile",
+      "permissions": [
+        "INTERNET",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1f2937"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-location",
+      "expo-camera",
+      "expo-file-system",
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to upload property images.",
+          "cameraPermission": "The app needs access to your camera for property verification."
+        }
+      ]
+    ],
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/your-expo-project-id"
+    },
+    "runtimeVersion": {
+      "policy": "nativeVersion"
+    },
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "primaryColor": "#1f2937",
+    "icon": "./assets/icon.png"
+  }
 }
