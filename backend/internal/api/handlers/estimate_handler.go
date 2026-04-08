@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"backend/internal/repository"
+	"backend/internal/services"
 	"encoding/csv"
 	"fmt"
 	"net/http"
@@ -40,7 +42,7 @@ func EstimateSearchHandler() gin.HandlerFunc {
 		// Debug: Print incoming request
 		fmt.Printf("[DEBUG] Incoming request: province='%s', district='%s', sector='%s', cell='%s', village='%s'\n", req.Province, req.District, req.Sector, req.Cell, req.Village)
 
-		file, err := os.Open("data/village_land_values_joined_clean_converted.csv")
+		file, err := os.Open("data/village_land_values_search_ready.csv")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open CSV file", "details": err.Error()})
 			return
@@ -67,8 +69,19 @@ func EstimateSearchHandler() gin.HandlerFunc {
 		}
 
 		header := records[0]
+		getValue := func(rec map[string]interface{}, keys ...string) string {
+			for _, k := range keys {
+				if v, ok := rec[k]; ok && v != nil {
+					s := strings.TrimSpace(fmt.Sprintf("%v", v))
+					if s != "" {
+						return s
+					}
+				}
+			}
+			return ""
+		}
 		var matches []map[string]interface{}
-		var prices []float64
+		var values []repository.VillageLandValue
 
 		for _, row := range records[1:] {
 			rec := make(map[string]interface{})
@@ -93,59 +106,54 @@ func EstimateSearchHandler() gin.HandlerFunc {
 			}
 			// Optionally, filter by property_type/zoning_type if needed
 
-			// Parse price
-			var priceStr string
-			if rec["weighted_avg_value_per_sqm"] != nil {
-				priceStr = fmt.Sprintf("%v", rec["weighted_avg_value_per_sqm"])
-				priceStr = strings.TrimSpace(priceStr)
-			}
-			if priceStr == "" {
+			minStr := getValue(rec, "Minimum Value Per Sqm", "min_value_per_sqm")
+			avgStr := getValue(rec, "Weighted Average Value Per Sqm", "weighted_avg_value_per_sqm")
+			maxStr := getValue(rec, "Maximum Value Per Sqm", "max_value_per_sqm")
+			if minStr == "" || avgStr == "" || maxStr == "" {
 				continue
 			}
-			price, err := strconv.ParseFloat(priceStr, 64)
+			minVal, err := strconv.ParseFloat(minStr, 64)
 			if err != nil {
 				continue
 			}
-			prices = append(prices, price)
+			avgVal, err := strconv.ParseFloat(avgStr, 64)
+			if err != nil {
+				continue
+			}
+			maxVal, err := strconv.ParseFloat(maxStr, 64)
+			if err != nil {
+				continue
+			}
+			values = append(values, repository.VillageLandValue{
+				Province:               strings.TrimSpace(rec["province"].(string)),
+				District:               strings.TrimSpace(rec["district"].(string)),
+				Sector:                 strings.TrimSpace(rec["sector"].(string)),
+				Cell:                   strings.TrimSpace(rec["cell"].(string)),
+				Village:                strings.TrimSpace(rec["village"].(string)),
+				LandUse:                getValue(rec, "Land Use", "land_use"),
+				MinValuePerSqm:         minVal,
+				WeightedAvgValuePerSqm: avgVal,
+				MaxValuePerSqm:         maxVal,
+			})
 			matches = append(matches, rec)
 		}
 
-		if len(prices) == 0 {
+		if len(values) == 0 {
 			c.JSON(http.StatusNotFound, gin.H{"error": "No matching records found"})
 			return
 		}
 
-		// Calculate min, max, weighted average
-		minVal, maxVal, sum, weightedSum := prices[0], prices[0], 0.0, 0.0
-		totalWeight := 0.0
-		for i, price := range prices {
-			if price < minVal {
-				minVal = price
-			}
-			if price > maxVal {
-				maxVal = price
-			}
-			// Use land_size_sqm as weight if available
-			size := 1.0
-			if sz, ok := matches[i]["land_size_sqm"]; ok {
-				szStr := strings.TrimSpace(sz.(string))
-				if szStr != "" {
-					if szVal, err := strconv.ParseFloat(szStr, 64); err == nil {
-						size = szVal
-					}
-				}
-			}
-			weightedSum += price * size
-			totalWeight += size
-			sum += price
+		aggregated, err := services.AggregateLandValues(values)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No matching records found"})
+			return
 		}
-		weightedAvg := weightedSum / totalWeight
 
 		resp := EstimateSearchResponse{
-			MinValuePerSqm:         minVal,
-			MaxValuePerSqm:         maxVal,
-			WeightedAvgValuePerSqm: weightedAvg,
-			Count:                  len(prices),
+			MinValuePerSqm:         aggregated.MinValuePerSqm,
+			MaxValuePerSqm:         aggregated.MaxValuePerSqm,
+			WeightedAvgValuePerSqm: aggregated.WeightedAvgValuePerSqm,
+			Count:                  aggregated.Count,
 			Records:                matches,
 		}
 		c.JSON(http.StatusOK, gin.H{"data": resp})

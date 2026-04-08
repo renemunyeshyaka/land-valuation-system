@@ -166,6 +166,14 @@ If you are interested in partnering or integrating with LVS, please contact us v
 
 `plot_size_sqm` is **only** used for calculating the total price, **not** for searching or filtering records.
 
+**Village Price Fallback Clarification (Data Completeness Rule):**
+- No village with complete location keys (`province`, `district`, `sector`, `cell`, `village`) should be dropped from search datasets.
+- If a village record is missing one or more price fields, the system imputes those values using this fallback order:
+   1. Same `cell` (sibling village/cell aggregate)
+   2. Same `sector`
+   3. Same `district`
+- This rule ensures estimate search and add-property workflows keep full village coverage while preserving consistent pricing behavior.
+
 **UPI-based search is deprecated and must NOT be used for price estimation.**
 
 #### API Endpoint

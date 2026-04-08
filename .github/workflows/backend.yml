@@ -61,6 +61,21 @@ jobs:
       run: |
         chmod +x preflight_auth_env.sh
         ./preflight_auth_env.sh .env.production.example --template
+
+    - name: Build search-ready land values (imputation, no village drop)
+      working-directory: backend
+      run: |
+        chmod +x scripts/build_search_ready_land_values.sh
+        ./scripts/build_search_ready_land_values.sh --input data/village_land_values_joined_clean.csv --output data/village_land_values_search_ready.csv --report data/village_land_values_search_ready_report.txt
+
+        unresolved=$(grep '^unresolved_missing_price_rows=' data/village_land_values_search_ready_report.txt | cut -d'=' -f2)
+        missing_locations=$(grep '^missing_location_keys_in_output=' data/village_land_values_search_ready_report.txt | cut -d'=' -f2)
+
+        echo "unresolved_missing_price_rows=$unresolved"
+        echo "missing_location_keys_in_output=$missing_locations"
+
+        test "$missing_locations" = "0"
+        test "$unresolved" = "0"
     
     - name: Run focused authz regression suite
       working-directory: backend

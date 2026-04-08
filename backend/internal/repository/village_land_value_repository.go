@@ -26,19 +26,33 @@ func NewVillageLandValueRepository(db *gorm.DB) *VillageLandValueRepository {
 	return &VillageLandValueRepository{db: db}
 }
 
-func (r *VillageLandValueRepository) GetByAllFields(ctx context.Context, province, district, sector, cell, village string) (*VillageLandValue, error) {
-	// Normalize province alternate names
-	normProvince := province
+func normalizeProvince(province string) string {
 	if province == "Kigali City" || province == "Kigali city" {
-		normProvince = "Kigali Town/Umujyi wa Kigali"
+		return "Kigali Town/Umujyi wa Kigali"
 	}
-	// Case-insensitive search for all fields
-	var value VillageLandValue
+	return province
+}
+
+func (r *VillageLandValueRepository) GetAllByAllFields(ctx context.Context, province, district, sector, cell, village string) ([]VillageLandValue, error) {
+	normProvince := normalizeProvince(province)
+	var values []VillageLandValue
 	result := r.db.WithContext(ctx).Table("village_land_values").
 		Where("LOWER(province) = LOWER(?) AND LOWER(district) = LOWER(?) AND LOWER(sector) = LOWER(?) AND LOWER(cell) = LOWER(?) AND LOWER(village) = LOWER(?)", normProvince, district, sector, cell, village).
-		First(&value)
+		Find(&values)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return &value, nil
+	if len(values) == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+	return values, nil
+}
+
+func (r *VillageLandValueRepository) GetByAllFields(ctx context.Context, province, district, sector, cell, village string) (*VillageLandValue, error) {
+	// Normalize province alternate names
+	values, err := r.GetAllByAllFields(ctx, province, district, sector, cell, village)
+	if err != nil {
+		return nil, err
+	}
+	return &values[0], nil
 }

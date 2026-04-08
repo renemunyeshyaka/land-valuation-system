@@ -1,0 +1,12 @@
+total_rows=268729
+kept_rows=267342
+source_unique_location_keys=14808
+output_unique_location_keys=14808
+missing_location_keys_in_output=0
+dropped_missing_hierarchy=0
+imputed_from_cell_rows=8902
+imputed_from_sector_rows=22
+imputed_from_district_rows=0
+unresolved_missing_price_rows=0
+dropped_non_numeric_price=0
+dropped_total=0
