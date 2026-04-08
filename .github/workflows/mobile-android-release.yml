@@ -27,10 +27,9 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           missing=0
-          for key in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+          for key in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS; do
             if [[ -z "${!key}" ]]; then
               echo "::error::Missing required secret: $key"
               missing=1
@@ -80,14 +79,49 @@ jobs:
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
+          mkdir -p android/app
+          # Strip accidental whitespace/newlines from pasted secret before decoding.
+          if ! printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '\r\n\t ' | base64 --decode > android/app/release.keystore; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 is not valid base64. Recopy the full one-line base64 value without quotes."
+            exit 1
+          fi
+
+          if [[ ! -s android/app/release.keystore ]]; then
+            echo "::error::Decoded keystore is empty. Check ANDROID_KEYSTORE_BASE64."
+            exit 1
+          fi
+
+      - name: Validate keystore credentials before Gradle
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          KEYSTORE_PATH="android/app/release.keystore"
+
+          if ! keytool -list -storetype PKCS12 -keystore "$KEYSTORE_PATH" -storepass "$ANDROID_KEYSTORE_PASSWORD" >/dev/null 2>&1; then
+            echo "::error::Keystore cannot be opened with ANDROID_KEYSTORE_PASSWORD. Ensure ANDROID_KEYSTORE_BASE64 and ANDROID_KEYSTORE_PASSWORD come from the same keystore file."
+            exit 1
+          fi
+
+          if ! keytool -list -storetype PKCS12 -keystore "$KEYSTORE_PATH" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" >/dev/null 2>&1; then
+            echo "::error::Alias '$ANDROID_KEY_ALIAS' not found in keystore. Update ANDROID_KEY_ALIAS."
+            exit 1
+          fi
+
+          if ! keytool -certreq -storetype PKCS12 -keystore "$KEYSTORE_PATH" -storepass "$ANDROID_KEYSTORE_PASSWORD" -keypass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" -file /tmp/android-signing-check.csr >/dev/null 2>&1; then
+            echo "::error::Private key decryption failed. For PKCS12, use the same password for key and store."
+            exit 1
+          fi
+
+          rm -f /tmp/android-signing-check.csr
 
       - name: Build signed release AAB (strict signing)
         env:
           ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/mobile/android/app/release.keystore
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          # PKCS12 keystores use the same password for store and key entry.
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           cd android
           ./gradlew bundleRelease -Pandroid.allowDebugSigningForRelease=false
