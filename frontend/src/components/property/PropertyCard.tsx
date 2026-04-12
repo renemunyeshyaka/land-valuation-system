@@ -259,7 +259,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           <div className="bg-white rounded-xl shadow-lg p-6 min-w-[280px] relative" onClick={e => e.stopPropagation()}>
             <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onClick={() => setShareOpen(false)}>&times;</button>
             <div className="font-bold mb-2">Share this property</div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 mb-3">
               <a
                 href={`https://wa.me/?text=${encodeURIComponent('Check out this property: ' + property.title + ' ' + (typeof window !== 'undefined' ? window.location.origin + '/search/' + property.id : ''))}`}
                 target="_blank"
@@ -292,6 +292,29 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               >
                 <i className="fab fa-facebook text-xl" /> Facebook
               </a>
+            </div>
+            {/* Copy to clipboard button */}
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="text"
+                readOnly
+                value={typeof window !== 'undefined' ? window.location.origin + '/search/' + property.id : ''}
+                className="flex-1 px-2 py-1 border border-gray-200 rounded text-sm text-gray-700 bg-gray-50"
+                style={{ minWidth: 0 }}
+                onFocus={e => e.target.select()}
+                aria-label="Property URL"
+              />
+              <button
+                className="px-3 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium"
+                onClick={() => {
+                  const url = typeof window !== 'undefined' ? window.location.origin + '/search/' + property.id : '';
+                  navigator.clipboard.writeText(url);
+                }}
+                type="button"
+                aria-label="Copy property URL"
+              >
+                Copy
+              </button>
             </div>
           </div>
         </div>

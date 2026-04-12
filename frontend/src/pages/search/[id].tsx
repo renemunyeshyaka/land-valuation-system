@@ -279,12 +279,50 @@ const PropertyDetail: React.FC = () => {
 
   return (
     <>
-      {/* HEAD / SEO */}
+
+      {/* HEAD / SEO & SOCIAL META TAGS */}
       <Head>
         <title>{property.location} · Property Details · Land Valuation System</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-        <meta name="description" content={`${property.location} - ${property.propertyType} property for sale in Rwanda`} />
-        <meta property="og:title" content={`${property.location} · LandVal`} />
+        <meta
+          name="description"
+          content={
+            property.description
+              ? `${property.location} - ${property.description}`
+              : `${property.location} - ${property.propertyType} property for sale in Rwanda`
+          }
+        />
+        {/* Canonical URL */}
+        <link rel="canonical" href={`https://landval.rw/search/${property.id}`} />
+
+        {/* Open Graph Meta Tags */}
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={`${property.location} · Property Details · Land Valuation System`} />
+        <meta
+          property="og:description"
+          content={
+            property.description
+              ? `${property.location} - ${property.description}`
+              : `${property.location} - ${property.propertyType} property for sale in Rwanda`
+          }
+        />
+        <meta property="og:image" content={property.image || '/default-og-image.jpg'} />
+        <meta property="og:url" content={`https://landval.rw/search/${property.id}`} />
+        <meta property="og:site_name" content="Land Valuation System" />
+
+        {/* Twitter Card Meta Tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${property.location} · Property Details · Land Valuation System`} />
+        <meta
+          name="twitter:description"
+          content={
+            property.description
+              ? `${property.location} - ${property.description}`
+              : `${property.location} - ${property.propertyType} property for sale in Rwanda`
+          }
+        />
+        <meta name="twitter:image" content={property.image || '/default-og-image.jpg'} />
+        <meta name="twitter:url" content={`https://landval.rw/search/${property.id}`} />
       </Head>
 
       {/* MAIN LAYOUT */}

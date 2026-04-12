@@ -69,11 +69,13 @@ If you are interested in partnering or integrating with LVS, please contact us v
 - **Base URL:** `/api/v1/properties`
 - **Description:** Allows registered users to create, view, update, and delete their property listings. Access and limits can be enforced based on user subscription rights.
 
+
 **Endpoints:**
 
 - `GET /api/v1/properties` — List all properties owned by the authenticated user (with filters, pagination)
 - `POST /api/v1/properties` — Create a new property (requires authentication, checks subscription limits)
-- `GET /api/v1/properties/:id` — Get a property by ID (owner or admin only)
+- `GET /api/v1/properties/:id` — Get a property by ID (**public**, increments and returns views, interested, sqm, etc.)
+- `POST /api/v1/properties/:id/interested` — Mark as interested (**public**, increments and returns interested count)
 - `PUT /api/v1/properties/:id` — Update a property (owner or admin only)
 - `DELETE /api/v1/properties/:id` — Delete a property (owner or admin only)
 
@@ -94,7 +96,8 @@ If you are interested in partnering or integrating with LVS, please contact us v
 }
 ```
 
-**Response Example (GET):**
+
+**Response Example (GET /api/v1/properties/:id):**
 ```json
 {
    "id": 1,
@@ -111,9 +114,22 @@ If you are interested in partnering or integrating with LVS, please contact us v
    "price": 6000000,
    "status": "for_sale",
    "images": ["https://example.com/uploads/property1.jpg", "https://example.com/uploads/property2.jpg"],
-   "created_at": "2026-03-31T12:00:00Z"
+   "created_at": "2026-03-31T12:00:00Z",
+   "views": 42,
+   "interested": 7,
+   "land_size": 500,
+   "size_unit": "sqm"
 }
 ```
+
+**Public Property Stats:**
+- `views` (integer): Public, persistent view count. Incremented on each GET.
+- `interested` (integer): Public, persistent like count. Incremented via POST `/api/v1/properties/:id/interested`.
+- `land_size` and `size_unit`: Always shown publicly.
+
+**Note:**
+- Both endpoints are public and do not require authentication.
+- The frontend always displays views, interested, and sqm for all properties.
 
 **Additional Fields:**
 - `plot_number`: Unique plot identifier (e.g., UPI or government-issued number).
@@ -124,10 +140,11 @@ If you are interested in partnering or integrating with LVS, please contact us v
 - Premium features (e.g., promoted listings, extra images, image upload) can be restricted to higher tiers.
 - All actions require authentication; only owners or admins can modify/delete properties.
 
+
 #### Marketplace API
 
 - **Base URL:** `/api/v1/marketplace`
-- **Description:** Publicly lists all properties available for sale. No authentication required for browsing.
+- **Description:** Publicly lists all properties available for sale. No authentication required for browsing. All public stats (views, interested, sqm) are always visible.
 
 **Endpoints:**
 - `GET /api/v1/marketplace/properties-for-sale` — List all properties for sale (with filters, pagination)

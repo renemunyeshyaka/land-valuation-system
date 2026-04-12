@@ -921,9 +921,104 @@ paths:
     delete:
       responses: {}
     get:
-      responses: {}
+      description: |
+        Retrieve a property by ID. This endpoint is **public** and increments the persistent view count for the property. The response includes public stats: views, interested (like count), land_size, and size_unit. No authentication required.
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: Property ID
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Property found
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              owner_id:
+                type: integer
+              title:
+                type: string
+              description:
+                type: string
+              plot_number:
+                type: string
+              province:
+                type: string
+              district:
+                type: string
+              sector:
+                type: string
+              cell:
+                type: string
+              village:
+                type: string
+              plot_size_sqm:
+                type: number
+              price:
+                type: number
+              status:
+                type: string
+              images:
+                type: array
+                items:
+                  type: string
+              created_at:
+                type: string
+              views:
+                type: integer
+                description: Public, persistent view count
+              interested:
+                type: integer
+                description: Public, persistent like count
+              land_size:
+                type: number
+                description: Land size (sqm)
+              size_unit:
+                type: string
+                description: Size unit (e.g., sqm)
+        "404":
+          description: Property not found
+        "500":
+          description: Internal Server Error
+      summary: Get property by ID (public, increments views)
+      tags:
+        - properties
     put:
       responses: {}
+
+  /api/v1/properties/{id}/interested:
+    post:
+      description: |
+        Mark the property as "interested" (like). This endpoint is **public** and increments the persistent interested count for the property. Returns the updated interested count. No authentication required.
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: Property ID
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Interested count incremented
+          schema:
+            type: object
+            properties:
+              interested:
+                type: integer
+                description: Updated interested count
+        "404":
+          description: Property not found
+        "500":
+          description: Internal Server Error
+      summary: Mark property as interested (public like)
+      tags:
+        - properties
   /api/v1/properties/search:
     post:
       consumes:
