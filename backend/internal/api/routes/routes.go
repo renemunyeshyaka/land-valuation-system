@@ -115,7 +115,7 @@ func setupPropertyRoutes(router *gin.Engine, db *gorm.DB) {
 	// Initialize repositories and services
 	propertyRepo := repository.NewPropertyRepository(db)
 	propertyHandler := handlers.NewPropertyHandler(propertyRepo)
-	marketplaceHandler := handlers.NewMarketplaceHandler(services.NewMarketplaceService(db))
+	marketplaceHandler := handlers.NewMarketplaceHandler(services.NewMarketplaceService(db), db)
 
 	properties := router.Group("/api/v1/properties")
 	{

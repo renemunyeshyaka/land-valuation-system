@@ -129,3 +129,6 @@ backend/cmd/propertyscraper/
 !backend/migrations/**
 !backend/migrations/
 !backend/migrations/**
+
+# Android
+release.keystore

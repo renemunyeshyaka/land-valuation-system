@@ -5,8 +5,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"backend/internal/models"
 	"backend/internal/services"
 	"backend/internal/utils"
+
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,12 +17,16 @@ import (
 // MarketplaceHandler handles marketplace-related API endpoints
 type MarketplaceHandler struct {
 	marketplaceService *services.MarketplaceService
+	db                 *gorm.DB
 }
 
+// Removed invalid GetDB method for undefined MarketplaceService type.
+
 // NewMarketplaceHandler creates a new marketplace handler
-func NewMarketplaceHandler(marketplaceService *services.MarketplaceService) *MarketplaceHandler {
+func NewMarketplaceHandler(marketplaceService *services.MarketplaceService, db *gorm.DB) *MarketplaceHandler {
 	return &MarketplaceHandler{
 		marketplaceService: marketplaceService,
+		db:                 db,
 	}
 }
 
@@ -104,4 +111,34 @@ func (h *MarketplaceHandler) GetPropertyListingsOnSale(c *gin.Context) {
 	}
 
 	utils.SuccessPaginatedResponse(c, http.StatusOK, "Properties on sale retrieved", listings, total, page, limit)
+}
+
+// IncrementInterested godoc
+// @Summary Increment interested count for a property
+// @Description Increments the interested count for a property (public, no authentication required)
+// @Tags marketplace
+// @Produce json
+// @Param id path string true "Property ID"
+// @Success 200 {object} utils.APIResponse
+// @Failure 404 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
+// @Router /marketplace/properties/:id/interested [post]
+func (h *MarketplaceHandler) IncrementInterested(c *gin.Context) {
+	propertyID := c.Param("id")
+	id, err := strconv.Atoi(propertyID)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid property ID", err.Error())
+		return
+	}
+	db := h.db
+	if err := db.Model(&models.Property{}).Where("id = ?", id).Update("interested", gorm.Expr("interested + 1")).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "Property not found", err.Error())
+		return
+	}
+	var prop models.Property
+	if err := db.First(&prop, id).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "Property not found", err.Error())
+		return
+	}
+	utils.SuccessResponse(c, http.StatusOK, "Interested count incremented", gin.H{"interested": prop.Interested})
 }
