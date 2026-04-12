@@ -19,9 +19,11 @@ interface PropertyCardProps {
 }
 
 export default function PropertyCard({ property }: PropertyCardProps) {
-  const [isSaved, setIsSaved] = React.useState(false)
   const placeholder = 'https://placehold.co/600x400/png?text=No+Image'
   const [displayImageUrl, setDisplayImageUrl] = React.useState<string>(placeholder)
+  const [interested, setInterested] = React.useState<number>(property.interested || 0)
+  const [isLiking, setIsLiking] = React.useState(false)
+  const [shareOpen, setShareOpen] = React.useState(false)
 
   React.useEffect(() => {
     if (property.images && property.images.length > 0 && property.images[0]) {
@@ -30,6 +32,41 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     }
     setDisplayImageUrl(placeholder)
   }, [property.images])
+
+  // Like handler (increments interested count)
+  const handleLike = async () => {
+    if (isLiking) return;
+    setIsLiking(true);
+    setInterested((prev) => prev + 1); // Optimistic update
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+      const res = await fetch(`${apiUrl}/api/v1/marketplace/properties/${property.id}/interested`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.data?.interested !== undefined) setInterested(data.data.interested);
+      }
+    } catch (e) {
+      // Ignore error, keep optimistic
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  // Share handler
+  const handleShare = () => {
+    const shareData = {
+      title: property.title,
+      text: `Check out this property: ${property.title}`,
+      url: typeof window !== 'undefined' ? window.location.origin + `/search/${property.id}` : '',
+    };
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {});
+    } else {
+      setShareOpen(true);
+    }
+  };
 
   return (
     <motion.div 
@@ -76,14 +113,22 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="absolute bottom-4 right-4 flex space-x-2">
-          <button 
-            onClick={() => setIsSaved(!isSaved)}
-            className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition"
+        <div className="absolute bottom-4 right-4 flex space-x-2 z-10">
+          <button
+            onClick={handleLike}
+            disabled={isLiking}
+            aria-label="Like property"
+            className={`bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition ${isLiking ? 'opacity-60 pointer-events-none' : ''}`}
+            title="I'm interested"
           >
-            <Heart className={`w-4 h-4 ${isSaved ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} />
+            <Heart className={`w-4 h-4 ${interested > (property.interested || 0) ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} />
           </button>
-          <button className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition">
+          <button
+            onClick={handleShare}
+            aria-label="Share property"
+            className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition"
+            title="Share property"
+          >
             <Share2 className="w-4 h-4 text-gray-700" />
           </button>
         </div>
@@ -153,7 +198,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </div>
           <div className="text-center">
             <div className="text-xs text-gray-500">Interested</div>
-            <div className="font-semibold text-sm">{property.interested || 0}</div>
+            <div className="font-semibold text-sm">{interested}</div>
           </div>
         </div>
 
@@ -171,6 +216,49 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </button>
         </div>
       </div>
+      {/* Social Share Popup (fallback) */}
+      {shareOpen && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setShareOpen(false)}>
+          <div className="bg-white rounded-xl shadow-lg p-6 min-w-[280px] relative" onClick={e => e.stopPropagation()}>
+            <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onClick={() => setShareOpen(false)}>&times;</button>
+            <div className="font-bold mb-2">Share this property</div>
+            <div className="flex flex-col gap-2">
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent('Check out this property: ' + property.title + ' ' + (typeof window !== 'undefined' ? window.location.origin + '/search/' + property.id : ''))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 rounded hover:bg-green-50 text-green-700 font-medium"
+              >
+                <i className="fab fa-whatsapp text-xl" /> WhatsApp
+              </a>
+              <a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out this property: ' + property.title + ' ' + (typeof window !== 'undefined' ? window.location.origin + '/search/' + property.id : ''))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 rounded hover:bg-blue-50 text-blue-600 font-medium"
+              >
+                <i className="fab fa-twitter text-xl" /> Twitter
+              </a>
+              <a
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin + '/search/' + property.id : '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 rounded hover:bg-blue-50 text-blue-700 font-medium"
+              >
+                <i className="fab fa-linkedin text-xl" /> LinkedIn
+              </a>
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin + '/search/' + property.id : '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 rounded hover:bg-blue-50 text-blue-800 font-medium"
+              >
+                <i className="fab fa-facebook text-xl" /> Facebook
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   )
 }
