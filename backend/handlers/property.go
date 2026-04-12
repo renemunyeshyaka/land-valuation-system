@@ -21,6 +21,22 @@ type Property struct {
 	PlotNumber  string   `json:"plot_number"`
 	Images      []string `json:"images"`
 	CreatedAt   int64    `json:"created_at"`
+	LikesCount  int      `json:"likes_count"`
+}
+
+// LikePropertyHandler increments the likes_count for a property
+func LikePropertyHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.FormValue("id")
+	idx := findPropertyIndex(id)
+	if idx == -1 {
+		http.Error(w, "Property not found", http.StatusNotFound)
+		return
+	}
+	properties[idx].LikesCount++
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(properties[idx]); err != nil {
+		log.Printf("LikePropertyHandler encode error: %v", err)
+	}
 }
 
 // In-memory store for demonstration (replace with DB in production)

@@ -1,10 +1,6 @@
 package handlers
 
 import (
-	"backend/internal/models"
-	"backend/internal/repository"
-	"backend/internal/services"
-	"backend/internal/utils"
 	"errors"
 	"net/http"
 	"os"
@@ -14,7 +10,69 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/lib/pq"
+
+	"backend/internal/models"
+	"backend/internal/repository"
+	"backend/internal/services"
 )
+
+type PropertyHandler struct {
+	propertyRepo *repository.PropertyRepository
+}
+
+func NewPropertyHandler(repo *repository.PropertyRepository) *PropertyHandler {
+	return &PropertyHandler{propertyRepo: repo}
+}
+
+// InterestedPropertyHandler increments the interested count for a property (POST /api/v1/properties/:id/interested)
+func (h *PropertyHandler) InterestedPropertyHandler(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid property ID"})
+		return
+	}
+
+	property, err := h.propertyRepo.FindByID(uint(id))
+	if err != nil || property == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Property not found"})
+		return
+	}
+
+	if err := h.propertyRepo.IncrementInterested(uint(id)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update interested count"})
+		return
+	}
+
+	// Fetch updated count
+	updated, _ := h.propertyRepo.FindByID(uint(id))
+	c.JSON(http.StatusOK, gin.H{"message": "Interested added", "interested": updated.Interested})
+}
+
+// LikePropertyHandler increments the likes_count for a property (POST /api/v1/properties/:id/like)
+func (h *PropertyHandler) LikePropertyHandler(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid property ID"})
+		return
+	}
+
+	property, err := h.propertyRepo.FindByID(uint(id))
+	if err != nil || property == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Property not found"})
+		return
+	}
+
+	property.LikesCount++
+	if err := h.propertyRepo.Update(property); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update likes count"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Like added", "likes_count": property.LikesCount})
+}
+
+// getUserIDFromContext extracts user_id from Gin context for tests and handlers
+// Duplicate getUserIDFromContext removed
 
 // ListProperties returns a list of properties with optional filters
 func (h *PropertyHandler) ListProperties(c *gin.Context) {
@@ -54,54 +112,60 @@ func (h *PropertyHandler) ListProperties(c *gin.Context) {
 
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count properties", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count properties", "details": err.Error()})
 		return
 	}
 
 	var properties []models.Property
 	offset := (page - 1) * limit
 	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&properties).Error; err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to list properties", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list properties", "details": err.Error()})
 		return
 	}
 
-	utils.SuccessPaginatedResponse(c, http.StatusOK, "Properties retrieved successfully", properties, int(total), page, limit)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Properties retrieved successfully",
+		"data":    properties,
+		"total":   int(total),
+		"page":    page,
+		"limit":   limit,
+	})
 }
 
 // GetProperty returns a property by ID
 func (h *PropertyHandler) GetProperty(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid property ID", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid property ID", "details": err.Error()})
 		return
 	}
 
 	property, err := h.propertyRepo.FindByID(uint(id), "Owner")
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve property", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve property", "details": err.Error()})
 		return
 	}
 	if property == nil {
-		utils.ErrorResponse(c, http.StatusNotFound, "Property not found", "")
+		c.JSON(http.StatusNotFound, gin.H{"error": "Property not found"})
 		return
 	}
 
 	authUserID, userType, isAuthenticated := getOptionalAuthFromHeader(c)
 	if property.Visibility == "only_me" {
 		if !isAuthenticated || (authUserID != property.OwnerID && userType != "admin") {
-			utils.ErrorResponse(c, http.StatusForbidden, "This property is private", "Only the owner can view this property")
+			c.JSON(http.StatusForbidden, gin.H{"error": "This property is private", "details": "Only the owner can view this property"})
 			return
 		}
 	}
 	if property.Visibility == "registered" {
 		if !isAuthenticated {
-			utils.ErrorResponse(c, http.StatusUnauthorized, "Authentication required", "Please sign in to view this property")
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required", "details": "Please sign in to view this property"})
 			return
 		}
 	}
 
 	_ = h.propertyRepo.IncrementViews(uint(id))
-	utils.SuccessResponse(c, http.StatusOK, "Property retrieved successfully", property)
+	c.JSON(http.StatusOK, gin.H{"message": "Property retrieved successfully", "data": property})
 }
 
 // SearchNearby searches for properties using UPI or geo/type/price filters.
@@ -119,7 +183,7 @@ func (h *PropertyHandler) SearchNearby(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request", "details": err.Error()})
 		return
 	}
 
@@ -128,7 +192,7 @@ func (h *PropertyHandler) SearchNearby(c *gin.Context) {
 	hasType := req.PropertyType != ""
 	hasPrice := req.MaxPrice > 0
 	if !hasUPI && !hasGeo && !hasType && !hasPrice {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", "provide at least one search criterion: upi, property_type, max_price, or latitude+longitude+radius_km")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request", "details": "provide at least one search criterion: upi, property_type, max_price, or latitude+longitude+radius_km"})
 		return
 	}
 
@@ -145,15 +209,15 @@ func (h *PropertyHandler) SearchNearby(c *gin.Context) {
 	if req.UPI != "" {
 		results, total, err := h.propertyRepo.FindByUPIPaginated(req.UPI, page, limit)
 		if err != nil {
-			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to search property", err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search property", "details": err.Error()})
 			return
 		}
 		if total == 0 {
-			utils.SuccessPaginatedResponse(c, http.StatusOK, "No property found for given UPI", []models.Property{}, 0, page, limit)
+			c.JSON(http.StatusOK, gin.H{"message": "No property found for given UPI", "data": []models.Property{}, "total": 0, "page": page, "limit": limit})
 			return
 		}
 
-		utils.SuccessPaginatedResponse(c, http.StatusOK, "Property found", results, total, page, limit)
+		c.JSON(http.StatusOK, gin.H{"message": "Property found", "data": results, "total": total, "page": page, "limit": limit})
 		return
 	}
 
@@ -169,18 +233,18 @@ func (h *PropertyHandler) SearchNearby(c *gin.Context) {
 		limit,
 	)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to search properties", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search properties", "details": err.Error()})
 		return
 	}
 
-	utils.SuccessPaginatedResponse(c, http.StatusOK, "Properties found", properties, total, page, limit)
+	c.JSON(http.StatusOK, gin.H{"message": "Properties found", "data": properties, "total": total, "page": page, "limit": limit})
 }
 
 // CreateProperty creates a new property
 func (h *PropertyHandler) CreateProperty(c *gin.Context) {
 	userID, err := getUserIDFromContext(c)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", err.Error())
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "details": err.Error()})
 		return
 	}
 
@@ -211,7 +275,7 @@ func (h *PropertyHandler) CreateProperty(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request", "details": err.Error()})
 		return
 	}
 
@@ -250,25 +314,18 @@ func (h *PropertyHandler) CreateProperty(c *gin.Context) {
 		var pgErr *pq.Error
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			if pgErr.Constraint == "properties_upi_key" || strings.Contains(strings.ToLower(pgErr.Detail), "(upi)") {
-				utils.ErrorResponse(c, http.StatusConflict, "Property with this UPI already exists", "UPI/Parcel ID must be unique. Please use a different UPI.")
+				c.JSON(http.StatusConflict, gin.H{"error": "Property with this UPI already exists", "details": "UPI/Parcel ID must be unique. Please use a different UPI."})
 				return
 			}
 		}
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create property", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create property", "details": err.Error()})
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusCreated, "Property created successfully", property)
+	c.JSON(http.StatusCreated, gin.H{"message": "Property created successfully", "data": property})
 }
 
-type PropertyHandler struct {
-	propertyRepo *repository.PropertyRepository
-}
-
-// NewPropertyHandler returns a new PropertyHandler
-func NewPropertyHandler(propertyRepo *repository.PropertyRepository) *PropertyHandler {
-	return &PropertyHandler{propertyRepo: propertyRepo}
-}
+// Duplicate struct and constructor removed
 
 // UpdateProperty updates an existing property
 // @Router /api/v1/properties/{id} [put]
@@ -276,13 +333,13 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
 	userIDUint, err := getUserIDFromContext(c)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", err.Error())
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "details": err.Error()})
 		return
 	}
 
 	property, err := h.propertyRepo.FindByID(uint(id))
 	if err != nil || property == nil {
-		utils.ErrorResponse(c, http.StatusNotFound, "Property not found", "")
+		c.JSON(http.StatusNotFound, gin.H{"error": "Property not found"})
 		return
 	}
 
@@ -290,7 +347,7 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 	userType, _ := c.Get("user_type")
 	if userType != "admin" {
 		if property.OwnerID != userIDUint {
-			utils.ErrorResponse(c, http.StatusForbidden, "You don't have permission to update this property", "")
+			c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to update this property"})
 			return
 		}
 	}
@@ -314,7 +371,7 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request", "details": err.Error()})
 		return
 	}
 
@@ -364,11 +421,11 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 	}
 
 	if err := h.propertyRepo.Update(property); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update property", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update property", "details": err.Error()})
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Property updated successfully", property)
+	c.JSON(http.StatusOK, gin.H{"message": "Property updated successfully", "data": property})
 }
 
 // DeleteProperty deletes a property
@@ -377,29 +434,29 @@ func (h *PropertyHandler) DeleteProperty(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
 	userID, err := getUserIDFromContext(c)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", err.Error())
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "details": err.Error()})
 		return
 	}
 
 	property, err := h.propertyRepo.FindByID(uint(id))
 	if err != nil || property == nil {
-		utils.ErrorResponse(c, http.StatusNotFound, "Property not found", "")
+		c.JSON(http.StatusNotFound, gin.H{"error": "Property not found"})
 		return
 	}
 
 	// Admin can delete any property, non-admin users can only delete their own.
 	userType, _ := c.Get("user_type")
 	if userType != "admin" && property.OwnerID != userID {
-		utils.ErrorResponse(c, http.StatusForbidden, "You don't have permission to delete this property", "")
+		c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to delete this property"})
 		return
 	}
 
 	if err := h.propertyRepo.Delete(uint(id)); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to delete property", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete property", "details": err.Error()})
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Property deleted successfully", nil)
+	c.JSON(http.StatusOK, gin.H{"message": "Property deleted successfully"})
 }
 
 func getUserIDFromContext(c *gin.Context) (uint, error) {
@@ -507,7 +564,7 @@ func getOptionalAuthFromHeader(c *gin.Context) (uint, string, bool) {
 func (h *PropertyHandler) ListMyProperties(c *gin.Context) {
 	userID, err := getUserIDFromContext(c)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", err.Error())
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "details": err.Error()})
 		return
 	}
 
@@ -524,18 +581,18 @@ func (h *PropertyHandler) ListMyProperties(c *gin.Context) {
 
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count your properties", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count your properties", "details": err.Error()})
 		return
 	}
 
 	var properties []models.Property
 	offset := (page - 1) * limit
 	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&properties).Error; err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to list your properties", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list your properties", "details": err.Error()})
 		return
 	}
 
-	utils.SuccessPaginatedResponse(c, http.StatusOK, "Your properties retrieved successfully", properties, int(total), page, limit)
+	c.JSON(http.StatusOK, gin.H{"message": "Your properties retrieved successfully", "data": properties, "total": int(total), "page": page, "limit": limit})
 }
 
 // SearchNearby godoc
@@ -555,9 +612,9 @@ func (h *PropertyHandler) ListMyProperties(c *gin.Context) {
 func (h *PropertyHandler) GetStatistics(c *gin.Context) {
 	stats, err := h.propertyRepo.GetStatistics()
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve statistics", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve statistics", "details": err.Error()})
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Statistics retrieved successfully", stats)
+	c.JSON(http.StatusOK, gin.H{"message": "Statistics retrieved successfully", "data": stats})
 }

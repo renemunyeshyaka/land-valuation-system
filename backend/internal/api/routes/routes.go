@@ -129,6 +129,8 @@ func setupPropertyRoutes(router *gin.Engine, db *gorm.DB) {
 			protectedProperties.DELETE("/:id", propertyHandler.DeleteProperty)
 			protectedProperties.GET("/:id/marketplace-listings", marketplaceHandler.GetMarketplaceListings)
 			protectedProperties.POST("/:id/sync-marketplace", marketplaceHandler.SyncMarketplaceAPIs)
+			// Like property endpoint
+			protectedProperties.POST("/:id/like", propertyHandler.LikePropertyHandler)
 		}
 
 		// Public routes
@@ -136,6 +138,8 @@ func setupPropertyRoutes(router *gin.Engine, db *gorm.DB) {
 		properties.POST("/search", propertyHandler.SearchNearby)
 		properties.GET("/stats", propertyHandler.GetStatistics)
 		properties.GET("/:id", propertyHandler.GetProperty)
+		// Interested property endpoint (public)
+		properties.POST("/:id/interested", propertyHandler.InterestedPropertyHandler)
 	}
 
 	marketplace := router.Group("/api/v1/marketplace")

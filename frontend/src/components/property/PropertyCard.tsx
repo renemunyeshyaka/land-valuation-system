@@ -14,41 +14,74 @@ import {
 import { formatPrice, formatSize } from '../../utils/formatters'
 import { resolveImageUrl } from '../../utils/image'
 
+
+
 interface PropertyCardProps {
   property: any
+  isAuthenticated?: boolean // (Unused, but kept for future use)
 }
 
 export default function PropertyCard({ property }: PropertyCardProps) {
+
+
+
   const placeholder = 'https://placehold.co/600x400/png?text=No+Image'
   const [displayImageUrl, setDisplayImageUrl] = React.useState<string>(placeholder)
-  const [interested, setInterested] = React.useState<number>(property.interested || 0)
+  const [interested, setInterested] = React.useState<number>(property.interested ?? 0)
+  const [views, setViews] = React.useState<number>(property.views ?? 0)
+  const [landSize, setLandSize] = React.useState<number | undefined>(property.landSize)
+  const [sizeUnit, setSizeUnit] = React.useState<string | undefined>(property.sizeUnit)
   const [isLiking, setIsLiking] = React.useState(false)
   const [shareOpen, setShareOpen] = React.useState(false)
 
+  // Fetch real property stats (views, sqm) on mount
   React.useEffect(() => {
+    let isMounted = true;
     if (property.images && property.images.length > 0 && property.images[0]) {
       setDisplayImageUrl(resolveImageUrl(property.images[0]))
-      return
+    } else {
+      setDisplayImageUrl(placeholder)
     }
-    setDisplayImageUrl(placeholder)
-  }, [property.images])
 
-  // Like handler (increments interested count)
+    // Fetch real stats from backend (increments views)
+    const fetchStats = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+        const res = await fetch(`${apiUrl}/api/v1/properties/${property.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          const prop = data?.data ?? {};
+          if (isMounted) {
+            if (typeof prop.views === 'number') setViews(prop.views);
+            if (typeof prop.interested === 'number') setInterested(prop.interested);
+            if (typeof prop.land_size === 'number') setLandSize(prop.land_size);
+            if (typeof prop.size_unit === 'string') setSizeUnit(prop.size_unit);
+          }
+        }
+      } catch {}
+    };
+    fetchStats();
+    return () => { isMounted = false; };
+  }, [property.id, property.images]);
+
+  // Like handler (public, persistent, correct endpoint)
   const handleLike = async () => {
     if (isLiking) return;
     setIsLiking(true);
-    setInterested((prev) => prev + 1); // Optimistic update
+    setInterested((prev) => prev + 1); // Optimistic UI update
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-      const res = await fetch(`${apiUrl}/api/v1/marketplace/properties/${property.id}/interested`, {
+      const res = await fetch(`${apiUrl}/api/v1/properties/${property.id}/interested`, {
         method: 'POST',
       });
       if (res.ok) {
         const data = await res.json();
-        if (data?.data?.interested !== undefined) setInterested(data.data.interested);
+        // Some handlers return {interested: ...}, some {data: {interested: ...}}
+        if (data?.interested !== undefined) setInterested(data.interested);
+        else if (data?.data?.interested !== undefined) setInterested(data.data.interested);
       }
     } catch (e) {
-      // Ignore error, keep optimistic
+      setInterested((prev) => prev - 1); // Optionally revert on error
     } finally {
       setIsLiking(false);
     }
@@ -121,7 +154,8 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             className={`bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition ${isLiking ? 'opacity-60 pointer-events-none' : ''}`}
             title="I'm interested"
           >
-            <Heart className={`w-4 h-4 ${interested > (property.interested || 0) ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} />
+            <Heart className={`w-4 h-4 ${interested > (property.interested ?? 0) ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} />
+            <span>{interested}</span>
           </button>
           <button
             onClick={handleShare}
@@ -158,7 +192,10 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             )}
           </div>
           <span className="text-sm text-gray-500">
-            {formatSize(property.landSize, property.sizeUnit)}
+            {/* Always show sqm publicly */}
+            {typeof landSize === 'number' && landSize > 0 && typeof sizeUnit === 'string'
+              ? formatSize(landSize, sizeUnit)
+              : '—'}
           </span>
         </div>
 
@@ -194,7 +231,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </div>
           <div className="text-center">
             <div className="text-xs text-gray-500">Views</div>
-            <div className="font-semibold text-sm">{property.views || 0}</div>
+            <div className="font-semibold text-sm">{views}</div>
           </div>
           <div className="text-center">
             <div className="text-xs text-gray-500">Interested</div>

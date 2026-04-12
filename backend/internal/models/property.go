@@ -85,6 +85,7 @@ type Property struct {
 	// Statistics
 	Views      int `gorm:"default:0" json:"views"`
 	Interested int `gorm:"default:0" json:"interested"`
+	LikesCount int `gorm:"default:0" json:"likes_count"`
 
 	// Metadata
 	LastValuation  *time.Time `json:"last_valuation,omitempty"`

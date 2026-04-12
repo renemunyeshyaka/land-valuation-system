@@ -118,7 +118,8 @@ func setupAuthzRouter(t *testing.T, db *gorm.DB) *gin.Engine {
 	})
 
 	r := gin.New()
-	propertyHandler := handlers.NewPropertyHandler(repository.NewPropertyRepository(db))
+	propertyRepo := repository.NewPropertyRepository(db)
+	propertyHandler := handlers.NewPropertyHandler(propertyRepo)
 	marketplaceHandler := handlers.NewMarketplaceHandler(services.NewMarketplaceService(db), db)
 	analyticsHandler := handlers.NewAnalyticsHandler(services.NewAnalyticsService(db))
 	subscriptionHandler := handlers.NewSubscriptionHandler(services.NewSubscriptionService(db))
