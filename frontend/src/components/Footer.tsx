@@ -8,6 +8,7 @@ const Footer = () => (
           <i className="fas fa-map-marked-alt text-2xl"></i>
           <span className="font-bold text-xl">LandVal</span>
         </div>
+        <p className="text-xs mt-2 text-emerald-300">Certified by National Cybersecurity Authority (NCSA)<br/>Data Protection & Privacy Office (DPO)</p>
         <p className="text-sm mt-3">The most trusted land valuation and land marketplace in Rwanda. All gazette data sourced from official publications.</p>
         <div className="flex gap-4 mt-5">
           <i className="fab fa-twitter hover:text-white text-xl"></i>

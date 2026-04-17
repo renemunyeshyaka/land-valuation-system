@@ -1,3 +1,5 @@
+
+import Footer from '../../components/Footer';
 import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -207,18 +209,7 @@ const ForgotPassword: React.FC = () => {
         </main>
 
         {/* FOOTER */}
-        <footer className="bg-gray-900 text-gray-300 py-12 md:py-16 mt-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-4">LandVal</h3>
-                <p className="text-gray-400 text-sm mb-4">Rwanda’s trusted platform for land valuation, property insights, and secure transactions.</p>
-                <p className="text-gray-500 text-xs">&copy; {new Date().getFullYear()} Land Valuation System. All rights reserved.</p>
-              </div>
-              {/* ...other footer columns as needed... */}
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );

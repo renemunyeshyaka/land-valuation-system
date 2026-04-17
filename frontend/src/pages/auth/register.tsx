@@ -1,3 +1,5 @@
+
+import Footer from '../../components/Footer';
 import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -389,75 +391,10 @@ const Register: React.FC = () => {
         </main>
 
         {/* FOOTER */}
-        <footer className="bg-gray-900 text-gray-300 border-t border-gray-800 mt-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-            
-            {/* Footer Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-              
-              {/* Brand Column */}
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-                    <i className="fas fa-map-marked-alt text-white text-sm"></i>
-                  </div>
-                  <span className="font-bold text-white">LandVal</span>
-                </div>
-                <p className="text-sm text-gray-400">
-                  Accurate land valuation powered by official Rwanda gazette data.
-                </p>
-              </div>
-
-              {/* Product Links */}
-              <div>
-                <h4 className="font-semibold text-white mb-4 text-sm">Product</h4>
-                <ul className="space-y-2 text-sm">
-                  <li><a href="/search" className="text-gray-400 hover:text-emerald-400 transition">Valuation</a></li>
-                  <li><a href="/marketplace" className="text-gray-400 hover:text-emerald-400 transition">Marketplace</a></li>
-                  <li><a href="/subscriptions" className="text-gray-400 hover:text-emerald-400 transition">Subscription</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition">API</a></li>
-                </ul>
-              </div>
-
-              {/* Legal Links */}
-              <div>
-                <h4 className="font-semibold text-white mb-4 text-sm">Legal</h4>
-                <ul className="space-y-2 text-sm">
-                  <li><a href="/privacy" className="text-gray-400 hover:text-emerald-400 transition">Privacy Policy</a></li>
-                  <li><a href="/terms" className="text-gray-400 hover:text-emerald-400 transition">Terms of Service</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition">Contact</a></li>
-                </ul>
-              </div>
-
-              {/* Social Links */}
-              <div>
-                <h4 className="font-semibold text-white mb-4 text-sm">Follow Us</h4>
-                <div className="flex gap-4">
-                  <a href="#" className="text-gray-400 hover:text-emerald-400 transition">
-                    <i className="fab fa-twitter text-lg"></i>
-                  </a>
-                  <a href="#" className="text-gray-400 hover:text-emerald-400 transition">
-                    <i className="fab fa-linkedin text-lg"></i>
-                  </a>
-                  <a href="#" className="text-gray-400 hover:text-emerald-400 transition">
-                    <i className="fab fa-whatsapp text-lg"></i>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Divider */}
-            <div className="border-t border-gray-800 pt-8">
-              <p className="text-center text-gray-500 text-sm">
-                © 2026 Land Valuation System. All rights reserved.
-              </p>
-            </div>
-          </div>
-        </footer>
-
+        <Footer />
       </div>
     </>
   );
-};
+}
 
 export default Register;
