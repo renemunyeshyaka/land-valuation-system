@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import adminHierarchyRaw from '../src/data/land_admin_hierarchy_from_csv.json';
 import Head from 'next/head';
 import Link from 'next/link';
 import PropertyCard from '../src/components/property/PropertyCard';
@@ -36,6 +37,52 @@ export default function Marketplace() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(16); // Properties per page
   const [search, setSearch] = useState('');
+  // Dependent selector state
+  type AdminHierarchy = {
+    [province: string]: {
+      [district: string]: {
+        [sector: string]: {
+          [cell: string]: string[];
+        };
+      };
+    };
+  };
+  const adminHierarchy: AdminHierarchy = adminHierarchyRaw as AdminHierarchy;
+  const provinceNames = Object.keys(adminHierarchy);
+  const [province, setProvince] = useState('');
+  const [district, setDistrict] = useState('');
+  const [sector, setSector] = useState('');
+  const [cell, setCell] = useState('');
+  const [village, setVillage] = useState('');
+  const [type, setType] = useState('');
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
+
+  // Dependent dropdown options
+  const districtNames = province ? Object.keys(adminHierarchy[province] || {}) : [];
+  const sectorNames = province && district ? Object.keys((adminHierarchy[province] || {})[district] || {}) : [];
+  const cellNames = province && district && sector ? Object.keys(((adminHierarchy[province] || {})[district] || {})[sector] || {}) : [];
+  const villageNames = province && district && sector && cell ? (((adminHierarchy[province] || {})[district] || {})[sector] || {})[cell] || [] : [];
+
+  // Property types (hardcoded for now)
+  const propertyTypes = [
+    { value: '', label: 'All Types' },
+    { value: 'residential', label: 'Residential Land' },
+    { value: 'commercial', label: 'Commercial Land' },
+    { value: 'agricultural', label: 'Agricultural Land' },
+    { value: 'industrial', label: 'Industrial Land' },
+    { value: 'mixed', label: 'Mixed Use' },
+  ];
+
+  // Price ranges (can be improved)
+  const priceRanges = [
+    { value: '', label: 'Any Price' },
+    { value: '0-1000000', label: 'Up to 1M RWF' },
+    { value: '1000000-5000000', label: '1M - 5M RWF' },
+    { value: '5000000-20000000', label: '5M - 20M RWF' },
+    { value: '20000000-100000000', label: '20M - 100M RWF' },
+    { value: '100000000-', label: '100M+ RWF' },
+  ];
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Sample properties removed (no longer used)
@@ -54,38 +101,13 @@ export default function Marketplace() {
         // The backend returns { data: { data: [...] } }
         const propertyArray = data?.data?.data;
         if (Array.isArray(propertyArray)) {
-          if (propertyArray.length > 0) {
-            // Map null images/features to empty arrays for compatibility
-            const normalized = propertyArray.map((p: any) => ({
-              ...p,
-              images: Array.isArray(p.images) ? p.images : (p.images ? [p.images] : []),
-              features: Array.isArray(p.features) ? p.features : (p.features ? [p.features] : []),
-            }));
-            // Keep most recently created properties first on page 1.
-            normalized.sort((a: any, b: any) => {
-              const ta = Date.parse(a?.created_at || '');
-              const tb = Date.parse(b?.created_at || '');
-              if (Number.isFinite(ta) && Number.isFinite(tb) && ta !== tb) return tb - ta;
-              const ia = Number(a?.id || 0);
-              const ib = Number(b?.id || 0);
-              return ib - ia;
-            });
-            setProperties(normalized);
-          } else {
-            setProperties([]); // Backend returned empty array
-          }
+          setProperties(propertyArray);
         } else {
-          setError('Unexpected API response.');
           setProperties([]);
-          if (typeof window !== 'undefined') {
-            // Log for debugging
-            // eslint-disable-next-line no-console
-            console.error('API response:', data);
-          }
         }
       } catch (err: any) {
         setError(err.message || 'Unknown error');
-        setProperties([]); // No fallback to samples on error
+        setProperties([]);
       } finally {
         setLoading(false);
       }
@@ -95,14 +117,28 @@ export default function Marketplace() {
 
   // Filtered and paginated properties
   const filtered = properties.filter((p) => {
-    if (!search) return true;
+    // Text search
     const s = search.toLowerCase();
-    return (
+    const matchesText = !search ||
       p.title?.toLowerCase().includes(s) ||
       p.district?.toLowerCase().includes(s) ||
       p.sector?.toLowerCase().includes(s) ||
-      (p.description?.toLowerCase().includes(s) ?? false)
-    );
+      (p.description?.toLowerCase().includes(s) ?? false);
+
+    // Dependent selectors (only use fields that exist in Property interface)
+    // No province, cell, or village in Property interface, so skip those
+    const matchesDistrict = !district || p.district === district;
+    const matchesSector = !sector || p.sector === sector;
+    // No type field in Property interface, so skip type filtering or use a fallback if available
+    const matchesType = true;
+    let matchesPrice = true;
+    if (priceMin || priceMax) {
+      const price = Number(p.price);
+      if (priceMin && price < Number(priceMin)) matchesPrice = false;
+      if (priceMax && price > Number(priceMax)) matchesPrice = false;
+    }
+
+    return matchesText && matchesDistrict && matchesSector && matchesType && matchesPrice;
   });
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
   const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -188,24 +224,98 @@ export default function Marketplace() {
           <h1 className="text-3xl font-bold mb-2 text-center">Marketplace</h1>
           <p className="text-gray-600 mb-8 text-center">Browse properties for sale. Use filters and search to find your ideal property.</p>
 
-          {/* Search Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
+          {/* Search & Filter Controls */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            {/* Province */}
+            <select
+              value={province}
+              onChange={e => { setProvince(e.target.value); setDistrict(''); setSector(''); setCell(''); setVillage(''); setCurrentPage(1); }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Provinces</option>
+              {provinceNames.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+            {/* District */}
+            <select
+              value={district}
+              onChange={e => { setDistrict(e.target.value); setSector(''); setCell(''); setVillage(''); setCurrentPage(1); }}
+              disabled={!province}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+            >
+              <option value="">All Districts</option>
+              {districtNames.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+            {/* Sector */}
+            <select
+              value={sector}
+              onChange={e => { setSector(e.target.value); setCell(''); setVillage(''); setCurrentPage(1); }}
+              disabled={!district}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+            >
+              <option value="">All Sectors</option>
+              {sectorNames.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            {/* Cell */}
+            <select
+              value={cell}
+              onChange={e => { setCell(e.target.value); setVillage(''); setCurrentPage(1); }}
+              disabled={!sector}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+            >
+              <option value="">All Cells</option>
+              {cellNames.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            {/* Village */}
+            <select
+              value={village}
+              onChange={e => { setVillage(e.target.value); setCurrentPage(1); }}
+              disabled={!cell}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+            >
+              <option value="">All Villages</option>
+              {villageNames.map(v => <option key={v} value={v}>{v}</option>)}
+            </select>
+            {/* Property Type */}
+            <select
+              value={type}
+              onChange={e => { setType(e.target.value); setCurrentPage(1); }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {propertyTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            {/* Price Range */}
+            <select
+              value={priceMin && priceMax ? `${priceMin}-${priceMax}` : ''}
+              onChange={e => {
+                const val = e.target.value;
+                if (!val) { setPriceMin(''); setPriceMax(''); setCurrentPage(1); return; }
+                const [min, max] = val.split('-');
+                setPriceMin(min);
+                setPriceMax(max || '');
+                setCurrentPage(1);
+              }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {priceRanges.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+            </select>
+            {/* Text search */}
             <input
               type="text"
               placeholder="Search by title, district, sector, or description..."
               value={search}
               onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="w-full sm:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-            <div className="flex gap-2 mt-2 sm:mt-0">
-              <button
-                className="px-4 py-2 bg-gray-200 rounded-lg text-gray-700 font-semibold hover:bg-gray-300"
-                onClick={() => { setSearch(''); setCurrentPage(1); }}
-                disabled={!search}
-              >
-                Clear
-              </button>
-            </div>
+            {/* Clear button */}
+            <button
+              className="w-full px-4 py-2 bg-gray-200 rounded-lg text-gray-700 font-semibold hover:bg-gray-300"
+              onClick={() => {
+                setSearch(''); setProvince(''); setDistrict(''); setSector(''); setCell(''); setVillage(''); setType(''); setPriceMin(''); setPriceMax(''); setCurrentPage(1);
+              }}
+              type="button"
+            >
+              Clear All
+            </button>
           </div>
 
           {loading && (
