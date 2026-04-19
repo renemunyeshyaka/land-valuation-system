@@ -380,7 +380,12 @@ This workflow ensures LVS is robust, user-friendly, and fully independent.
 
    Note: `backend/main.go` is a deprecated shim and should not be used as a runtime entrypoint.
    - Frontend: `cd frontend && npm run test` | rm -rf .next && npm run dev | npm run build && npm run start
-   - Mobile: `cd mobile && npm run test`
+   - In another `terminal type`: cd mobile && npx expo start
+   - Mobile: `cd mobile && npm run test` | emulator -list-avds && emulator -avd test_avd 
+                                          or
+                                          emulator -avd test_avd -gpu swiftshader_indirect
+
+ If you see "Unable to connect to adb daemon on port: 5037": adb start-server
 
 ### VPS Auth/MFA Deploy Preflight
 
