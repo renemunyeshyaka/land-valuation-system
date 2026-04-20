@@ -1,11 +1,10 @@
 package services
 
 import (
-	"context"
-	"strconv"
-
 	"backend/internal/models"
 	"backend/internal/repository"
+	"context"
+	"strconv"
 
 	"gorm.io/gorm"
 )
@@ -51,21 +50,37 @@ func (s *NotificationService) SendToUser(ctx context.Context, input SendNotifica
 }
 
 func (s *NotificationService) ListForUser(ctx context.Context, userID string, limit int) ([]models.Notification, error) {
-	return s.notificationRepo.ListByUserID(ctx, userID, limit)
+	uid, err := strconv.ParseUint(userID, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	return s.notificationRepo.ListByUserID(ctx, uint(uid), limit)
 }
 
 func (s *NotificationService) MarkAsRead(ctx context.Context, notificationID, userID string) error {
-	return s.notificationRepo.MarkAsRead(ctx, notificationID, userID)
+	uid, err := strconv.ParseUint(userID, 10, 64)
+	if err != nil {
+		return err
+	}
+	return s.notificationRepo.MarkAsRead(ctx, notificationID, uint(uid))
 }
 
 // MarkAllAsRead marks all unread notifications as read for a user
 func (s *NotificationService) MarkAllAsRead(ctx context.Context, userID string) (int64, error) {
-	return s.notificationRepo.MarkAllAsReadByUser(ctx, userID)
+	uid, err := strconv.ParseUint(userID, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return s.notificationRepo.MarkAllAsReadByUser(ctx, uint(uid))
 }
 
 // GetUnreadCount returns the count of unread notifications for a user
 func (s *NotificationService) GetUnreadCount(ctx context.Context, userID string) (int64, error) {
-	return s.notificationRepo.GetUnreadCountByUser(ctx, userID)
+	uid, err := strconv.ParseUint(userID, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return s.notificationRepo.GetUnreadCountByUser(ctx, uint(uid))
 }
 
 // BroadcastNotification sends a notification to all users or a specific role
@@ -109,5 +124,17 @@ func (s *NotificationService) BroadcastNotification(ctx context.Context, title, 
 
 // DeleteNotification removes a notification for a user
 func (s *NotificationService) DeleteNotification(ctx context.Context, notificationID, userID string) error {
-	return s.notificationRepo.Delete(ctx, notificationID, userID)
+	uid, err := strconv.ParseUint(userID, 10, 64)
+	if err != nil {
+		return err
+	}
+	return s.notificationRepo.Delete(ctx, notificationID, uint(uid))
+}
+
+func (s *NotificationService) AdminDeleteNotification(ctx context.Context, notificationID string) error {
+	return s.notificationRepo.AdminDeleteNotification(ctx, notificationID)
+}
+
+func (s *NotificationService) AdminUpdateNotification(ctx context.Context, notificationID string, payload *models.Notification) (*models.Notification, error) {
+	return s.notificationRepo.AdminUpdateNotification(ctx, notificationID, payload)
 }

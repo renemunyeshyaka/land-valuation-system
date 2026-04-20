@@ -1,12 +1,12 @@
 package handlers
 
 import (
+	"backend/internal/models"
+	"backend/internal/services"
+	"backend/internal/utils"
 	"net/http"
 	"strconv"
 	"time"
-
-	"backend/internal/services"
-	"backend/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -72,6 +72,12 @@ func (h *NotificationHandler) SendToUser(c *gin.Context) {
 		return
 	}
 
+	// Broadcast to WebSocket clients (if hub is available)
+	if WSNotificationHubInstance != nil && notification != nil {
+		msg := utils.NotificationToJSON(notification)
+		go WSNotificationHubInstance.Broadcast([]byte(msg))
+	}
+
 	utils.SuccessResponse(c, http.StatusCreated, "Notification sent", notification)
 }
 
@@ -87,12 +93,12 @@ func (h *NotificationHandler) SendToUser(c *gin.Context) {
 // @Failure 500 {object} utils.APIResponse
 // @Router /users/notifications [get]
 func (h *NotificationHandler) ListUserNotifications(c *gin.Context) {
-	userID := c.MustGet("user_id").(string)
+	userIDStr := c.MustGet("user_id").(string)
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 
-	notifications, err := h.notificationService.ListForUser(c.Request.Context(), userID, limit)
+	notifications, err := h.notificationService.ListForUser(c.Request.Context(), userIDStr, limit)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve notifications", err.Error())
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid user ID for notification lookup", err.Error())
 		return
 	}
 
@@ -212,6 +218,13 @@ func (h *NotificationHandler) BroadcastNotification(c *gin.Context) {
 		return
 	}
 
+	// Broadcast to WebSocket clients (if hub is available)
+	if WSNotificationHubInstance != nil {
+		// Send a generic broadcast message (clients should refresh notifications)
+		msg := utils.BroadcastNotificationToJSON(req.Title, req.Message, req.Type, req.UserRole)
+		go WSNotificationHubInstance.Broadcast([]byte(msg))
+	}
+
 	utils.SuccessResponse(c, http.StatusCreated, "Notification broadcasted successfully", gin.H{
 		"recipients_count": recipientsCount,
 		"user_role":        req.UserRole,
@@ -241,4 +254,55 @@ func (h *NotificationHandler) DeleteNotification(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Notification deleted successfully", nil)
+}
+
+// AdminDeleteNotification godoc
+// @Summary Admin delete notification
+// @Description Admin can delete any notification by ID
+// @Tags admin,notifications
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Notification ID"
+// @Success 200 {object} utils.APIResponse
+// @Failure 401 {object} utils.APIResponse
+// @Failure 404 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
+// @Router /admin/notifications/{id} [delete]
+func (h *NotificationHandler) AdminDeleteNotification(c *gin.Context) {
+	notificationID := c.Param("id")
+	if err := h.notificationService.AdminDeleteNotification(c.Request.Context(), notificationID); err != nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "Failed to delete notification", err.Error())
+		return
+	}
+	utils.SuccessResponse(c, http.StatusOK, "Notification deleted successfully", nil)
+}
+
+// AdminUpdateNotification godoc
+// @Summary Admin update notification
+// @Description Admin can update any notification by ID
+// @Tags admin,notifications
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Notification ID"
+// @Param request body models.Notification true "Notification update payload"
+// @Success 200 {object} utils.APIResponse
+// @Failure 400 {object} utils.APIResponse
+// @Failure 401 {object} utils.APIResponse
+// @Failure 404 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
+// @Router /admin/notifications/{id} [put]
+func (h *NotificationHandler) AdminUpdateNotification(c *gin.Context) {
+	notificationID := c.Param("id")
+	var payload models.Notification
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		return
+	}
+	updated, err := h.notificationService.AdminUpdateNotification(c.Request.Context(), notificationID, &payload)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "Failed to update notification", err.Error())
+		return
+	}
+	utils.SuccessResponse(c, http.StatusOK, "Notification updated successfully", updated)
 }

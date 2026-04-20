@@ -9,17 +9,20 @@ import Footer from '@/components/Footer';
 import UserManagement from '@/components/admin/UserManagement';
 import MarketplaceManagement from '@/components/admin/MarketplaceManagement';
 import PropertyListings from '@/components/admin/PropertyListings';
+
 import AnalyticsRevenue from '@/components/admin/AnalyticsRevenue';
 import SupportModeration from '@/components/admin/SupportModeration';
 import Payments from '@/components/admin/Payments';
 import SystemHealth from '@/components/admin/SystemHealth';
 import DataImportExport from '@/components/admin/DataImportExport';
+import NotificationManagement from '@/components/admin/NotificationManagement';
 
 const NAV = [
   { key: 'overview', label: 'Dashboard', icon: 'fas fa-tachometer-alt' },
   { key: 'users', label: 'Users', icon: 'fas fa-users' },
   { key: 'marketplace', label: 'Marketplace', icon: 'fas fa-map-marked-alt' },
   { key: 'listings', label: 'Listings', icon: 'fas fa-building' },
+  { key: 'notifications', label: 'Notifications', icon: 'fas fa-bell' },
   { key: 'payments', label: 'Payments', icon: 'fas fa-hand-holding-usd' },
   { key: 'analytics', label: 'Analytics', icon: 'fas fa-chart-line' },
   { key: 'support', label: 'Support', icon: 'fas fa-headset' },
@@ -193,6 +196,7 @@ function AdminDashboard() {
       case 'users': return <UserManagement />;
       case 'marketplace': return <MarketplaceManagement />;
       case 'listings': return <PropertyListings />;
+      case 'notifications': return <NotificationManagement />;
       case 'payments': return <Payments />;
       case 'analytics': return <AnalyticsRevenue />;
       case 'support': return <SupportModeration />;

@@ -56,6 +56,14 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client) 
 	{
 		invoice.GET(":txn_id/download", invoiceHandler.DownloadInvoice)
 	}
+
+	// --- WebSocket Notification Hub ---
+	wsNotificationHub := handlers.NewWSNotificationHub()
+	// Expose at /ws/notifications (public, but clients must authenticate after connecting)
+	router.GET("/ws/notifications", wsNotificationHub.HandleWS)
+
+	// Make the hub available for later use (e.g., for broadcasting)
+	handlers.WSNotificationHubInstance = wsNotificationHub
 }
 
 func setupAuthRoutes(router *gin.Engine, db *gorm.DB) {
@@ -246,6 +254,7 @@ func setupAdminRoutes(router *gin.Engine, db *gorm.DB) {
 	admin.Use(middleware.AuthRequired(), middleware.AdminRequired())
 	{
 		admin.GET("/users", adminHandler.GetAllUsers)
+		admin.GET("/user-roles", adminHandler.GetUserRoles)
 		admin.GET("/users/list", userHandler.ListUsers) // New paginated/filterable endpoint
 		admin.GET("/users/:id", adminHandler.GetUser)
 		admin.PUT("/users/:id", userHandler.UpdateUserByAdmin)
@@ -263,6 +272,7 @@ func setupAdminRoutes(router *gin.Engine, db *gorm.DB) {
 		admin.GET("/properties", adminHandler.GetAllProperties)
 		admin.POST("/properties/:id/approve", adminHandler.ApproveProperty)
 		admin.POST("/properties/:id/reject", adminHandler.RejectProperty)
+		admin.GET("/notifications", adminHandler.GetAllNotifications)
 	}
 }
 
@@ -275,6 +285,8 @@ func setupNotificationRoutes(router *gin.Engine, db *gorm.DB) {
 	{
 		admin.POST("/notifications", notificationHandler.SendToUser)
 		admin.POST("/notifications/broadcast", notificationHandler.BroadcastNotification)
+		admin.DELETE("/notifications/:id", notificationHandler.AdminDeleteNotification)
+		admin.PUT("/notifications/:id", notificationHandler.AdminUpdateNotification)
 	}
 
 	users := router.Group("/api/v1/users")

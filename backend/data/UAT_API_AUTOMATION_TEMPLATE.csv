@@ -1,0 +1,6 @@
+Test Case ID,API URL,Method,Headers,Request Body,Expected Result,Api Response,Actual Result,Tested At
+1,https://sandbox.momodeveloper.mtn.com/v1_0/apiuser,POST,"Ocp-Apim-Subscription-Key: <your-key>",{"providerCallbackHost": "string"},201 Created,,,
+2,https://sandbox.momodeveloper.mtn.com/v1_0/apiuser/<user-id>/apikey,POST,"Ocp-Apim-Subscription-Key: <your-key>",,201 Created,,,
+3,https://sandbox.momodeveloper.mtn.com/collection/token/POST,POST,"Ocp-Apim-Subscription-Key: <your-key>;Authorization: Basic <base64>",grant_type=client_credentials,200 OK,,,
+4,https://sandbox.momodeveloper.mtn.com/collection/v1_0/requesttopay,POST,"Ocp-Apim-Subscription-Key: <your-key>;Authorization: Bearer <token>",{"amount": "1000", "currency": "EUR", "externalId": "123", "payer": {"partyIdType": "MSISDN", "partyId": "46733123450"}, "payerMessage": "test", "payeeNote": "test"},202 Accepted,,,
+5,https://sandbox.momodeveloper.mtn.com/collection/v1_0/requesttopay/<reference-id>,GET,"Ocp-Apim-Subscription-Key: <your-key>;Authorization: Bearer <token>",,200 OK,,,

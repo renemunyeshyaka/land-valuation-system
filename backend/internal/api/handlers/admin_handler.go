@@ -10,8 +10,65 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetUserRoles returns all available user roles (static list)
+// @Summary Get all user roles
+// @Description Returns a list of all user roles
+// @Tags admin
+// @Produce json
+// @Success 200 {object} utils.APIResponse
+// @Router /admin/user-roles [get]
+
+func (h *AdminHandler) GetUserRoles(c *gin.Context) {
+	roles := []string{"individual", "agent", "corporate", "government", "admin"}
+	utils.SuccessResponse(c, http.StatusOK, "User roles retrieved", roles)
+}
+
 type AdminHandler struct {
 	adminService *services.AdminService
+}
+
+// GetAllNotifications retrieves all notifications (admin only, paginated, filterable)
+// @Summary Get all notifications
+// @Description Returns a paginated, filterable list of all notifications in the system
+// @Tags admin,notifications
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Page size" default(20)
+// @Param user_id query string false "Filter by user ID"
+// @Param type query string false "Filter by notification type (info, success, warning, error)"
+// @Param is_read query bool false "Filter by read/unread status"
+// @Param sent_by_id query string false "Filter by sender/admin ID"
+// @Param search query string false "Search in title/message"
+// @Success 200 {object} utils.APIResponse
+// @Failure 401 {object} utils.APIResponse
+// @Failure 500 {object} utils.APIResponse
+// @Security BearerAuth
+// @Router /admin/notifications [get]
+func (h *AdminHandler) GetAllNotifications(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	userID := c.Query("user_id")
+	notifType := c.Query("type")
+	isReadStr := c.Query("is_read")
+	sentByID := c.Query("sent_by_id")
+	search := c.Query("search")
+
+	// Parse is_read (optional)
+	var isRead *bool
+	if isReadStr != "" {
+		val := isReadStr == "true" || isReadStr == "1"
+		isRead = &val
+	}
+
+	notifications, total, err := h.adminService.GetAllNotifications(
+		c.Request.Context(), page, limit, userID, notifType, isRead, sentByID, search,
+	)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve notifications", err.Error())
+		return
+	}
+
+	utils.SuccessPaginatedResponse(c, http.StatusOK, "Notifications retrieved", notifications, total, page, limit)
 }
 
 // VerifyKYCRequest represents KYC verification request

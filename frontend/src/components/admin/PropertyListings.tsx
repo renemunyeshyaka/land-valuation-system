@@ -325,61 +325,65 @@ const PropertyListings: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {listings.filter(listing => {
-                const q = search.toLowerCase();
-                return (
-                  (listing.title || '').toLowerCase().includes(q) ||
-                  getLocationText(listing).toLowerCase().includes(q) ||
-                  (listing.property_type || listing.type || '').toLowerCase().includes(q) ||
-                  (listing.status || '').toLowerCase().includes(q)
-                );
-              }).map(listing => (
-                <tr key={listing.id}>
-                  <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>
-                    {getPrimaryImage(listing) ? (
-                      <button
-                        type="button"
-                        onClick={() => openGallery(listing)}
-                        style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
-                        title="View all images"
-                      >
-                        <img
-                          src={getPrimaryImage(listing) as string}
-                          alt={listing.title || 'Property image'}
-                          style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
-                      </button>
-                    ) : (
-                      <span style={{ color: '#9ca3af', fontSize: 12 }}>No image</span>
-                    )}
-                  </td>
-                  <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.title || '-'}</td>
-                  <td style={{ padding: 8, border: '1px solid #eee' }}>{getLocationText(listing)}</td>
-                  <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.property_type || listing.type || '-'}</td>
-                  <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.status || '-'}</td>
-                  <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>
-                    {getGoogleMapsLink(listing) ? (
-                      <a
-                        href={getGoogleMapsLink(listing) as string}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}
-                      >
-                        Open Map
-                      </a>
-                    ) : (
-                      <span style={{ color: '#9ca3af', fontSize: 12 }}>N/A</span>
-                    )}
-                  </td>
-                  <td style={{ padding: 8, border: '1px solid #eee' }}>
-                    <button onClick={() => openEditModal(listing)} style={{ marginRight: 8, background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                    <button onClick={() => setDeleteId(listing.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
-                  </td>
-                </tr>
-              ))}
+              {Array.isArray(listings)
+                ? listings
+                    .filter(listing => {
+                      const q = search.toLowerCase();
+                      return (
+                        (listing.title || '').toLowerCase().includes(q) ||
+                        getLocationText(listing).toLowerCase().includes(q) ||
+                        (listing.property_type || listing.type || '').toLowerCase().includes(q) ||
+                        (listing.status || '').toLowerCase().includes(q)
+                      );
+                    })
+                    .map(listing => (
+                      <tr key={listing.id}>
+                        <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>
+                          {getPrimaryImage(listing) ? (
+                            <button
+                              type="button"
+                              onClick={() => openGallery(listing)}
+                              style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
+                              title="View all images"
+                            >
+                              <img
+                                src={getPrimaryImage(listing) as string}
+                                alt={listing.title || 'Property image'}
+                                style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            </button>
+                          ) : (
+                            <span style={{ color: '#9ca3af', fontSize: 12 }}>No image</span>
+                          )}
+                        </td>
+                        <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.title || '-'}</td>
+                        <td style={{ padding: 8, border: '1px solid #eee' }}>{getLocationText(listing)}</td>
+                        <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.property_type || listing.type || '-'}</td>
+                        <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.status || '-'}</td>
+                        <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>
+                          {getGoogleMapsLink(listing) ? (
+                            <a
+                              href={getGoogleMapsLink(listing) as string}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}
+                            >
+                              Open Map
+                            </a>
+                          ) : (
+                            <span style={{ color: '#9ca3af', fontSize: 12 }}>N/A</span>
+                          )}
+                        </td>
+                        <td style={{ padding: 8, border: '1px solid #eee' }}>
+                          <button onClick={() => openEditModal(listing)} style={{ marginRight: 8, background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                          <button onClick={() => setDeleteId(listing.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                        </td>
+                      </tr>
+                    ))
+                : null}
             </tbody>
           </table>
         )}

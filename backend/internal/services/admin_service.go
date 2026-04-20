@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	"backend/internal/models"
@@ -13,6 +14,65 @@ import (
 type AdminService struct {
 	userRepo *repository.UserRepository
 	db       *gorm.DB
+}
+
+// parseUint tries to parse a string as uint, returns (value, true) if valid, (0, false) otherwise
+func parseUint(s string) (uint, bool) {
+	v, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+	return uint(v), true
+}
+
+// GetAllNotifications retrieves all notifications (admin only, paginated, filterable)
+func (s *AdminService) GetAllNotifications(ctx context.Context, page, limit int, userID, notifType string, isRead *bool, sentByID, search string) ([]*models.Notification, int, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+	offset := (page - 1) * limit
+
+	query := s.db.WithContext(ctx).Model(&models.Notification{})
+	// Only filter by user_id if userID is a valid integer and provided
+	if userID != "" {
+		uid, ok := parseUint(userID)
+		if ok {
+			query = query.Where("user_id = ?", uid)
+		} else {
+			// If userID is invalid, do not filter (show all)
+			// Optionally, could return error here
+		}
+	}
+	// If userID is empty, do NOT filter by user_id (admin sees all)
+
+	if notifType != "" {
+		query = query.Where("LOWER(type) = ?", strings.ToLower(notifType))
+	}
+	if isRead != nil {
+		query = query.Where("is_read = ?", *isRead)
+	}
+	if sentByID != "" {
+		query = query.Where("sent_by_id = ?", sentByID)
+	}
+	if search != "" {
+		q := "%" + strings.ToLower(search) + "%"
+		query = query.Where("LOWER(title) LIKE ? OR LOWER(message) LIKE ?", q, q)
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var notifications []*models.Notification
+	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&notifications).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return notifications, int(total), nil
 }
 
 func NewAdminService(db *gorm.DB) *AdminService {

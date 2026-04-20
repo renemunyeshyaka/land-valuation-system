@@ -273,7 +273,7 @@ const UserManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {users.map(user => (
+                {Array.isArray(users) && users.map(user => (
                   <tr key={user.id}>
                     <td style={{ padding: 8, border: '1px solid #eee', fontFamily: 'monospace' }}>{String(user.id)}</td>
                     <td style={{ padding: 8, border: '1px solid #eee' }}>{user.first_name}</td>

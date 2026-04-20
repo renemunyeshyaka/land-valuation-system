@@ -1,11 +1,10 @@
 package repository
 
 import (
+	"backend/internal/models"
 	"context"
 	"errors"
 	"time"
-
-	"backend/internal/models"
 
 	"gorm.io/gorm"
 )
@@ -18,6 +17,41 @@ func NewNotificationRepository(db *gorm.DB) *NotificationRepository {
 	return &NotificationRepository{db: db}
 }
 
+// AdminDeleteNotification deletes any notification by ID (admin)
+func (r *NotificationRepository) AdminDeleteNotification(ctx context.Context, notificationID string) error {
+	result := r.db.WithContext(ctx).
+		Where("id = ?", notificationID).
+		Delete(&models.Notification{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("notification not found")
+	}
+	return nil
+}
+
+// AdminUpdateNotification updates any notification by ID (admin)
+func (r *NotificationRepository) AdminUpdateNotification(ctx context.Context, notificationID string, payload *models.Notification) (*models.Notification, error) {
+	var notif models.Notification
+	if err := r.db.WithContext(ctx).First(&notif, "id = ?", notificationID).Error; err != nil {
+		return nil, err
+	}
+	// Only update allowed fields
+	notif.Title = payload.Title
+	notif.Message = payload.Message
+	notif.Type = payload.Type
+	notif.IsRead = payload.IsRead
+	notif.ReadAt = payload.ReadAt
+	notif.UserID = payload.UserID
+	notif.SentByID = payload.SentByID
+
+	if err := r.db.WithContext(ctx).Save(&notif).Error; err != nil {
+		return nil, err
+	}
+	return &notif, nil
+}
+
 func (r *NotificationRepository) Create(ctx context.Context, notification *models.Notification) (*models.Notification, error) {
 	result := r.db.WithContext(ctx).Create(notification)
 	if result.Error != nil {
@@ -26,7 +60,7 @@ func (r *NotificationRepository) Create(ctx context.Context, notification *model
 	return notification, nil
 }
 
-func (r *NotificationRepository) ListByUserID(ctx context.Context, userID string, limit int) ([]models.Notification, error) {
+func (r *NotificationRepository) ListByUserID(ctx context.Context, userID uint, limit int) ([]models.Notification, error) {
 	var notifications []models.Notification
 
 	query := r.db.WithContext(ctx).
@@ -44,7 +78,7 @@ func (r *NotificationRepository) ListByUserID(ctx context.Context, userID string
 	return notifications, nil
 }
 
-func (r *NotificationRepository) MarkAsRead(ctx context.Context, notificationID, userID string) error {
+func (r *NotificationRepository) MarkAsRead(ctx context.Context, notificationID string, userID uint) error {
 	now := time.Now().UTC()
 
 	result := r.db.WithContext(ctx).
@@ -54,20 +88,11 @@ func (r *NotificationRepository) MarkAsRead(ctx context.Context, notificationID,
 			"is_read": true,
 			"read_at": now,
 		})
-
-	if result.Error != nil {
-		return result.Error
-	}
-
-	if result.RowsAffected == 0 {
-		return errors.New("notification not found")
-	}
-
-	return nil
+	return result.Error
 }
 
 // MarkAllAsReadByUser marks all unread notifications as read for a user
-func (r *NotificationRepository) MarkAllAsReadByUser(ctx context.Context, userID string) (int64, error) {
+func (r *NotificationRepository) MarkAllAsReadByUser(ctx context.Context, userID uint) (int64, error) {
 	now := time.Now().UTC()
 
 	result := r.db.WithContext(ctx).
@@ -86,7 +111,7 @@ func (r *NotificationRepository) MarkAllAsReadByUser(ctx context.Context, userID
 }
 
 // GetUnreadCountByUser returns the count of unread notifications for a user
-func (r *NotificationRepository) GetUnreadCountByUser(ctx context.Context, userID string) (int64, error) {
+func (r *NotificationRepository) GetUnreadCountByUser(ctx context.Context, userID uint) (int64, error) {
 	var count int64
 
 	result := r.db.WithContext(ctx).
@@ -111,7 +136,7 @@ func (r *NotificationRepository) CreateMultiple(ctx context.Context, notificatio
 }
 
 // Delete removes a notification
-func (r *NotificationRepository) Delete(ctx context.Context, notificationID, userID string) error {
+func (r *NotificationRepository) Delete(ctx context.Context, notificationID string, userID uint) error {
 	result := r.db.WithContext(ctx).
 		Where("id = ? AND user_id = ?", notificationID, userID).
 		Delete(&models.Notification{})

@@ -95,12 +95,6 @@ func NewSubscriptionService(db *gorm.DB) *SubscriptionService {
 	}
 }
 
-// parseUint safely converts string to uint
-func parseUint(s string) uint {
-	v, _ := strconv.ParseUint(s, 10, 64)
-	return uint(v)
-}
-
 // GetAllPlans retrieves all subscription plans
 func (s *SubscriptionService) GetAllPlans(ctx context.Context) ([]map[string]interface{}, error) {
 	plans := []map[string]interface{}{
@@ -153,8 +147,12 @@ func (s *SubscriptionService) UpgradeSubscription(ctx context.Context, userID, n
 		// Create new subscription if doesn't exist
 		now := time.Now()
 		nextYear := now.AddDate(1, 0, 0)
+		uid, ok := parseUint(userID)
+		if !ok {
+			return nil, fmt.Errorf("invalid userID: %s", userID)
+		}
 		subscription := &models.Subscription{
-			UserID:    parseUint(userID),
+			UserID:    uid,
 			PlanType:  newPlanType,
 			Status:    "active",
 			StartDate: now,
@@ -237,7 +235,11 @@ func (s *SubscriptionService) GetInvoice(ctx context.Context, invoiceID, userID 
 		return nil, err
 	}
 
-	if transaction.BuyerID != parseUint(userID) {
+	uid, ok := parseUint(userID)
+	if !ok {
+		return nil, errors.New("unauthorized")
+	}
+	if transaction.BuyerID != uid {
 		return nil, errors.New("unauthorized")
 	}
 

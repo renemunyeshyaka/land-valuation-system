@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import adminHierarchyRaw from '../src/data/land_admin_hierarchy_from_csv.json';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -87,32 +87,93 @@ export default function Marketplace() {
 
   // Sample properties removed (no longer used)
 
-  useEffect(() => {
-    async function fetchProperties() {
-      setLoading(true);
-      setError(null);
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-        const res = await fetch(`${apiUrl}/api/v1/marketplace/properties-for-sale?t=${Date.now()}`, {
-          cache: 'no-store',
-        });
-        if (!res.ok) throw new Error('Failed to fetch properties');
-        const data = await res.json();
-        // The backend returns { data: { data: [...] } }
-        const propertyArray = data?.data?.data;
-        if (Array.isArray(propertyArray)) {
-          setProperties(propertyArray);
-        } else {
-          setProperties([]);
-        }
-      } catch (err: any) {
-        setError(err.message || 'Unknown error');
+  // --- Real-time property updates via WebSocket (with fallback polling) ---
+  const wsRef = useRef<WebSocket | null>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch properties from API
+  const fetchProperties = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+      const res = await fetch(`${apiUrl}/api/v1/marketplace/properties-for-sale?t=${Date.now()}`, {
+        cache: 'no-store',
+      });
+      if (!res.ok) throw new Error('Failed to fetch properties');
+      const data = await res.json();
+      const propertyArray = data?.data?.data;
+      if (Array.isArray(propertyArray)) {
+        setProperties(propertyArray);
+      } else {
         setProperties([]);
-      } finally {
-        setLoading(false);
       }
+    } catch (err: any) {
+      setError(err.message || 'Unknown error');
+      setProperties([]);
+    } finally {
+      setLoading(false);
     }
-    fetchProperties();
+  };
+
+  useEffect(() => {
+    let ws: WebSocket | null = null;
+    let polling: NodeJS.Timeout | null = null;
+    let closedByClient = false;
+
+    // Helper to start polling if WS fails
+    const startPolling = () => {
+      if (!polling) {
+        polling = setInterval(fetchProperties, 15000); // 15s fallback polling
+        pollingRef.current = polling;
+      }
+    };
+
+    // Try to connect to WebSocket for real-time updates
+    try {
+      const wsUrl = (process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5001') + '/ws/marketplace';
+      ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        // On connect, fetch initial data
+        fetchProperties();
+        // Stop polling if running
+        if (pollingRef.current) clearInterval(pollingRef.current);
+      };
+      ws.onmessage = (event) => {
+        // Expecting a message like { type: 'property_update' }
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'property_update') {
+            fetchProperties();
+          }
+        } catch {}
+      };
+      ws.onerror = () => {
+        // On error, fallback to polling
+        startPolling();
+      };
+      ws.onclose = () => {
+        if (!closedByClient) startPolling();
+      };
+    } catch {
+      // If WS fails to construct, fallback to polling
+      startPolling();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      closedByClient = true;
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
   }, []);
 
   // Filtered and paginated properties
