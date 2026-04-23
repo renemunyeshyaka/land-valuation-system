@@ -1,11 +1,34 @@
  
 
 import React, { useState, useEffect } from 'react';
+
+// ErrorBoundary to catch runtime errors in children
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: any }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: any, info: any) {
+    // Log error to console for debugging
+    // eslint-disable-next-line no-console
+    console.error('ErrorBoundary caught error:', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div style={{ color: 'red', padding: 16, background: '#fee', borderRadius: 8 }}>A UI error occurred: {String(this.state.error)}</div>;
+    }
+    return this.props.children;
+  }
+}
 import axios from 'axios';
 import { resolveImageUrl } from '../../utils/image';
 import adminHierarchyRaw from '../../data/land_admin_hierarchy_from_csv.json';
 import { useSession } from 'next-auth/react';
 import { refreshAccessToken } from '../../utils/tokenRefresh';
+import AdminEditPropertyModal from './AdminEditPropertyModal';
 
 type AdminHierarchy = {
   [province: string]: {
@@ -21,6 +44,9 @@ type MarketplaceEditForm = {
   title: string;
   description: string;
   property_type: string;
+  upi: string;
+  area_sqm: string;
+  price: string;
   status: string;
   visibility: string;
   province: string;
@@ -54,6 +80,9 @@ const MarketplaceManagement = () => {
     title: '',
     description: '',
     property_type: '',
+    upi: '',
+    area_sqm: '',
+    price: '',
     status: 'available',
     visibility: 'public',
     province: '',
@@ -161,6 +190,9 @@ const MarketplaceManagement = () => {
       title: listing?.title || '',
       description: listing?.description || '',
       property_type: listing?.property_type || listing?.type || '',
+      upi: listing?.upi != null ? String(listing.upi) : '',
+      area_sqm: listing?.area_sqm != null ? String(listing.area_sqm) : '',
+      price: listing?.price != null ? String(listing.price) : '',
       status: listing?.status || 'available',
       visibility: listing?.visibility || 'public',
       province: listing?.province || '',
@@ -309,8 +341,21 @@ const MarketplaceManagement = () => {
   };
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
+  // Extra runtime guards and logging for modal/gallery
+  const safeShowEdit = Boolean(showEdit && editListing && editForm && provinceNames && adminHierarchy);
+  if (showEdit && (!editListing || !editForm || !provinceNames || !adminHierarchy)) {
+    // eslint-disable-next-line no-console
+    console.warn('Edit modal render prevented due to missing data:', { showEdit, editListing, editForm, provinceNames, adminHierarchy });
+  }
+  const safeShowGallery = Boolean(showGallery && Array.isArray(galleryImages) && galleryImages.length > 0 && galleryIndex >= 0 && galleryIndex < galleryImages.length);
+  if (showGallery && (!Array.isArray(galleryImages) || galleryImages.length === 0 || galleryIndex < 0 || galleryIndex >= galleryImages.length)) {
+    // eslint-disable-next-line no-console
+    console.warn('Gallery render prevented due to invalid state:', { showGallery, galleryImages, galleryIndex });
+  }
+
   return (
-    <div style={{ maxWidth: 900, margin: '2rem auto', background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px #0001', padding: '2rem' }}>
+    <ErrorBoundary>
+      <div style={{ maxWidth: 900, margin: '2rem auto', background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px #0001', padding: '2rem' }}>
       <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1.5rem', color: '#2d6a4f' }}>Marketplace Management</h2>
       <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
         <button onClick={() => setShowAdd(true)} style={{ background: '#2d6a4f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.75rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Add Listing</button>
@@ -535,149 +580,80 @@ const MarketplaceManagement = () => {
       )}
 
       {/* Edit Listing Modal */}
-      {showEdit && editListing && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <form onSubmit={e => {
-            e.preventDefault();
-            onEdit({
-              title: editForm.title,
-              description: editForm.description,
-              property_type: editForm.property_type,
-              status: editForm.status,
-              visibility: editForm.visibility,
-              province: editForm.province,
-              district: editForm.district,
-              sector: editForm.sector,
-              cell: editForm.cell,
-              village: editForm.village,
-              latitude: editForm.latitude !== '' ? Number(editForm.latitude) : undefined,
-              longitude: editForm.longitude !== '' ? Number(editForm.longitude) : undefined,
-            });
-          }} style={{ background: '#fff', padding: 32, borderRadius: 12, minWidth: 320 }}>
-            <h3 style={{ marginBottom: 16 }}>Edit Listing</h3>
-            <input
-              name="title"
-              value={editForm.title}
-              onChange={(e) => handleEditFormChange('title', e.target.value)}
-              placeholder="Title"
-              style={{ width: '100%', marginBottom: 12, padding: 8 }}
-              required
-            />
-            <textarea
-              name="description"
-              value={editForm.description}
-              onChange={(e) => handleEditFormChange('description', e.target.value)}
-              placeholder="Description"
-              style={{ width: '100%', marginBottom: 12, padding: 8 }}
-              rows={3}
-            />
-            <input
-              name="property_type"
-              value={editForm.property_type}
-              onChange={(e) => handleEditFormChange('property_type', e.target.value)}
-              placeholder="Type"
-              style={{ width: '100%', marginBottom: 12, padding: 8 }}
-              required
-            />
-            <select
-              name="visibility"
-              value={editForm.visibility}
-              onChange={(e) => handleEditFormChange('visibility', e.target.value)}
-              style={{ width: '100%', marginBottom: 12, padding: 8 }}
-            >
-              <option value="public">public</option>
-              <option value="registered">registered</option>
-              <option value="only_me">only_me</option>
-            </select>
-            <select
-              name="province"
-              value={editForm.province}
-              onChange={(e) => handleEditFormChange('province', e.target.value)}
-              style={{ width: '100%', marginBottom: 12, padding: 8 }}
-            >
-              <option value="">Select Province</option>
-              {provinceNames.map((province) => (
-                <option key={province} value={province}>{province}</option>
-              ))}
-            </select>
-            <select
-              name="district"
-              value={editForm.district}
-              onChange={(e) => handleEditFormChange('district', e.target.value)}
-              disabled={!editForm.province}
-              style={{ width: '100%', marginBottom: 12, padding: 8 }}
-            >
-              <option value="">Select District</option>
-              {districtNames.map((district) => (
-                <option key={district} value={district}>{district}</option>
-              ))}
-            </select>
-            <select
-              name="sector"
-              value={editForm.sector}
-              onChange={(e) => handleEditFormChange('sector', e.target.value)}
-              disabled={!editForm.district}
-              style={{ width: '100%', marginBottom: 12, padding: 8 }}
-            >
-              <option value="">Select Sector</option>
-              {sectorNames.map((sector) => (
-                <option key={sector} value={sector}>{sector}</option>
-              ))}
-            </select>
-            <select
-              name="cell"
-              value={editForm.cell}
-              onChange={(e) => handleEditFormChange('cell', e.target.value)}
-              disabled={!editForm.sector}
-              style={{ width: '100%', marginBottom: 12, padding: 8 }}
-            >
-              <option value="">Select Cell</option>
-              {cellNames.map((cell) => (
-                <option key={cell} value={cell}>{cell}</option>
-              ))}
-            </select>
-            <select
-              name="village"
-              value={editForm.village}
-              onChange={(e) => handleEditFormChange('village', e.target.value)}
-              disabled={!editForm.cell}
-              style={{ width: '100%', marginBottom: 12, padding: 8 }}
-            >
-              <option value="">Select Village</option>
-              {villageNames.map((village) => (
-                <option key={village} value={village}>{village}</option>
-              ))}
-            </select>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-              <input
-                name="latitude"
-                value={editForm.latitude}
-                onChange={(e) => handleEditFormChange('latitude', e.target.value)}
-                placeholder="Latitude"
-                style={{ width: '100%', padding: 8 }}
-              />
-              <input
-                name="longitude"
-                value={editForm.longitude}
-                onChange={(e) => handleEditFormChange('longitude', e.target.value)}
-                placeholder="Longitude"
-                style={{ width: '100%', padding: 8 }}
-              />
-            </div>
-            <input
-              name="status"
-              value={editForm.status}
-              onChange={(e) => handleEditFormChange('status', e.target.value)}
-              placeholder="Status"
-              style={{ width: '100%', marginBottom: 12, padding: 8 }}
-              required
-            />
-            <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-              <button type="submit" style={{ background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Save</button>
-              <button type="button" onClick={() => { setShowEdit(false); setEditListing(null); }} style={{ background: '#eee', color: '#222', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-            </div>
-          </form>
-        </div>
+      {safeShowEdit && (
+        <AdminEditPropertyModal
+          editForm={editForm || { title: '', description: '', property_type: '', upi: '', area_sqm: '', price: '', status: 'available', visibility: 'public', province: '', district: '', sector: '', cell: '', village: '', latitude: '', longitude: '' }}
+          setEditForm={setEditForm}
+          onEdit={async (data: {
+            images: string[];
+            documents: string[];
+            newImages: File[];
+            newDocuments: File[];
+            removedImages: string[];
+            removedDocuments: string[];
+            [key: string]: any;
+          }) => {
+            let uploadedImageUrls: string[] = [];
+            let uploadedDocUrls: string[] = [];
+            const accessToken = getAuthToken();
+            const uploadFile = async (file: File, endpoint: string) => {
+              if (!file) return '';
+              const formData = new FormData();
+              const fieldName = endpoint === 'upload-image' ? 'image' : 'document';
+              formData.append(fieldName, file);
+              const res = await fetch(`${API_BASE_URL}/api/v1/files/${endpoint}`, {
+                method: 'POST',
+                headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+                body: formData,
+              });
+              if (res.ok) {
+                const json = await res.json();
+                return json.image_url || json.url || (json.data?.url ?? '');
+              } else {
+                const errorText = await res.text();
+                // eslint-disable-next-line no-console
+                console.error('Upload failed:', errorText);
+                throw new Error('Upload failed. ' + errorText);
+              }
+            };
+            try {
+              for (const img of data.newImages || []) {
+                if (!img) continue;
+                const url = await uploadFile(img, 'upload-image');
+                if (url) uploadedImageUrls.push(url);
+              }
+              for (const doc of data.newDocuments || []) {
+                if (!doc) continue;
+                const url = await uploadFile(doc, 'upload-document');
+                if (url) uploadedDocUrls.push(url);
+              }
+            } catch (err) {
+              setError('File upload failed.');
+              // eslint-disable-next-line no-console
+              console.error('File upload error in AdminEditPropertyModal:', err);
+              return;
+            }
+            const finalImages = [...(data.images || []), ...uploadedImageUrls].filter(img => img && !(data.removedImages || []).includes(img));
+            const finalDocs = [...(data.documents || []), ...uploadedDocUrls].filter(doc => doc && !(data.removedDocuments || []).includes(doc));
+            const payload = {
+              ...editForm,
+              images: finalImages,
+              documents: finalDocs,
+              area_sqm: editForm.area_sqm ? Number(editForm.area_sqm) : 0,
+              price: editForm.price ? Number(editForm.price) : 0,
+              latitude: editForm.latitude ? Number(editForm.latitude) : 0,
+              longitude: editForm.longitude ? Number(editForm.longitude) : 0,
+            };
+            // eslint-disable-next-line no-console
+            console.log('Submitting edit payload:', payload);
+            await onEdit(payload);
+          }}
+          onClose={() => { setShowEdit(false); setEditListing(null); }}
+          provinceNames={provinceNames || []}
+          adminHierarchy={adminHierarchy || {}}
+          existingImages={Array.isArray(editListing.images) ? editListing.images : (editListing.images ? [editListing.images] : [])}
+          existingDocuments={Array.isArray(editListing.documents) ? editListing.documents : (editListing.documents ? [editListing.documents] : [])}
+        />
       )}
 
       {/* Delete Listing Confirmation */}
@@ -695,7 +671,7 @@ const MarketplaceManagement = () => {
       )}
 
       {/* Image Gallery Modal */}
-      {showGallery && galleryImages.length > 0 && (
+      {safeShowGallery && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#000b', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
           <div style={{ background: '#fff', borderRadius: 12, width: 'min(900px, 95vw)', maxHeight: '92vh', overflow: 'auto', padding: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -742,7 +718,8 @@ const MarketplaceManagement = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 };
 
