@@ -1,49 +1,44 @@
 
+
+import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import MainNavbar from '../../components/MainNavbar';
+import { fetchUserNotifications, markNotificationRead, deleteNotification, markAllAsRead } from '../../utils/notificationApi';
 
-const notifications = [
-  {
-    id: 'NTF-001',
-    title: 'Subscription Renewed',
-    message: 'Your Professional plan was renewed successfully.',
-    type: 'billing',
-    read: false,
-    date: '2026-03-02',
-  },
-  {
-    id: 'NTF-002',
-    title: 'Valuation Completed',
-    message: 'Your valuation request for Remera Prime Location is ready.',
-    type: 'valuation',
-    read: false,
-    date: '2026-03-01',
-  },
-  {
-    id: 'NTF-003',
-    title: 'System Maintenance',
-    message: 'Scheduled maintenance on 2026-03-05 from 01:00 to 03:00.',
-    type: 'system',
-    read: true,
-    date: '2026-02-28',
-  },
-  {
-    id: 'NTF-004',
-    title: 'Payment Receipt Available',
-    message: 'Your receipt RCP-2098 is now available for download.',
-    type: 'billing',
-    read: true,
-    date: '2026-02-27',
-  },
-];
-
-function getTypeBadge(type: string) {
-  if (type === 'billing') return 'bg-blue-100 text-blue-700';
-  if (type === 'valuation') return 'bg-emerald-100 text-emerald-700';
-  return 'bg-gray-100 text-gray-700';
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
 }
 
 export default function NotificationsPage() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserNotifications({ limit: 50 }).then((data) => {
+      setNotifications(data);
+      setLoading(false);
+    });
+  }, []);
+
+  const handleMarkAsRead = async (id: string) => {
+    await markNotificationRead(id);
+    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteNotification(id);
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const handleMarkAllAsRead = async () => {
+    await markAllAsRead();
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
   return (
     <>
       <Head>
@@ -65,30 +60,43 @@ export default function NotificationsPage() {
                 <span className="px-3 py-1.5 text-sm font-semibold bg-emerald-100 text-emerald-700 rounded-full">
                   {notifications.filter((item) => !item.read).length} unread
                 </span>
+                <button className="ml-2 text-blue-600 text-sm" onClick={handleMarkAllAsRead}>
+                  Mark all as read
+                </button>
               </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-              {notifications.length === 0 ? (
+              {loading ? (
+                <div className="p-10 text-center">Loading...</div>
+              ) : notifications.length === 0 ? (
                 <div className="p-10 text-center">
                   <i className="fas fa-bell-slash text-4xl text-gray-300 mb-3"></i>
                   <p className="text-gray-600 font-medium">No notifications to show</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
-                  {notifications.map((item, idx) => (
-                    <div key={item.id} className={`p-5 ${item.read ? 'bg-white' : 'bg-emerald-50/40'}`}>
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <h3 className="text-base font-semibold text-gray-800">{item.title}</h3>
-                            <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getTypeBadge(item.type)}`}>
-                              {item.type}
-                            </span>
-                            {!item.read && <span className="w-2 h-2 rounded-full bg-emerald-600" />}
-                          </div>
-                          <p className="text-sm text-gray-600 mb-2">{item.message}</p>
-                          <p className="text-xs text-gray-500">{item.date}</p>
+                  {notifications.map((item) => (
+                    <div key={item.id} className={`p-5 flex items-start ${item.read ? 'bg-white' : 'bg-emerald-50/40'}`}>
+                      <span className={`mt-1 mr-3 ${item.read ? 'text-gray-400' : 'text-emerald-600'}`}>{item.read ? '○' : '●'}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <h3 className="text-base font-semibold text-gray-800">{item.title}</h3>
+                          <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-700">
+                            {/* Type badge placeholder */}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">{item.message}</p>
+                        <p className="text-xs text-gray-500">{new Date(item.createdAt).toLocaleString()}</p>
+                        <div className="flex gap-2 mt-2">
+                          {!item.read && (
+                            <button className="text-xs text-green-600" onClick={() => handleMarkAsRead(item.id)}>
+                              Mark as read
+                            </button>
+                          )}
+                          <button className="text-xs text-red-600" onClick={() => handleDelete(item.id)}>
+                            Delete
+                          </button>
                         </div>
                       </div>
                     </div>

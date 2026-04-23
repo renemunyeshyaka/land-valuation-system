@@ -9,6 +9,9 @@ import adminHierarchyRaw from '../../data/land_admin_hierarchy_from_csv.json';
 type Property = {
   id: number;
   owner_id: number;
+  upi?: string;
+  area_sqm?: number;
+  market_price_rwf?: number;
   title: string;
   description?: string;
   property_type: string;
@@ -28,6 +31,9 @@ type Property = {
 
 type EditableProperty = {
   id: number;
+  upi: string;
+  area_sqm: string;
+  market_price_rwf: string;
   title: string;
   description: string;
   property_type: string;
@@ -60,201 +66,139 @@ type AdminHierarchy = {
 export default function DashboardPropertiesPage() {
   const router = useRouter();
   const adminHierarchy: AdminHierarchy = adminHierarchyRaw as AdminHierarchy;
-  const provinceNames = Object.keys(adminHierarchy);
+  
+  // State variables
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditableProperty | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [editingImages, setEditingImages] = useState<string[]>([]);
-  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
-  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+  const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
 
-  const districtNames = editing?.province ? Object.keys(adminHierarchy[editing.province] || {}) : [];
-  const sectorNames = editing?.province && editing?.district ? Object.keys((adminHierarchy[editing.province] || {})[editing.district] || {}) : [];
-  const cellNames = editing?.province && editing?.district && editing?.sector ? Object.keys(((adminHierarchy[editing.province] || {})[editing.district] || {})[editing.sector] || {}) : [];
-  const villageNames = editing?.province && editing?.district && editing?.sector && editing?.cell ? (((adminHierarchy[editing.province] || {})[editing.district] || {})[editing.sector] || {})[editing.cell] || [] : [];
+  // Get unique location names for dropdowns
+  const provinceNames = useMemo(() => Object.keys(adminHierarchy), [adminHierarchy]);
+  
+  const districtNames = useMemo(() => {
+    if (!editing?.province) return [];
+    return Object.keys(adminHierarchy[editing.province] || {});
+  }, [editing?.province, adminHierarchy]);
+  
+  const sectorNames = useMemo(() => {
+    if (!editing?.province || !editing?.district) return [];
+    return Object.keys(adminHierarchy[editing.province]?.[editing.district] || {});
+  }, [editing?.province, editing?.district, adminHierarchy]);
+  
+  const cellNames = useMemo(() => {
+    if (!editing?.province || !editing?.district || !editing?.sector) return [];
+    return Object.keys(adminHierarchy[editing.province]?.[editing.district]?.[editing.sector] || {});
+  }, [editing?.province, editing?.district, editing?.sector, adminHierarchy]);
+  
+  const villageNames = useMemo(() => {
+    if (!editing?.province || !editing?.district || !editing?.sector || !editing?.cell) return [];
+    return adminHierarchy[editing.province]?.[editing.district]?.[editing.sector]?.[editing.cell] || [];
+  }, [editing?.province, editing?.district, editing?.sector, editing?.cell, adminHierarchy]);
 
-  const accessToken = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return null;
-    }
-    return localStorage.getItem('access_token');
-  }, []);
-
-  const fetchMyProperties = async () => {
-    if (!accessToken) {
-      router.replace('/auth/login');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const profileRes = await fetch(`${API_BASE_URL}/api/v1/users/profile`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      if (!profileRes.ok) {
-        throw new Error('Failed to load profile');
-      }
-
-      const profilePayload = await profileRes.json();
-      const userId = Number(profilePayload?.data?.id);
-      if (!Number.isFinite(userId) || userId <= 0) {
-        throw new Error('Invalid user profile');
-      }
-      setCurrentUserId(userId);
-
-      const propsRes = await fetch(`${API_BASE_URL}/api/v1/properties/my?page=1&limit=200`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      if (!propsRes.ok) {
-        throw new Error('Failed to load your properties');
-      }
-
-      const propsPayload = await propsRes.json();
-      const list: Property[] = Array.isArray(propsPayload?.data?.data)
-        ? propsPayload.data.data
-        : Array.isArray(propsPayload?.data)
-        ? propsPayload.data
-        : [];
-
-      setProperties(list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-    } catch (err: any) {
-      toast.error(err?.message || 'Could not load your properties');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Fetch current user and properties
   useEffect(() => {
-    void fetchMyProperties();
-  }, [accessToken]);
+    const fetchData = async () => {
+      try {
+        // Get current user
+        const token = localStorage.getItem('token');
+        if (!token) {
+          router.push('/login');
+          return;
+        }
+
+        const userRes = await fetch(`${API_BASE_URL}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!userRes.ok) throw new Error('Failed to fetch user');
+        const userData = await userRes.json();
+
+        setCurrentUserId(userData.id);
+        setCurrentUserRole(userData.role || null);
+
+        // Fetch properties
+        const propsRes = await fetch(`${API_BASE_URL}/api/properties/user/${userData.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!propsRes.ok) throw new Error('Failed to fetch properties');
+        const propsData = await propsRes.json();
+        setProperties(propsData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load properties');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [router]);
 
   const openEdit = (property: Property) => {
     setEditing({
       id: property.id,
+      upi: property.upi?.toString() || '',
+      area_sqm: property.area_sqm?.toString() || '',
+      market_price_rwf: property.market_price_rwf?.toString() || '',
       title: property.title,
       description: property.description || '',
       property_type: property.property_type,
       province: property.province || '',
-      district: property.district || '',
-      sector: property.sector || '',
+      district: property.district,
+      sector: property.sector,
       cell: property.cell || '',
       village: property.village || '',
-      latitude: property.latitude != null ? String(property.latitude) : '',
-      longitude: property.longitude != null ? String(property.longitude) : '',
-      price: String(property.price),
+      latitude: property.latitude?.toString() || '',
+      longitude: property.longitude?.toString() || '',
+      price: property.price.toString(),
       status: property.status,
-      visibility: property.visibility || 'public',
-      images: property.images || [],
+      visibility: property.visibility,
+      images: property.images || []
     });
     setEditingImages(property.images || []);
-    setNewImageFiles([]);
-    setNewImagePreviews([]);
-  };
-
-  const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) {
-      return;
-    }
-
-    const files = Array.from(e.target.files);
-    const validFiles: File[] = [];
-
-    const previewPromises = files.map(
-      (file) =>
-        new Promise<string | null>((resolve) => {
-          if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
-            toast.error(`${file.name}: invalid image format`);
-            resolve(null);
-            return;
-          }
-          if (file.size > 2 * 1024 * 1024) {
-            toast.error(`${file.name}: exceeds 2 MB limit`);
-            resolve(null);
-            return;
-          }
-
-          validFiles.push(file);
-          const reader = new FileReader();
-          reader.onloadend = () => resolve((reader.result as string) || null);
-          reader.readAsDataURL(file);
-        })
-    );
-
-    void Promise.all(previewPromises).then((previewResults) => {
-      const previews = previewResults.filter((preview): preview is string => Boolean(preview));
-      setNewImageFiles((prev) => [...prev, ...validFiles]);
-      setNewImagePreviews((prev) => [...prev, ...previews]);
-    });
+    setImagesToRemove([]);
   };
 
   const removeExistingImage = (index: number) => {
-    setEditingImages((prev) => prev.filter((_, currentIndex) => currentIndex !== index));
+    const imageToRemove = editingImages[index];
+    setImagesToRemove(prev => [...prev, imageToRemove]);
+    setEditingImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const removeNewImage = (index: number) => {
-    setNewImageFiles((prev) => prev.filter((_, currentIndex) => currentIndex !== index));
-    setNewImagePreviews((prev) => prev.filter((_, currentIndex) => currentIndex !== index));
-  };
+  const updateProperty = async () => {
+    if (!editing) return;
 
-  const uploadImage = async (file: File, token: string) => {
-    const formData = new FormData();
-    formData.append('image', file);
-
-    const response = await fetch(`${API_BASE_URL}/api/v1/files/upload-image`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const payload = await response.json().catch(() => null);
-      throw new Error(payload?.error || 'Failed to upload image');
-    }
-
-    const payload = await response.json();
-    return String(payload?.data?.url || '');
-  };
-
-  const saveEdit = async () => {
-    if (!editing || !accessToken) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Please login again');
       return;
     }
 
-    const numericPrice = Number(editing.price);
-    if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
-      toast.error('Price must be a valid number greater than 0.');
-      return;
-    }
 
-    setSaving(true);
+    // Helper to safely parse numbers or return null
+    const safeParseFloat = (val: string) => {
+      if (val === undefined || val === null || val.trim() === '') return null;
+      const num = parseFloat(val);
+      return isNaN(num) ? null : num;
+    };
+
     try {
-      let allImages = [...editingImages];
-
-      if (newImageFiles.length > 0) {
-        const loadingToast = toast.loading('Uploading images...');
-        for (const imageFile of newImageFiles) {
-          const imageUrl = await uploadImage(imageFile, accessToken);
-          if (imageUrl) {
-            allImages.push(imageUrl);
-          }
-        }
-        toast.dismiss(loadingToast);
-      }
-
-      const res = await fetch(`${API_BASE_URL}/api/v1/properties/${editing.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/properties/${editing.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
+          upi: editing.upi || null,
+          area_sqm: safeParseFloat(editing.area_sqm),
+          market_price_rwf: safeParseFloat(editing.market_price_rwf),
           title: editing.title,
           description: editing.description,
           property_type: editing.property_type,
@@ -263,67 +207,70 @@ export default function DashboardPropertiesPage() {
           sector: editing.sector,
           cell: editing.cell,
           village: editing.village,
-          latitude: editing.latitude !== '' ? Number(editing.latitude) : undefined,
-          longitude: editing.longitude !== '' ? Number(editing.longitude) : undefined,
-          price: numericPrice,
+          latitude: safeParseFloat(editing.latitude),
+          longitude: safeParseFloat(editing.longitude),
+          price: safeParseFloat(editing.price),
           status: editing.status,
           visibility: editing.visibility,
-          images: allImages,
-        }),
+          images_to_remove: imagesToRemove
+        })
       });
 
-      if (!res.ok) {
-        const payload = await res.json().catch(() => null);
-        const details = payload?.error?.details || payload?.error?.message || payload?.message || 'Failed to update property';
-        throw new Error(details);
-      }
+      if (!response.ok) throw new Error('Failed to update property');
 
+      const updatedProperty = await response.json();
+      setProperties(prev => prev.map(p => p.id === editing.id ? updatedProperty : p));
       toast.success('Property updated successfully');
       setEditing(null);
-      setEditingImages([]);
-      setNewImageFiles([]);
-      setNewImagePreviews([]);
-      await fetchMyProperties();
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to update property');
-    } finally {
-      setSaving(false);
+    } catch (error) {
+      console.error('Error updating property:', error);
+      toast.error('Failed to update property');
     }
   };
 
-  const deleteProperty = async (propertyId: number) => {
-    if (!accessToken) {
+  const deleteProperty = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this property? This action cannot be undone.')) return;
+    
+    setDeletingId(id);
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      toast.error('Please login again');
+      setDeletingId(null);
       return;
     }
 
-    const confirmed = window.confirm('Delete this property? This action cannot be undone.');
-    if (!confirmed) {
-      return;
-    }
-
-    setDeletingId(propertyId);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/properties/${propertyId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/properties/${id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (!res.ok) {
-        const payload = await res.json().catch(() => null);
-        const details = payload?.error?.details || payload?.error?.message || payload?.message || 'Failed to delete property';
-        throw new Error(details);
-      }
-
-      setProperties((prev) => prev.filter((property) => property.id !== propertyId));
-      toast.success('Property deleted');
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to delete property');
+      if (!response.ok) throw new Error('Failed to delete property');
+      
+      setProperties(prev => prev.filter(p => p.id !== id));
+      toast.success('Property deleted successfully');
+    } catch (error) {
+      console.error('Error deleting property:', error);
+      toast.error('Failed to delete property');
     } finally {
       setDeletingId(null);
     }
   };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-RW').format(price);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-600">Loading your properties...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -356,9 +303,7 @@ export default function DashboardPropertiesPage() {
             </div>
           </div>
 
-          {loading ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-600">Loading your properties...</div>
-          ) : properties.length === 0 ? (
+          {properties.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
               <p className="text-gray-700 mb-4">No registered properties found for your account.</p>
               <Link
@@ -373,8 +318,8 @@ export default function DashboardPropertiesPage() {
               {properties.map((property) => {
                 const thumbnail = resolveImageUrl(property.images?.[0]) || CARD_PLACEHOLDER;
                 return (
-                  <div key={property.id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div key={property.id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex flex-col lg:flex-row lg:items-start gap-4">
                       <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
                         <img
                           src={thumbnail}
@@ -388,12 +333,26 @@ export default function DashboardPropertiesPage() {
 
                       <div className="flex-1 min-w-0">
                         <h2 className="text-lg font-semibold text-gray-900">{property.title}</h2>
-                        <p className="text-sm text-gray-600 mt-1">{property.district}, {property.sector}</p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Type: {property.property_type} | Status: {property.status} | Visibility: {property.visibility}
-                        </p>
-                        <p className="text-sm text-gray-800 font-medium mt-1">Price: {Number(property.price).toLocaleString()} RWF</p>
-                        <p className="text-xs text-gray-500 mt-2">ID: {property.id} | Owner: {currentUserId ?? property.owner_id}</p>
+                        
+                        {/* Additional property details */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 mt-2">
+                          {property.upi && (
+                            <p className="text-xs text-gray-500">UPI: {property.upi}</p>
+                          )}
+                          {property.area_sqm && (
+                            <p className="text-xs text-gray-500">Area: {property.area_sqm.toLocaleString()} sqm</p>
+                          )}
+                          {property.market_price_rwf && (
+                            <p className="text-xs text-gray-500">Market Price: {formatPrice(property.market_price_rwf)} RWF</p>
+                          )}
+                          <p className="text-xs text-gray-500">Type: {property.property_type}</p>
+                          <p className="text-xs text-gray-500">Status: {property.status}</p>
+                          <p className="text-xs text-gray-500">Visibility: {property.visibility}</p>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600 mt-2">{property.district}, {property.sector}</p>
+                        <p className="text-sm text-gray-800 font-semibold mt-1">Price: {formatPrice(property.price)} RWF</p>
+                        <p className="text-xs text-gray-400 mt-2">ID: {property.id} | Owner ID: {property.owner_id}</p>
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -419,211 +378,281 @@ export default function DashboardPropertiesPage() {
           )}
         </div>
 
+        {/* Edit Modal */}
         {editing && (
-          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Update Property #{editing.id}</h3>
-
-              <div className="space-y-3">
-                <input
-                  value={editing.title}
-                  onChange={(e) => setEditing({ ...editing, title: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Title"
-                />
-                <textarea
-                  value={editing.description}
-                  onChange={(e) => setEditing({ ...editing, description: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  rows={3}
-                  placeholder="Description"
-                />
-                <input
-                  value={editing.property_type}
-                  onChange={(e) => setEditing({ ...editing, property_type: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Property type"
-                />
-                <select
-                  value={editing.province}
-                  onChange={(e) =>
-                    setEditing({ ...editing, province: e.target.value, district: '', sector: '', cell: '', village: '' })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                >
-                  <option value="">Select Province</option>
-                  {provinceNames.map((province) => (
-                    <option key={province} value={province}>
-                      {province}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={editing.district}
-                  onChange={(e) => setEditing({ ...editing, district: e.target.value, sector: '', cell: '', village: '' })}
-                  disabled={!editing.province}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:text-gray-400"
-                >
-                  <option value="">Select District</option>
-                  {districtNames.map((district) => (
-                    <option key={district} value={district}>
-                      {district}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={editing.sector}
-                  onChange={(e) => setEditing({ ...editing, sector: e.target.value, cell: '', village: '' })}
-                  disabled={!editing.district}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:text-gray-400"
-                >
-                  <option value="">Select Sector</option>
-                  {sectorNames.map((sector) => (
-                    <option key={sector} value={sector}>
-                      {sector}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={editing.cell}
-                  onChange={(e) => setEditing({ ...editing, cell: e.target.value, village: '' })}
-                  disabled={!editing.sector}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:text-gray-400"
-                >
-                  <option value="">Select Cell</option>
-                  {cellNames.map((cell) => (
-                    <option key={cell} value={cell}>
-                      {cell}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={editing.village}
-                  onChange={(e) => setEditing({ ...editing, village: e.target.value })}
-                  disabled={!editing.cell}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:text-gray-400"
-                >
-                  <option value="">Select Village</option>
-                  {villageNames.map((village) => (
-                    <option key={village} value={village}>
-                      {village}
-                    </option>
-                  ))}
-                </select>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input
-                    value={editing.latitude}
-                    onChange={(e) => setEditing({ ...editing, latitude: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    placeholder="Latitude"
-                  />
-                  <input
-                    value={editing.longitude}
-                    onChange={(e) => setEditing({ ...editing, longitude: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    placeholder="Longitude"
-                  />
-                </div>
-                <input
-                  value={editing.price}
-                  onChange={(e) => setEditing({ ...editing, price: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Price"
-                />
-                <select
-                  value={editing.status}
-                  onChange={(e) => setEditing({ ...editing, status: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                >
-                  <option value="available">available</option>
-                  <option value="pending">pending</option>
-                  <option value="sold">sold</option>
-                  <option value="rented">rented</option>
-                </select>
-                <select
-                  value={editing.visibility}
-                  onChange={(e) => setEditing({ ...editing, visibility: e.target.value as 'public' | 'registered' | 'only_me' })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                >
-                  <option value="public">public</option>
-                  <option value="registered">registered users only</option>
-                  <option value="only_me">only me</option>
-                </select>
-              </div>
-
-              <div className="mt-6 border-t pt-4">
-                <h4 className="text-sm font-semibold text-gray-900 mb-3">Property Images</h4>
-
-                <div className="mb-4">
-                  <p className="text-xs text-gray-600 mb-2">Current images</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {editingImages.length > 0 ? (
-                      editingImages.map((imageUrl, index) => (
-                        <div key={`${imageUrl}-${index}`} className="relative group rounded-lg overflow-hidden bg-gray-200 h-24">
-                          <img
-                            src={resolveImageUrl(imageUrl) || CARD_PLACEHOLDER}
-                            alt={`Property image ${index + 1}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = CARD_PLACEHOLDER;
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeExistingImage(index)}
-                            className="absolute inset-0 bg-red-600/0 group-hover:bg-red-600/70 text-white opacity-0 group-hover:opacity-100 transition-all"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="col-span-full rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500 text-center">
-                        No saved images yet. A placeholder thumbnail will be shown.
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {newImagePreviews.length > 0 && (
-                  <div className="mb-4">
-                    <p className="text-xs text-gray-600 mb-2">New images to upload</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {newImagePreviews.map((previewUrl, index) => (
-                        <div key={`${previewUrl}-${index}`} className="relative group rounded-lg overflow-hidden bg-gray-200 h-24 border-2 border-blue-200">
-                          <img src={previewUrl} alt={`New image ${index + 1}`} className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => removeNewImage(index)}
-                            className="absolute inset-0 bg-red-600/0 group-hover:bg-red-600/70 text-white opacity-0 group-hover:opacity-100 transition-all"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <label className="flex items-center justify-center w-full px-3 py-3 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors text-sm text-gray-600">
-                  Add or replace property images
-                  <input type="file" multiple accept="image/*" onChange={handleEditImageUpload} className="hidden" />
-                </label>
-              </div>
-
-              <div className="mt-6 flex items-center justify-end gap-2">
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl my-8">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl flex justify-between items-center">
+                <h3 className="text-xl font-semibold text-gray-900">Update Property #{editing.id}</h3>
                 <button
                   onClick={() => setEditing(null)}
-                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                  aria-label="Close"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4 max-h-[calc(90vh-80px)] overflow-y-auto">
+                {/* Basic Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">UPI (Unique Parcel ID)</label>
+                    <input
+                      value={editing.upi}
+                      onChange={(e) => setEditing({ ...editing, upi: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      placeholder="Enter UPI"
+                      disabled={currentUserRole !== 'admin'}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Area (sqm)</label>
+                    <input
+                      type="number"
+                      value={editing.area_sqm}
+                      onChange={(e) => setEditing({ ...editing, area_sqm: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      placeholder="Area in square meters"
+                      disabled={currentUserRole !== 'admin'}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Market Price (RWF)</label>
+                  <input
+                    type="number"
+                    value={editing.market_price_rwf}
+                    onChange={(e) => setEditing({ ...editing, market_price_rwf: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    placeholder="Estimated market price"
+                    disabled={currentUserRole !== 'admin'}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <input
+                    value={editing.title}
+                    onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    placeholder="Property title"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    value={editing.description}
+                    onChange={(e) => setEditing({ ...editing, description: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    rows={3}
+                    placeholder="Property description"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+                  <input
+                    value={editing.property_type}
+                    onChange={(e) => setEditing({ ...editing, property_type: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    placeholder="e.g., Residential, Commercial, Agricultural"
+                  />
+                </div>
+
+                {/* Location Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Province</label>
+                    <select
+                      value={editing.province}
+                      onChange={(e) =>
+                        setEditing({ ...editing, province: e.target.value, district: '', sector: '', cell: '', village: '' })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    >
+                      <option value="">Select Province</option>
+                      {provinceNames.map((province) => (
+                        <option key={province} value={province}>{province}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">District</label>
+                    <select
+                      value={editing.district}
+                      onChange={(e) => setEditing({ ...editing, district: e.target.value, sector: '', cell: '', village: '' })}
+                      disabled={!editing.province}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100"
+                    >
+                      <option value="">Select District</option>
+                      {districtNames.map((district) => (
+                        <option key={district} value={district}>{district}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Sector</label>
+                    <select
+                      value={editing.sector}
+                      onChange={(e) => setEditing({ ...editing, sector: e.target.value, cell: '', village: '' })}
+                      disabled={!editing.district}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100"
+                    >
+                      <option value="">Select Sector</option>
+                      {sectorNames.map((sector) => (
+                        <option key={sector} value={sector}>{sector}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Cell</label>
+                    <select
+                      value={editing.cell}
+                      onChange={(e) => setEditing({ ...editing, cell: e.target.value, village: '' })}
+                      disabled={!editing.sector}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100"
+                    >
+                      <option value="">Select Cell</option>
+                      {cellNames.map((cell) => (
+                        <option key={cell} value={cell}>{cell}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Village</label>
+                    <select
+                      value={editing.village}
+                      onChange={(e) => setEditing({ ...editing, village: e.target.value })}
+                      disabled={!editing.cell}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100"
+                    >
+                      <option value="">Select Village</option>
+                      {villageNames.map((village) => (
+                        <option key={village} value={village}>{village}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Coordinates */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                    <input
+                      value={editing.latitude}
+                      onChange={(e) => setEditing({ ...editing, latitude: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      placeholder="Latitude"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                    <input
+                      value={editing.longitude}
+                      onChange={(e) => setEditing({ ...editing, longitude: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      placeholder="Longitude"
+                    />
+                  </div>
+                </div>
+
+                {/* Pricing and Status */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price (RWF)</label>
+                    <input
+                      type="number"
+                      value={editing.price}
+                      onChange={(e) => setEditing({ ...editing, price: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      placeholder="Selling price"
+                      disabled={currentUserRole !== 'admin'}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select
+                      value={editing.status}
+                      onChange={(e) => setEditing({ ...editing, status: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    >
+                      <option value="available">Available</option>
+                      <option value="pending">Pending</option>
+                      <option value="sold">Sold</option>
+                      <option value="rented">Rented</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
+                    <select
+                      value={editing.visibility}
+                      onChange={(e) => setEditing({ ...editing, visibility: e.target.value as 'public' | 'registered' | 'only_me' })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    >
+                      <option value="public">Public</option>
+                      <option value="registered">Registered Users Only</option>
+                      <option value="only_me">Only Me</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Images Section */}
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Property Images</h4>
+                  <div className="mb-4">
+                    <p className="text-xs text-gray-600 mb-2">Current Images</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {editingImages.length > 0 ? (
+                        editingImages.map((imageUrl, index) => (
+                          <div key={`${imageUrl}-${index}`} className="relative group rounded-lg overflow-hidden bg-gray-200 h-24">
+                            <img
+                              src={resolveImageUrl(imageUrl) || CARD_PLACEHOLDER}
+                              alt={`Property image ${index + 1}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = CARD_PLACEHOLDER;
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeExistingImage(index)}
+                              className="absolute inset-0 bg-red-600/0 group-hover:bg-red-600/70 text-white opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="col-span-full rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500 text-center">
+                          No images available for this property.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 rounded-b-xl flex justify-end gap-3">
+                <button
+                  onClick={() => setEditing(null)}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={saveEdit}
-                  disabled={saving}
-                  className="px-4 py-2 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-60 transition-colors"
+                  onClick={updateProperty}
+                  className="px-4 py-2 rounded-lg bg-emerald-700 text-white font-medium hover:bg-emerald-800 transition-colors"
                 >
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  Save Changes
                 </button>
               </div>
             </div>

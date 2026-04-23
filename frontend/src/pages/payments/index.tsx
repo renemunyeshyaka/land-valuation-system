@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import MainNavbar from '../../components/MainNavbar';
 import ExchangeRateDisplay from '../../components/ExchangeRateDisplay';
+import { getPaymentSummary, getPaymentHistory } from '../../utils/paymentApi';
 
 /**
  * PAYMENT HISTORY PAGE · Land Valuation System
@@ -19,122 +20,92 @@ import ExchangeRateDisplay from '../../components/ExchangeRateDisplay';
  * - Billing information
  */
 
+
+interface PaymentSummary {
+  totalPaid: number;
+  pending: number;
+  failed: number;
+  lastPaymentDate: string;
+}
+
+interface Payment {
+  id: string;
+  amount: number;
+  status: 'paid' | 'pending' | 'failed' | 'completed';
+  method: string;
+  createdAt: string;
+  description?: string;
+  invoiceId?: string;
+  receiptUrl?: string;
+}
+
 const PaymentHistory: React.FC = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [summary, setSummary] = useState<PaymentSummary | null>(null);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [error, setError] = useState('');
 
-  // Mock transactions data
-  const allTransactions = [
-    {
-      id: 'TXN-202603-001',
-      date: '2026-03-01',
-      description: 'Professional Plan - Monthly Renewal',
-      amount: 79000,
-      status: 'completed',
-      method: 'MTN Mobile Money',
-      invoiceId: 'INV-202603-001'
-    },
-    {
-      id: 'TXN-202602-005',
-      date: '2026-02-28',
-      description: 'Professional Plan - Monthly Renewal',
-      amount: 79000,
-      status: 'completed',
-      method: 'Airtel Money',
-      invoiceId: 'INV-202602-005'
-    },
-    {
-      id: 'TXN-202602-001',
-      date: '2026-02-15',
-      description: 'Upgrade from Basic to Professional',
-      amount: 50000,
-      status: 'completed',
-      method: 'Payment Gateway',
-      invoiceId: 'INV-202602-001'
-    },
-    {
-      id: 'TXN-202601-008',
-      date: '2026-01-28',
-      description: 'Basic Plan - Monthly Renewal',
-      amount: 29000,
-      status: 'completed',
-      method: 'MTN Mobile Money',
-      invoiceId: 'INV-202601-008'
-    },
-    {
-      id: 'TXN-202601-001',
-      date: '2026-01-15',
-      description: 'Professional Plan - Monthly Renewal',
-      amount: 79000,
-      status: 'completed',
-      method: 'Payment Gateway',
-      invoiceId: 'INV-202601-001'
-    },
-    {
-      id: 'TXN-202512-010',
-      date: '2025-12-28',
-      description: 'Basic Plan - Monthly Renewal',
-      amount: 29000,
-      status: 'failed',
-      method: 'Airtel Money',
-      invoiceId: 'INV-202512-010'
-    },
-    {
-      id: 'TXN-202512-001',
-      date: '2025-12-15',
-      description: 'Initial Subscription - Basic Plan',
-      amount: 29000,
-      status: 'completed',
-      method: 'Payment Gateway',
-      invoiceId: 'INV-202512-001'
-    },
-  ];
-
-  // Redirect to login if not authenticated
   useEffect(() => {
-    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-
-    if (accessToken && storedUser) {
-      setLoading(false);
-    } else if (status === 'unauthenticated') {
-      router.push('/auth/login');
-    } else if (status === 'authenticated') {
-      setLoading(false);
+    async function fetchData() {
+      setLoading(true);
+      try {
+        // Get JWT token from next-auth session
+        const token = (session as any)?.accessToken || (session as any)?.jwt || (session as any)?.user?.token;
+        if (!token) throw new Error('Not authenticated');
+        const [summaryData, paymentData] = await Promise.all([
+          getPaymentSummary(token),
+          getPaymentHistory(token),
+        ]);
+        setSummary(summaryData);
+        setPayments(paymentData);
+        setError('');
+      } catch (err: any) {
+        const msg = err?.message || 'Failed to load payment data.';
+        setError(msg);
+        toast.error(msg);
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [status, router]);
+    if (status === 'authenticated') fetchData();
+    // Do not redirect unauthenticated users; show friendly message instead
+  }, [status, session, router]);
 
-  // Filter transactions
   const filteredTransactions = filterStatus === 'all'
-    ? allTransactions
-    : allTransactions.filter(t => t.status === filterStatus);
+    ? payments
+    : payments.filter(t => (filterStatus === 'completed' ? t.status === 'completed' || t.status === 'paid' : t.status === filterStatus));
 
-  const handleDownloadReceipt = async (invoiceId: string) => {
+  const handleDownloadReceipt = async (txn: Payment) => {
     try {
-      const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-      if (!accessToken) throw new Error('Not authenticated');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/invoice/${invoiceId}/download`, {
+      // Get JWT token from next-auth session
+      const token = (session as any)?.accessToken || (session as any)?.jwt || (session as any)?.user?.token;
+      if (!token) throw new Error('Not authenticated');
+      const url = txn.receiptUrl || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/invoice/${txn.invoiceId || txn.id}/download`;
+      const res = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
       if (!res.ok) throw new Error('Failed to download receipt');
       const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+      const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `invoice_${invoiceId}.html`;
+      a.href = downloadUrl;
+      a.download = `invoice_${txn.invoiceId || txn.id}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success(`Receipt ${invoiceId} downloaded!`);
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.success(`Receipt downloaded!`);
     } catch (err: any) {
       toast.error(err.message || 'Download failed');
     }
   };
+
+
 
   if (status === 'loading' || loading) {
     return (
@@ -144,12 +115,40 @@ const PaymentHistory: React.FC = () => {
     );
   }
 
-  // Calculate summary stats
-  const totalSpent = allTransactions
-    .filter(t => t.status === 'completed')
-    .reduce((sum, t) => sum + t.amount, 0);
-  const completedCount = allTransactions.filter(t => t.status === 'completed').length;
-  const failedCount = allTransactions.filter(t => t.status === 'failed').length;
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+          <i className="fas fa-exclamation-triangle text-4xl text-red-600 mb-4"></i>
+          <h2 className="text-2xl font-bold mb-2">Payment History Error</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            className="inline-block px-6 py-2.5 bg-emerald-700 text-white font-medium rounded-lg hover:bg-emerald-800 transition-colors"
+            onClick={() => window.location.reload()}
+          >
+            <i className="fas fa-redo mr-2"></i>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+          <i className="fas fa-lock text-4xl text-emerald-700 mb-4"></i>
+          <h2 className="text-2xl font-bold mb-2">Please log in to view your payment history</h2>
+          <p className="text-gray-600 mb-6">You must be signed in to access your transactions, invoices, and receipts.</p>
+          <Link href="/auth/login" className="inline-block px-6 py-2.5 bg-emerald-700 text-white font-medium rounded-lg hover:bg-emerald-800 transition-colors">
+            <i className="fas fa-sign-in-alt mr-2"></i>
+            Log in
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -181,26 +180,27 @@ const PaymentHistory: React.FC = () => {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-12">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                <p className="text-sm font-medium text-gray-600 mb-2">Total Spent</p>
-                <p className="text-3xl font-bold text-emerald-700">RWF {(totalSpent / 1000).toFixed(0)}k</p>
-                <p className="text-xs text-gray-500 mt-2">All completed transactions</p>
+            {summary && (
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-12">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                  <p className="text-sm font-medium text-gray-600 mb-2">Total Paid</p>
+                  <p className="text-3xl font-bold text-emerald-700">RWF {summary.totalPaid?.toLocaleString() || 0}</p>
+                  <p className="text-xs text-gray-500 mt-2">All paid transactions</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                  <p className="text-sm font-medium text-gray-600 mb-2">Pending</p>
+                  <p className="text-3xl font-bold text-yellow-600">{summary.pending}</p>
+                  <p className="text-xs text-gray-500 mt-2">Awaiting payment</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                  <p className="text-sm font-medium text-gray-600 mb-2">Failed</p>
+                  <p className="text-3xl font-bold text-red-600">{summary.failed}</p>
+                  <p className="text-xs text-gray-500 mt-2">Requires attention</p>
+                </div>
+                {/* Exchange Rate Display */}
+                <ExchangeRateDisplay showConverter={false} />
               </div>
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                <p className="text-sm font-medium text-gray-600 mb-2">Completed</p>
-                <p className="text-3xl font-bold text-green-600">{completedCount}</p>
-                <p className="text-xs text-gray-500 mt-2">Successful transactions</p>
-              </div>
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                <p className="text-sm font-medium text-gray-600 mb-2">Failed</p>
-                <p className="text-3xl font-bold text-red-600">{failedCount}</p>
-                <p className="text-xs text-gray-500 mt-2">Requires attention</p>
-              </div>
-              
-              {/* Exchange Rate Display */}
-              <ExchangeRateDisplay showConverter={false} />
-            </div>
+            )}
 
             {/* Filters & Transactions */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-12">
@@ -260,14 +260,16 @@ const PaymentHistory: React.FC = () => {
                   <tbody>
                     {filteredTransactions.map((txn) => (
                       <tr key={txn.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                        <td className="py-4 px-4 text-gray-800 font-medium">{txn.date}</td>
-                        <td className="py-4 px-4 text-gray-600">{txn.description}</td>
-                        <td className="py-4 px-4 text-gray-800 font-semibold">RWF {txn.amount.toLocaleString()}</td>
+                        <td className="py-4 px-4 text-gray-800 font-medium">{new Date(txn.createdAt).toLocaleDateString()}</td>
+                        <td className="py-4 px-4 text-gray-600">{txn.description || '-'}</td>
+                        <td className="py-4 px-4 text-gray-800 font-semibold">RWF {txn.amount?.toLocaleString()}</td>
                         <td className="py-4 px-4 text-gray-600">{txn.method}</td>
                         <td className="py-4 px-4">
                           <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                            txn.status === 'completed'
+                            txn.status === 'completed' || txn.status === 'paid'
                               ? 'bg-green-100 text-green-700'
+                              : txn.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-700'
                               : 'bg-red-100 text-red-700'
                           }`}>
                             {txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
@@ -275,7 +277,7 @@ const PaymentHistory: React.FC = () => {
                         </td>
                         <td className="py-4 px-4">
                           <button
-                            onClick={() => handleDownloadReceipt(txn.invoiceId)}
+                            onClick={() => handleDownloadReceipt(txn)}
                             className="text-emerald-700 hover:text-emerald-800 text-sm font-medium transition-colors"
                           >
                             <i className="fas fa-download mr-1"></i>Receipt
