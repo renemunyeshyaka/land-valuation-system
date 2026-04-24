@@ -104,7 +104,12 @@ export default function Marketplace() {
       const data = await res.json();
       const propertyArray = data?.data?.data;
       if (Array.isArray(propertyArray)) {
-        setProperties(propertyArray);
+        // Map snake_case to camelCase for land_size/size_unit
+        setProperties(propertyArray.map((p: any) => ({
+          ...p,
+          landSize: p.land_size ?? p.landSize,
+          sizeUnit: p.size_unit ?? p.sizeUnit ?? 'sqm',
+        })));
       } else {
         setProperties([]);
       }
@@ -124,7 +129,7 @@ export default function Marketplace() {
     // Helper to start polling if WS fails
     const startPolling = () => {
       if (!polling) {
-        polling = setInterval(fetchProperties, 15000); // 15s fallback polling
+        polling = setInterval(fetchProperties, 45000); // 45s fallback polling
         pollingRef.current = polling;
       }
     };

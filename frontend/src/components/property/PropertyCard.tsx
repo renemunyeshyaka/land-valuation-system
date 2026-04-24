@@ -29,8 +29,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   const [displayImageUrl, setDisplayImageUrl] = React.useState<string>(placeholder)
   const [interested, setInterested] = React.useState<number>(property.interested ?? 0)
   const [views, setViews] = React.useState<number>(property.views ?? 0)
-  const [landSize, setLandSize] = React.useState<number | undefined>(property.landSize)
-  const [sizeUnit, setSizeUnit] = React.useState<string | undefined>(property.sizeUnit)
+  // Use property.landSize and property.sizeUnit directly for instant updates
   const [isLiking, setIsLiking] = React.useState(false)
   const [shareOpen, setShareOpen] = React.useState(false)
 
@@ -54,8 +53,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           if (isMounted) {
             if (typeof prop.views === 'number') setViews(prop.views);
             if (typeof prop.interested === 'number') setInterested(prop.interested);
-            if (typeof prop.land_size === 'number') setLandSize(prop.land_size);
-            if (typeof prop.size_unit === 'string') setSizeUnit(prop.size_unit);
+            // Do not update landSize/sizeUnit here; always use props
           }
         }
       } catch {}
@@ -193,8 +191,8 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </div>
           <span className="text-sm text-gray-500">
             {/* Always show sqm publicly */}
-            {typeof landSize === 'number' && landSize > 0 && typeof sizeUnit === 'string'
-              ? formatSize(landSize, sizeUnit)
+            {typeof property.landSize === 'number' && property.landSize > 0 && typeof property.sizeUnit === 'string'
+              ? formatSize(property.landSize, property.sizeUnit)
               : '—'}
           </span>
         </div>

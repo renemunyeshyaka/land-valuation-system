@@ -197,6 +197,10 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 		blockchainPaymentService,
 	)
 
+	// Payment history/summary handler
+	txnRepo := repository.NewTransactionRepository(db)
+	paymentHistorySummaryHandler := handlers.NewPaymentHistorySummaryHandler(txnRepo)
+
 	payments := router.Group("/api/v1/payments")
 	{
 		// Public endpoint - no auth
@@ -209,6 +213,10 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 			// Mobile Money (active)
 			protected.POST("/mobile-money", paymentHandler.InitiateMobileMoneyPayment)
 			protected.GET("/:transaction_id/status", paymentHandler.CheckPaymentStatus)
+
+			// Payment history and summary endpoints
+			protected.GET("/history", paymentHistorySummaryHandler.GetPaymentHistory)
+			protected.GET("/summary", paymentHistorySummaryHandler.GetPaymentSummary)
 		}
 	}
 

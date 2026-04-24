@@ -45,7 +45,7 @@ type MarketplaceEditForm = {
   description: string;
   property_type: string;
   upi: string;
-  area_sqm: string;
+  land_size: string;
   price: string;
   status: string;
   visibility: string;
@@ -81,7 +81,7 @@ const MarketplaceManagement = () => {
     description: '',
     property_type: '',
     upi: '',
-    area_sqm: '',
+    land_size: '',
     price: '',
     status: 'available',
     visibility: 'public',
@@ -191,7 +191,7 @@ const MarketplaceManagement = () => {
       description: listing?.description || '',
       property_type: listing?.property_type || listing?.type || '',
       upi: listing?.upi != null ? String(listing.upi) : '',
-      area_sqm: listing?.area_sqm != null ? String(listing.area_sqm) : '',
+      land_size: listing?.land_size != null ? String(listing.land_size) : '',
       price: listing?.price != null ? String(listing.price) : '',
       status: listing?.status || 'available',
       visibility: listing?.visibility || 'public',
@@ -582,7 +582,7 @@ const MarketplaceManagement = () => {
       {/* Edit Listing Modal */}
       {safeShowEdit && (
         <AdminEditPropertyModal
-          editForm={editForm || { title: '', description: '', property_type: '', upi: '', area_sqm: '', price: '', status: 'available', visibility: 'public', province: '', district: '', sector: '', cell: '', village: '', latitude: '', longitude: '' }}
+          editForm={editForm || { title: '', description: '', property_type: '', upi: '', land_size: '', price: '', status: 'available', visibility: 'public', province: '', district: '', sector: '', cell: '', village: '', latitude: '', longitude: '' }}
           setEditForm={setEditForm}
           onEdit={async (data: {
             images: string[];
@@ -635,11 +635,12 @@ const MarketplaceManagement = () => {
             }
             const finalImages = [...(data.images || []), ...uploadedImageUrls].filter(img => img && !(data.removedImages || []).includes(img));
             const finalDocs = [...(data.documents || []), ...uploadedDocUrls].filter(doc => doc && !(data.removedDocuments || []).includes(doc));
+            const landSizeValue = editForm.land_size ? Number(editForm.land_size) : 0;
             const payload = {
               ...editForm,
               images: finalImages,
               documents: finalDocs,
-              area_sqm: editForm.area_sqm ? Number(editForm.area_sqm) : 0,
+              land_size: landSizeValue, // use only land_size for area
               price: editForm.price ? Number(editForm.price) : 0,
               latitude: editForm.latitude ? Number(editForm.latitude) : 0,
               longitude: editForm.longitude ? Number(editForm.longitude) : 0,

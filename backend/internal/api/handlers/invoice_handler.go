@@ -45,12 +45,23 @@ func (h *InvoiceHandler) DownloadInvoice(c *gin.Context) {
 		return
 	}
 
+	// Check for ?format=pdf query param
+	if c.Query("format") == "pdf" {
+		pdfBytes, err := h.InvoiceService.GenerateInvoicePDF(context.Background(), txn, user)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate PDF invoice"})
+			return
+		}
+		c.Header("Content-Disposition", "attachment; filename=invoice_"+txnIDStr+".pdf")
+		c.Data(http.StatusOK, "application/pdf", pdfBytes)
+		return
+	}
+	// Default: HTML
 	html, err := h.InvoiceService.GenerateInvoiceHTML(context.Background(), txn, user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate invoice"})
 		return
 	}
-
 	c.Header("Content-Disposition", "attachment; filename=invoice_"+txnIDStr+".html")
 	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
 }

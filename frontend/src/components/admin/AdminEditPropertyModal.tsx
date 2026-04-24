@@ -6,7 +6,7 @@ type EditFormType = {
   description: string;
   property_type: string;
   upi: string;
-  area_sqm: string;
+  land_size: string;
   price: string;
   status: string;
   visibility: string;
@@ -79,7 +79,7 @@ export default function AdminEditPropertyModal({ editForm, setEditForm, onEdit, 
               <option value="registered">registered</option>
               <option value="only_me">only_me</option>
             </select>
-            <input name="area_sqm" type="number" value={editForm.area_sqm} onChange={e => setEditForm(f => ({ ...f, area_sqm: e.target.value }))} placeholder="Area (sqm)" style={{ width: '100%', marginBottom: 12, padding: 8 }} />
+            <input name="land_size" type="number" value={editForm.land_size} onChange={e => setEditForm(f => ({ ...f, land_size: e.target.value }))} placeholder="Area (sqm)" style={{ width: '100%', marginBottom: 12, padding: 8 }} />
             <input name="price" type="number" value={editForm.price} onChange={e => setEditForm(f => ({ ...f, price: e.target.value }))} placeholder="Price (RWF)" style={{ width: '100%', marginBottom: 12, padding: 8 }} />
             <input name="gazette_reference" value={editForm.gazette_reference || ''} onChange={e => setEditForm(f => ({ ...f, gazette_reference: e.target.value }))} placeholder="Gazette Reference" style={{ width: '100%', marginBottom: 12, padding: 8 }} />
             <button onClick={() => setStep(2)} style={{ width: '100%', background: '#2d6a4f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, marginTop: 8 }}>Next: Location</button>

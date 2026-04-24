@@ -30,12 +30,12 @@ type PropertyFilter struct {
 }
 
 type Property struct {
-	Province         string         `gorm:"size:100" json:"province"`
-	District         string         `gorm:"not null;size:100" json:"district"`
-	Sector           string         `gorm:"not null;size:100" json:"sector"`
-	Cell             string         `gorm:"size:100" json:"cell"`
-	Village          string         `gorm:"size:100" json:"village"`
-	AreaSqm          float64        `json:"area_sqm"`
+	Province string `gorm:"size:100" json:"province"`
+	District string `gorm:"not null;size:100" json:"district"`
+	Sector   string `gorm:"not null;size:100" json:"sector"`
+	Cell     string `gorm:"size:100" json:"cell"`
+	Village  string `gorm:"size:100" json:"village"`
+	// AreaSqm removed; use LandSize only
 	MarketPriceRWF   float64        `json:"market_price_rwf"`
 	GeometryBoundary string         `json:"geometry_boundary"`
 	LocationName     string         `json:"location_name"`

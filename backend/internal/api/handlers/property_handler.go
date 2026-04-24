@@ -368,6 +368,11 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 		Visibility   string   `json:"visibility"`
 		Features     []string `json:"features"`
 		Images       []string `json:"images"`
+		UPI          string   `json:"upi"`
+		// AreaSqm removed; use LandSize only
+		MarketPriceRWF float64 `json:"market_price_rwf"`
+		LandSize       float64 `json:"land_size"`
+		SizeUnit       string  `json:"size_unit"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -418,6 +423,20 @@ func (h *PropertyHandler) UpdateProperty(c *gin.Context) {
 	// Update images if provided (allow empty array to clear images)
 	if req.Images != nil {
 		property.Images = pq.StringArray(req.Images)
+	}
+	// Allow updating UPI, land_size, market_price_rwf, and size_unit
+	if req.UPI != "" {
+		property.UPI = req.UPI
+	}
+	// AreaSqm removed
+	if req.LandSize > 0 {
+		property.LandSize = req.LandSize
+	}
+	if req.SizeUnit != "" {
+		property.SizeUnit = req.SizeUnit
+	}
+	if req.MarketPriceRWF > 0 {
+		property.MarketPriceRWF = req.MarketPriceRWF
 	}
 
 	if err := h.propertyRepo.Update(property); err != nil {

@@ -331,9 +331,9 @@ func (s *MarketplaceService) SyncMarketplaceAPIs(ctx context.Context, propertyID
 		"synced_apis":      []string{},
 		"sync_timestamp":   time.Now(),
 		"property_details": map[string]interface{}{
-			"location":  property.LocationName,
-			"type":      property.PropertyType,
-			"area_sqm":  property.AreaSqm,
+			"location": property.LocationName,
+			"type":     property.PropertyType,
+			// area_sqm removed, use land_size only
 			"valuation": property.MarketPriceRWF,
 		},
 	}
@@ -420,9 +420,9 @@ func (s *MarketplaceService) GetPropertyListingsOnSale(ctx context.Context, page
 			"id":            p.ID,
 			"location":      p.LocationName,
 			"property_type": p.PropertyType,
-			"area_sqm":      p.AreaSqm,
-			"price_rwf":     p.MarketPriceRWF,
-			"status":        p.Status,
+			// area_sqm removed, use land_size only
+			"price_rwf": p.MarketPriceRWF,
+			"status":    p.Status,
 		}
 	}
 	return listings, int(total), nil
