@@ -1,6 +1,8 @@
 
 
 import React, { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 import Head from 'next/head';
 import MainNavbar from '../../components/MainNavbar';
 import { fetchUserNotifications, markNotificationRead, deleteNotification, markAllAsRead } from '../../utils/notificationApi';
@@ -16,13 +18,20 @@ interface Notification {
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
+    if (status === 'loading') return;
+    if (!session) {
+      router.replace('/auth/login');
+      return;
+    }
     fetchUserNotifications({ limit: 50 }).then((data) => {
       setNotifications(data);
       setLoading(false);
     });
-  }, []);
+  }, [session, status, router]);
 
   const handleMarkAsRead = async (id: string) => {
     await markNotificationRead(id);

@@ -129,7 +129,7 @@ export default function Marketplace() {
     // Helper to start polling if WS fails
     const startPolling = () => {
       if (!polling) {
-        polling = setInterval(fetchProperties, 45000); // 45s fallback polling
+        polling = setInterval(fetchProperties, 120000); // 2 minute fallback polling
         pollingRef.current = polling;
       }
     };
