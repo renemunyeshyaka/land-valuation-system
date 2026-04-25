@@ -1,11 +1,10 @@
 import type { AppProps } from 'next/app'
-import '../styles/globals.css';
+//import '../styles/globals.css';
 import { SessionProvider } from 'next-auth/react'
 import { Provider } from 'react-redux'
 import { Toaster } from 'react-hot-toast'
 import { store } from '../store'
-import '../styles/globals.css'
-// import '@/styles/globals.css'
+
 
 
 

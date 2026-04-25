@@ -54,7 +54,7 @@ const Subscription: React.FC = () => {
       </Head>
 
       <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
-        <MainNavbar />
+        
 
         <main className="flex-grow">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">

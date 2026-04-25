@@ -1,16 +1,32 @@
+import SubscriptionSelector from '../../components/SubscriptionSelector';
+import FourStepProcess from '../../components/FourStepProcess';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
+// Notification type for dashboard notifications
+interface DashboardNotification {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  title: string;
+  message: string;
+  type: string;
+  sentAt: string;
+  read: boolean;
+  sentBy: string;
+}
 import LandEstimateResultCard from '../../components/LandEstimateResultCard';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { useSession, signOut } from 'next-auth/react';
+import { clearAuth, fetchWithTokenRefresh } from '../../utils/tokenRefresh';
 import LandEstimateForm, { LandEstimateRequest } from '../../components/LandEstimateForm';
 import Head from 'next/head';
 // import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { useSession, signOut } from 'next-auth/react';
-import toast from 'react-hot-toast';
-import Link from 'next/link';
-import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '../../utils/tokenRefresh';
-import FourStepProcess from '../../components/FourStepProcess';
-import SubscriptionSelector from '../../components/SubscriptionSelector';
+import dynamic from 'next/dynamic';
+const UserEditPropertyModal = dynamic(() => import('../../components/property/UserEditPropertyModal'), { ssr: false });
+// ...existing code...
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
@@ -35,91 +51,236 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
  * - Components: Buttons, cards, stat boxes
  */
 
+
 interface UserData {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  userType?: string;
+  userType: string;
   phone?: string;
-  subscriptionTier: 'free' | 'basic' | 'professional' | 'ultimate';
-  subscriptionExpiresAt?: string;
+  subscriptionTier: string;
+  subscriptionExpiresAt?: string | null;
   referralCode: string;
-  recentValuations: Array<{
-    id: string;
-    location: string;
-    area: number;
-    valuationPrice: number;
-    createdAt: string;
-  }>;
+  recentValuations: any[];
 }
 
-interface DashboardNotification {
-  id: string | number;
-  userId: string;
-  userEmail: string;
-  userName: string;
-  title: string;
-  message: string;
-  type: string;
-  sentAt: string;
-  read: boolean;
-  sentBy: string;
-}
 
-const Dashboard: React.FC = () => {
-  // Error boundary for admin experience selector
-  const [selectorError, setSelectorError] = useState<string | null>(null);
+function Dashboard() {
+        // Handle property edit (PUT request)
+        const handleEditProperty = async (updatedProperty: any) => {
+          try {
+            const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+            if (!accessToken) {
+              toast.error('Not authenticated. Please log in again.');
+              return;
+            }
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/properties/${updatedProperty.id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify(updatedProperty),
+            });
+            if (!response.ok) {
+              throw new Error('Failed to update property');
+            }
+            toast.success('Property updated successfully!');
+            handleCloseEditModal();
+            // Refresh properties list
+            fetchProperties(propertyTab);
+          } catch (err: any) {
+            toast.error(err.message || 'Failed to update property');
+          }
+        };
+      // --- Location Data for Property Modal ---
+      const [provinceNames, setProvinceNames] = useState<string[]>([]);
+      const [adminHierarchy, setAdminHierarchy] = useState<any>({});
+
+      useEffect(() => {
+        // Load hierarchical location JSON for province/district/sector/cell/village selectors
+        const fetchLocationData = async () => {
+          try {
+            const res = await fetch('/land_admin_hierarchy_from_csv.json');
+            const data = await res.json();
+            setAdminHierarchy(data);
+            setProvinceNames(Object.keys(data));
+          } catch (e) {
+            setAdminHierarchy({});
+            setProvinceNames([]);
+          }
+        };
+        fetchLocationData();
+      }, []);
+    // --- Edit Property Modal State & Handlers ---
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [editForm, setEditForm] = useState<any>(null);
+
+    // Open the edit modal with the selected property
+    const handleOpenEditModal = (property: any) => {
+      setEditForm(property);
+      setEditModalOpen(true);
+    };
+
+    // Close the edit modal
+    const handleCloseEditModal = () => {
+      setEditModalOpen(false);
+      setEditForm(null);
+    };
+  // Modal state and logic for View Properties (profile version)
+  const [showPropertiesModal, setShowPropertiesModal] = useState(false);
+  const [propertyTab, setPropertyTab] = useState<'public' | 'registered' | 'mine'>('public');
+  const [properties, setProperties] = useState<any[]>([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(false);
+  const [propertiesError, setPropertiesError] = useState<string | null>(null);
+
+  // --- Payment History modal state and logic ---
+  const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
+  const [paymentTab, setPaymentTab] = useState<'all' | 'success' | 'failed'>('all');
+  const [payments, setPayments] = useState<any[]>([]);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  // Fetch properties based on selected tab
+  const fetchProperties = async (tab: 'public' | 'registered' | 'mine') => {
+    setPropertiesLoading(true);
+    setPropertiesError(null);
+    let url = '';
+    let options: RequestInit = {};
+    if (tab === 'public') {
+      url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/properties?visibility=public`;
+    } else if (tab === 'registered') {
+      url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/properties?visibility=registered`;
+    } else if (tab === 'mine') {
+      url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/properties/my`;
+      const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+      if (accessToken) {
+        options.headers = { Authorization: `Bearer ${accessToken}` };
+      }
+    }
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error('Failed to fetch properties');
+      }
+      const data = await response.json();
+      setProperties(data?.data || []);
+    } catch (err: any) {
+      setPropertiesError(err.message || 'Failed to fetch properties');
+    } finally {
+      setPropertiesLoading(false);
+    }
+  };
+
+  // Payment History API fetch
+  const fetchPayments = async (tab: 'all' | 'success' | 'failed') => {
+    setPaymentLoading(true);
+    setPaymentError(null);
+    let url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/payments/history`;
+    let options: RequestInit = {};
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (accessToken) {
+      options.headers = { Authorization: `Bearer ${accessToken}` };
+    }
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error('Failed to fetch payment history');
+      }
+      const data = await response.json();
+      let txns = Array.isArray(data?.data) ? data.data : [];
+      if (tab === 'success') {
+        txns = txns.filter((t: any) => t.status === 'success');
+      } else if (tab === 'failed') {
+        txns = txns.filter((t: any) => t.status === 'failed');
+      }
+      setPayments(txns);
+    } catch (err: any) {
+      setPaymentError(err.message || 'Failed to fetch payment history');
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  // Open/close Payment History modal
+  const handleOpenPaymentHistoryModal = () => {
+    setShowPaymentHistoryModal(true);
+    setPaymentTab('all');
+    fetchPayments('all');
+  };
+  const handleClosePaymentHistoryModal = () => {
+    setShowPaymentHistoryModal(false);
+    setPayments([]);
+    setPaymentError(null);
+  };
+  // Handle Payment tab change
+  const handlePaymentTabChange = (tab: 'all' | 'success' | 'failed') => {
+    setPaymentTab(tab);
+    fetchPayments(tab);
+  };
+
+  // Open modal and fetch properties for default tab
+  const handleOpenPropertiesModal = () => {
+    setShowPropertiesModal(true);
+    setPropertyTab('public');
+    fetchProperties('public');
+  };
+
+  const handleClosePropertiesModal = () => {
+    setShowPropertiesModal(false);
+    setProperties([]);
+    setPropertiesError(null);
+  };
+
+  // Handle tab change
+  const handleTabChange = (tab: 'public' | 'registered' | 'mine') => {
+    setPropertyTab(tab);
+    fetchProperties(tab);
+  };
+    // Handles land estimate form submission
+    const handleEstimate = async (estimateRequest: any) => {
+      setEstimateLoading(true);
+      setEstimateError(null);
+      setEstimateResult(null);
+      try {
+        // Replace with actual API call if available
+        // Example: const response = await fetch('/api/estimate', { ... })
+        // For now, mock a result
+        const mockResult = {
+          ...estimateRequest,
+          valuationPrice: 140000000,
+          createdAt: new Date().toISOString(),
+        };
+        setEstimateResult(mockResult);
+      } catch (error: any) {
+        setEstimateError('Failed to get estimate. Please try again.');
+      } finally {
+        setEstimateLoading(false);
+      }
+    };
   const router = useRouter();
   const { data: session, status } = useSession();
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
   const [authRedirecting, setAuthRedirecting] = useState(false);
-  const [tokenExpired, setTokenExpired] = useState(false); // Track if token is already known to be expired
-  const [notifications, setNotifications] = useState<DashboardNotification[]>([]);
-
-  const [estimateResult, setEstimateResult] = useState<any | null>(null);
+  const [selectorError, setSelectorError] = useState<string | null>(null);
+  const [tokenExpired, setTokenExpired] = useState(false);
+  const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
   const [estimateLoading, setEstimateLoading] = useState(false);
   const [estimateError, setEstimateError] = useState<string | null>(null);
-  const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
+  const [estimateResult, setEstimateResult] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-
-  const handleEstimate = async (params: LandEstimateRequest) => {
-    if (!user) {
-      setShowRegisterPrompt(true);
-      return;
-    }
-    setEstimateLoading(true);
-    setEstimateError(null);
-    setEstimateResult(null);
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/land-value-estimate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
-      });
-      if (!res.ok) throw new Error('Failed to fetch estimate');
-      const payload = await res.json();
-      setEstimateResult(payload.data || null);
-    } catch (err: any) {
-      setEstimateError(err.message || 'Unknown error');
-    } finally {
-      setEstimateLoading(false);
-    }
-  };
 
   const clearAuthAndRedirectToLogin = () => {
     if (authRedirecting) {
       return;
     }
-
     setAuthRedirecting(true);
     setLoading(false);
-
     clearAuth();
-
     toast.error('Session expired. Please sign in again.');
     router.replace('/auth/login');
   };
@@ -558,14 +719,6 @@ const Dashboard: React.FC = () => {
                     View Profile
                   </Link>
                   <Link
-                    href="/dashboard/properties"
-                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <i className="fas fa-list mr-2"></i>
-                    My Properties
-                  </Link>
-                  <Link
                     href="/properties/add"
                     className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
                     onClick={() => setMobileMenuOpen(false)}
@@ -580,6 +733,14 @@ const Dashboard: React.FC = () => {
                   >
                     <i className="fas fa-gem mr-2"></i>
                     Upgrade Plan
+                  </Link>
+                  <Link
+                    href="/analytics"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <i className="fas fa-chart-line mr-2"></i>
+                    Analytics
                   </Link>
                   <button
                     onClick={async () => {
@@ -616,9 +777,224 @@ const Dashboard: React.FC = () => {
                 </button>
               </div>
             )}
-            {renderAdminExperienceSelector(user, router, getAdminExperienceMode)}
-            {/* Four Steps Process */}
+            {/* Quick Navigation - moved above FourStepProcess as requested */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+              <Link
+                href="/properties/add"
+                className="flex flex-col items-center gap-3 p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 border border-emerald-600 rounded-lg hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all group"
+              >
+                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <i className="fas fa-plus-circle text-emerald-700 text-xl"></i>
+                </div>
+                <span className="text-sm font-semibold text-white">Add Property</span>
+              </Link>
+              <Link
+                href="/analytics"
+                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
+              >
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                  <i className="fas fa-chart-line text-blue-700 text-lg"></i>
+                </div>
+                <span className="text-sm font-semibold text-gray-800">Analytics</span>
+              </Link>
+              <Link
+                href="/dashboard/subscription"
+                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
+              >
+                <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                  <i className="fas fa-gem text-amber-700 text-lg"></i>
+                </div>
+                <span className="text-sm font-semibold text-gray-800">Upgrade Plan</span>
+              </Link>
+              {/* View Properties quick nav card (profile modal version) */}
+              <button
+                type="button"
+                onClick={handleOpenPropertiesModal}
+                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
+              >
+                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                  <i className="fas fa-eye text-emerald-700 text-lg"></i>
+                </div>
+                <span className="text-sm font-semibold text-gray-800">View Properties</span>
+              </button>
+              {/* Payment History quick nav card */}
+              <button
+                type="button"
+                onClick={handleOpenPaymentHistoryModal}
+                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-blue-200 transition-all group"
+              >
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                  <i className="fas fa-wallet text-blue-700 text-lg"></i>
+                </div>
+                <span className="text-sm font-semibold text-gray-800">Payment History</span>
+              </button>
+
+              {/* View Properties Modal (profile version) */}
+
+              {showPropertiesModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                  <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative animate-fade-in">
+                    <button
+                      className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
+                      onClick={handleClosePropertiesModal}
+                      aria-label="Close"
+                    >
+                      &times;
+                    </button>
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                      <i className="fas fa-building"></i>
+                      View Properties
+                    </h2>
+                    {/* Selector Tabs */}
+                    <div className="flex gap-2 mb-4">
+                      <button
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'public' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        onClick={() => handleTabChange('public')}
+                      >
+                        Public
+                      </button>
+                      <button
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'registered' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        onClick={() => handleTabChange('registered')}
+                      >
+                        Registered
+                      </button>
+                      <button
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'mine' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        onClick={() => handleTabChange('mine')}
+                      >
+                        Only mine
+                      </button>
+                    </div>
+                    {propertiesLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <i className="fas fa-spinner fa-spin text-2xl text-emerald-700"></i>
+                        <span className="ml-3 text-gray-600">Loading...</span>
+                      </div>
+                    ) : propertiesError ? (
+                      <div className="text-red-600 py-4">{propertiesError}</div>
+                    ) : properties.length === 0 ? (
+                      <div className="text-gray-600 py-4">No properties found.</div>
+                    ) : (
+                      <div className="overflow-y-auto max-h-96 divide-y divide-gray-100">
+                        {properties.map((prop) => (
+                          <div key={prop.id} className="py-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-semibold text-gray-800">{prop.title || 'Untitled Property'}</div>
+                                <div className="text-sm text-gray-500">{prop.location}</div>
+                                {prop.price && (
+                                  <div className="text-sm text-emerald-700 font-bold">RWF {prop.price.toLocaleString()}</div>
+                                )}
+                                {prop.description && (
+                                  <div className="text-xs text-gray-600 mt-1">{prop.description}</div>
+                                )}
+                              </div>
+                              <div className="flex flex-col items-end gap-2">
+                                {prop.owner_id === user.id && propertyTab === 'mine' && (
+                                  <button
+                                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    onClick={() => handleOpenEditModal(prop)}
+                                  >
+                                    <i className="fas fa-edit mr-1"></i>Edit
+                                  </button>
+                                )}
+                                {prop.owner_name && (
+                                  <div className="text-xs text-gray-400 text-right">By: {prop.owner_name}</div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* User Edit Property Modal */}
+                  {editModalOpen && editForm && (
+                    <UserEditPropertyModal
+                      editForm={editForm}
+                      setEditForm={setEditForm}
+                      onEdit={handleEditProperty}
+                      onClose={handleCloseEditModal}
+                      provinceNames={provinceNames}
+                      adminHierarchy={adminHierarchy}
+                    />
+                  )}
+                </div>
+              )}
+
+
+            {/* Payment History Modal (always at root, not inside grid) */}
+            {showPaymentHistoryModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative animate-fade-in">
+                  <button
+                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
+                    onClick={handleClosePaymentHistoryModal}
+                    aria-label="Close"
+                  >
+                    &times;
+                  </button>
+                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i className="fas fa-wallet"></i>
+                    Payment History
+                  </h2>
+                  {/* Selector Tabs */}
+                  <div className="flex gap-2 mb-4">
+                    <button
+                      className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${paymentTab === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                      onClick={() => handlePaymentTabChange('all')}
+                    >
+                      All
+                    </button>
+                    <button
+                      className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${paymentTab === 'success' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-green-50'}`}
+                      onClick={() => handlePaymentTabChange('success')}
+                    >
+                      Success
+                    </button>
+                    <button
+                      className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${paymentTab === 'failed' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-red-50'}`}
+                      onClick={() => handlePaymentTabChange('failed')}
+                    >
+                      Failed
+                    </button>
+                  </div>
+                  {paymentLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <i className="fas fa-spinner fa-spin text-2xl text-blue-700"></i>
+                      <span className="ml-3 text-gray-600">Loading...</span>
+                    </div>
+                  ) : paymentError ? (
+                    <div className="text-red-600 py-4">{paymentError}</div>
+                  ) : payments.length === 0 ? (
+                    <div className="text-gray-600 py-4">No payment records found.</div>
+                  ) : (
+                    <div className="overflow-y-auto max-h-96 divide-y divide-gray-100">
+                      {payments.map((txn) => (
+                        <div key={txn.id} className="py-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-semibold text-gray-800">{txn.description || 'Payment'}</div>
+                              <div className="text-sm text-gray-500">{txn.date}</div>
+                              <div className="text-sm font-bold text-blue-700">RWF {txn.amount?.toLocaleString()}</div>
+                              <div className={`text-xs mt-1 ${txn.status === 'success' ? 'text-green-600' : txn.status === 'failed' ? 'text-red-600' : 'text-gray-600'}`}>{txn.status}</div>
+                            </div>
+                            {txn.reference && (
+                              <div className="text-xs text-gray-400 text-right">Ref: {txn.reference}</div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            </div>
+            {/* Four Steps Process - now below Quick Navigation */}
             <FourStepProcess />
+            {renderAdminExperienceSelector(user, router, getAdminExperienceMode)}
 
             {/* Refined Estimate Search (matches home page) */}
             {/* Registration Prompt Modal */}
@@ -660,68 +1036,7 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Quick Navigation */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-              <Link
-                href="/properties/add"
-                className="flex flex-col items-center gap-3 p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 border border-emerald-600 rounded-lg hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all group"
-              >
-                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <i className="fas fa-plus-circle text-emerald-700 text-xl"></i>
-                </div>
-                <span className="text-sm font-semibold text-white">Add Property</span>
-              </Link>
-
-              <Link
-                href="/search"
-                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
-              >
-                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-                  <i className="fas fa-search text-emerald-700 text-lg"></i>
-                </div>
-                <span className="text-sm font-semibold text-gray-800">Search Properties</span>
-              </Link>
-
-              <Link
-                href="/dashboard/properties"
-                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
-              >
-                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-                  <i className="fas fa-list text-emerald-700 text-lg"></i>
-                </div>
-                <span className="text-sm font-semibold text-gray-800">My Properties</span>
-              </Link>
-
-              <Link
-                href="/analytics"
-                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
-              >
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                  <i className="fas fa-chart-line text-blue-700 text-lg"></i>
-                </div>
-                <span className="text-sm font-semibold text-gray-800">Analytics</span>
-              </Link>
-
-              <Link
-                href="/payments"
-                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
-              >
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                  <i className="fas fa-credit-card text-purple-700 text-lg"></i>
-                </div>
-                <span className="text-sm font-semibold text-gray-800">Payment History</span>
-              </Link>
-
-              <Link
-                href="/dashboard/subscription"
-                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
-              >
-                <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors">
-                  <i className="fas fa-gem text-amber-700 text-lg"></i>
-                </div>
-                <span className="text-sm font-semibold text-gray-800">Upgrade Plan</span>
-              </Link>
-            </div>
+            {/* Quick Navigation moved above FourStepProcess */}
 
             {/* Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

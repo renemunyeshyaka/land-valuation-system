@@ -1,0 +1,90 @@
+{
+  "East/Iburasirazuba": {
+    "Bugesera": {
+      "Gashora": {
+        "Biryogo": [
+          "Bidudu",
+          "Biryogo",
+          "Buhoro",
+          "Gihanama",
+          "Kagarama",
+          "Kanyonyomba",
+          "Karutete",
+          "Kivugiza",
+          "Rugunga"
+        ],
+        "Kabuye": [
+          "Bidudu",
+          "Kabuye",
+          "Karizinge",
+          "Rwagasiga",
+          "Rweteto"
+        ],
+        "Kagomasi": [
+          "Akagako",
+          "Kagomasi",
+          "Kiruhura",
+          "Kuruganda",
+          "Runzenze",
+          "Rushubi"
+        ],
+        "Mwendo": [
+          "Gaharwa",
+          "Gisenyi",
+          "Kayovu",
+          "Ruhanga",
+          "Ruhanura",
+          "Rutanga"
+        ],
+        "Ramiro": [
+          "Dihiro",
+          "Kagasa I",
+          "Kagasa Ii",
+          "Karusine I",
+          "Karusine Ii",
+          "Migina",
+          "Munyinya",
+          "Rweru I",
+          "Rweru Ii"
+        ]
+      },
+      "Juru": {
+        "Juru": [
+          "Ayabakiza",
+          "Bisagara",
+          "Nyamigende",
+          "Rugarama",
+          "Rwamakara",
+          "Twabagarama"
+        ],
+        "Kabukuba": [
+          "Gikana",
+          "Gikurazo",
+          "Kabukuba",
+          "Kamatongo",
+          "Majanja",
+          "Mbuye",
+          "Rushubi"
+        ],
+        "Mugorore": [
+          "Cyirabo",
+          "Gatora",
+          "Kajevuba",
+          "Mugorore",
+          "Murambi",
+          "Rebero",
+          "Rwamurama",
+          "Tabarari"
+        ],
+        "Musovu": [
+          "Bitega",
+          "Gasharu",
+          "Kabuga",
+          "Kabuye",
+          "Musovu",
+          "Rugarama"
+        ]
+      }
+    }
+  }
+}

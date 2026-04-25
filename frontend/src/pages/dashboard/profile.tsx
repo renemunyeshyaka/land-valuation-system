@@ -1,4 +1,13 @@
 import React, { useState, useEffect } from 'react';
+
+interface PublicProperty {
+  id: string;
+  title: string;
+  location: string;
+  owner_name?: string;
+  price?: number;
+  description?: string;
+}
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -16,6 +25,65 @@ interface ProfileData {
 }
 
 const Profile: React.FC = () => {
+
+  // State for "View Properties" modal and selector
+  const [showPropertiesModal, setShowPropertiesModal] = useState(false);
+  const [propertyTab, setPropertyTab] = useState<'public' | 'registered' | 'mine'>('public');
+  const [properties, setProperties] = useState<PublicProperty[]>([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(false);
+  const [propertiesError, setPropertiesError] = useState<string | null>(null);
+
+
+  // Fetch properties based on selected tab
+  const fetchProperties = async (tab: 'public' | 'registered' | 'mine') => {
+    setPropertiesLoading(true);
+    setPropertiesError(null);
+    let url = '';
+    let options: RequestInit = {};
+    if (tab === 'public') {
+      url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/properties?visibility=public`;
+    } else if (tab === 'registered') {
+      url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/properties?visibility=registered`;
+    } else if (tab === 'mine') {
+      url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/properties/my`;
+      const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+      if (accessToken) {
+        options.headers = { Authorization: `Bearer ${accessToken}` };
+      }
+    }
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error('Failed to fetch properties');
+      }
+      const data = await response.json();
+      setProperties(data?.data || []);
+    } catch (err: any) {
+      setPropertiesError(err.message || 'Failed to fetch properties');
+    } finally {
+      setPropertiesLoading(false);
+    }
+  };
+
+
+  // Open modal and fetch properties for default tab
+  const handleOpenPropertiesModal = () => {
+    setShowPropertiesModal(true);
+    setPropertyTab('public');
+    fetchProperties('public');
+  };
+
+  const handleClosePropertiesModal = () => {
+    setShowPropertiesModal(false);
+    setProperties([]);
+    setPropertiesError(null);
+  };
+
+  // Handle tab change
+  const handleTabChange = (tab: 'public' | 'registered' | 'mine') => {
+    setPropertyTab(tab);
+    fetchProperties(tab);
+  };
   const router = useRouter();
   const { data: session, status } = useSession();
   const [userLoading, setUserLoading] = useState(true);
@@ -456,6 +524,87 @@ const Profile: React.FC = () => {
               <p className="text-base text-gray-600">
                 Update your personal information
               </p>
+
+              <button
+                type="button"
+                onClick={handleOpenPropertiesModal}
+                className="mt-4 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm"
+              >
+                <i className="fas fa-building mr-2"></i>
+                View Properties
+              </button>
+
+              {/* View Properties Modal */}
+              {showPropertiesModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                  <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative animate-fade-in">
+                    <button
+                      className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
+                      onClick={handleClosePropertiesModal}
+                      aria-label="Close"
+                    >
+                      &times;
+                    </button>
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                      <i className="fas fa-building"></i>
+                      View Properties
+                    </h2>
+                    {/* Selector Tabs */}
+                    <div className="flex gap-2 mb-4">
+                      <button
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'public' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        onClick={() => handleTabChange('public')}
+                      >
+                        Public
+                      </button>
+                      <button
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'registered' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        onClick={() => handleTabChange('registered')}
+                      >
+                        Registered
+                      </button>
+                      <button
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'mine' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        onClick={() => handleTabChange('mine')}
+                      >
+                        Only mine
+                      </button>
+                    </div>
+                    {propertiesLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <i className="fas fa-spinner fa-spin text-2xl text-emerald-700"></i>
+                        <span className="ml-3 text-gray-600">Loading...</span>
+                      </div>
+                    ) : propertiesError ? (
+                      <div className="text-red-600 py-4">{propertiesError}</div>
+                    ) : properties.length === 0 ? (
+                      <div className="text-gray-600 py-4">No properties found.</div>
+                    ) : (
+                      <div className="overflow-y-auto max-h-96 divide-y divide-gray-100">
+                        {properties.map((prop) => (
+                          <div key={prop.id} className="py-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-semibold text-gray-800">{prop.title || 'Untitled Property'}</div>
+                                <div className="text-sm text-gray-500">{prop.location}</div>
+                                {prop.price && (
+                                  <div className="text-sm text-emerald-700 font-bold">RWF {prop.price.toLocaleString()}</div>
+                                )}
+                                {prop.description && (
+                                  <div className="text-xs text-gray-600 mt-1">{prop.description}</div>
+                                )}
+                              </div>
+                              {prop.owner_name && (
+                                <div className="text-xs text-gray-400 text-right">By: {prop.owner_name}</div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6 sm:p-8">

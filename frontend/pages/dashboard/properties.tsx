@@ -66,6 +66,7 @@ type AdminHierarchy = {
 };
 
 function DashboardPropertiesPage() {
+	// Core hooks and data
 	const router = useRouter();
 	const { data: session, status } = useSession();
 	const adminHierarchy: AdminHierarchy = adminHierarchyRaw as AdminHierarchy;
@@ -80,26 +81,50 @@ function DashboardPropertiesPage() {
 	const [editingImages, setEditingImages] = useState<string[]>([]);
 	const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
 
-	// Get unique location names for dropdowns
-	const provinceNames = useMemo(() => Object.keys(adminHierarchy), [adminHierarchy]);
+	// Location selectors (cascading logic)
+	// Force only the 5 official province names of Rwanda, regardless of JSON content
+	const provinceNames = useMemo(
+	  () => [
+	    'Kigali Town/Umujyi wa Kigali',
+	    'East/Iburasirazuba',
+	    'North/Iburengerazuba',
+	    'West/Iburengerazuba',
+	    'South/Amajyepfo',
+	  ].filter((name) => Object.keys(adminHierarchy).includes(name)),
+	  [adminHierarchy]
+	);
 	const districtNames = useMemo(() => {
 		if (!editing?.province) return [];
-		return Object.keys(adminHierarchy[editing.province] || {});
+		return Object.keys(adminHierarchy[editing.province] || {}).filter(
+		  (name) => typeof name === 'string' && name.trim() !== '' && isNaN(Number(name))
+		);
 	}, [editing?.province, adminHierarchy]);
 	const sectorNames = useMemo(() => {
 		if (!editing?.province || !editing?.district) return [];
-		return Object.keys(adminHierarchy[editing.province]?.[editing.district] || {});
+		return Object.keys((adminHierarchy[editing.province] || {})[editing.district] || {}).filter(
+		  (name) => typeof name === 'string' && name.trim() !== '' && isNaN(Number(name))
+		);
 	}, [editing?.province, editing?.district, adminHierarchy]);
 	const cellNames = useMemo(() => {
 		if (!editing?.province || !editing?.district || !editing?.sector) return [];
-		return Object.keys(adminHierarchy[editing.province]?.[editing.district]?.[editing.sector] || {});
+		return Object.keys(((adminHierarchy[editing.province] || {})[editing.district] || {})[editing.sector] || {}).filter(
+		  (name) => typeof name === 'string' && name.trim() !== '' && isNaN(Number(name))
+		);
 	}, [editing?.province, editing?.district, editing?.sector, adminHierarchy]);
 	const villageNames = useMemo(() => {
 		if (!editing?.province || !editing?.district || !editing?.sector || !editing?.cell) return [];
-		return adminHierarchy[editing.province]?.[editing.district]?.[editing.sector]?.[editing.cell] || [];
+		return ((((adminHierarchy[editing.province] || {})[editing.district] || {})[editing.sector] || {})[editing.cell] || []).filter(
+		  (name) => typeof name === 'string' && name.trim() !== '' && isNaN(Number(name))
+		);
 	}, [editing?.province, editing?.district, editing?.sector, editing?.cell, adminHierarchy]);
 
-	// Fetch current user and properties using NextAuth session
+	// Debug: Log adminHierarchy and provinceNames to diagnose selector issue
+	useEffect(() => {
+		console.log('DEBUG adminHierarchy:', adminHierarchy);
+		console.log('DEBUG provinceNames:', provinceNames);
+	}, [adminHierarchy, provinceNames]);
+
+	// Fetch only the authenticated user's properties using the correct backend endpoint
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
@@ -109,22 +134,15 @@ function DashboardPropertiesPage() {
 					return;
 				}
 
-				const userRes = await fetch(`${API_BASE_URL}/api/auth/me`, {
-					headers: { Authorization: `Bearer ${session.accessToken}` }
-				});
-				if (!userRes.ok) throw new Error('Failed to fetch user');
-				const userData = await userRes.json();
-
-				setCurrentUserId(userData.id);
-				setCurrentUserRole(userData.role || null);
-
-				// Fetch properties
-				const propsRes = await fetch(`${API_BASE_URL}/api/properties/user/${userData.id}`, {
+				// Fetch properties for the authenticated user
+				const propsRes = await fetch(`${API_BASE_URL}/api/v1/properties/my`, {
 					headers: { Authorization: `Bearer ${session.accessToken}` }
 				});
 				if (!propsRes.ok) throw new Error('Failed to fetch properties');
 				const propsData = await propsRes.json();
-				setProperties(propsData);
+				// If backend returns an envelope, extract data
+				const properties = propsData.data || propsData;
+				setProperties(properties);
 			} catch (error) {
 				console.error('Error fetching data:', error);
 				toast.error('Failed to load properties');
