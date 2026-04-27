@@ -29,9 +29,16 @@ interface Property {
 
 
 
+// Utility to format seconds
+function formatSeconds(sec: number) {
+  if (sec < 1) return `${Math.round(sec * 1000)} ms`;
+  return `${sec.toFixed(2)} s`;
+}
+
 export default function Marketplace() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadTime, setLoadTime] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -93,7 +100,9 @@ export default function Marketplace() {
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch properties from API (server-side pagination)
-  const fetchProperties = async () => {
+  const fetchProperties = async (measureLoad = false) => {
+    let start: number | null = null;
+    if (measureLoad) start = performance.now();
     setLoading(true);
     setError(null);
     try {
@@ -121,18 +130,40 @@ export default function Marketplace() {
       } else {
         setProperties([]);
       }
+      if (measureLoad && start !== null) {
+        setLoadTime((performance.now() - start) / 1000);
+      }
     } catch (err: any) {
       setError(err.message || 'Unknown error');
       setProperties([]);
       setTotalCount(0);
+      if (measureLoad && start !== null) {
+        setLoadTime((performance.now() - start) / 1000);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch properties when currentPage, pageSize, or search changes
+  // First load: measure load time
   useEffect(() => {
-    fetchProperties();
+    fetchProperties(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Reload every 2 minutes to increase views
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchProperties();
+    }, 2 * 60 * 1000); // 2 minutes
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch properties when currentPage, pageSize, or search changes (but not on first mount)
+  useEffect(() => {
+    if (currentPage !== 1 || search) {
+      fetchProperties();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, pageSize, search]);
 
@@ -316,6 +347,9 @@ export default function Marketplace() {
 
           {loading && (
             <div className="text-center py-10 text-lg text-gray-500">Loading properties...</div>
+          )}
+          {!loading && loadTime !== null && (
+            <div className="text-center text-xs text-gray-400 mb-2">First load time: {formatSeconds(loadTime)} (max 10s target)</div>
           )}
           {error && (
             <div className="text-center py-10 text-red-500">{error}</div>
