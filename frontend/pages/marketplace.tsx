@@ -36,6 +36,7 @@ export default function Marketplace() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(16); // Properties per page
+  const [totalCount, setTotalCount] = useState(0); // Total properties from backend
   const [search, setSearch] = useState('');
   // Dependent selector state
   type AdminHierarchy = {
@@ -91,20 +92,27 @@ export default function Marketplace() {
   const wsRef = useRef<WebSocket | null>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch properties from API
+  // Fetch properties from API (server-side pagination)
   const fetchProperties = async () => {
     setLoading(true);
     setError(null);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-      const res = await fetch(`${apiUrl}/api/v1/marketplace/properties-for-sale?t=${Date.now()}`, {
+      // Add page and limit to query
+      const params = new URLSearchParams();
+      params.append('page', String(currentPage));
+      params.append('limit', String(pageSize));
+      if (search) params.append('search', search); // Optionally pass search to backend if supported
+      // TODO: Add filter params if backend supports them
+      const res = await fetch(`${apiUrl}/api/v1/marketplace/properties-for-sale?${params.toString()}&t=${Date.now()}`, {
         cache: 'no-store',
       });
       if (!res.ok) throw new Error('Failed to fetch properties');
       const data = await res.json();
       const propertyArray = data?.data?.data;
+      const total = data?.data?.total || 0;
+      setTotalCount(total);
       if (Array.isArray(propertyArray)) {
-        // Map snake_case to camelCase for land_size/size_unit
         setProperties(propertyArray.map((p: any) => ({
           ...p,
           landSize: p.land_size ?? p.landSize,
@@ -116,98 +124,20 @@ export default function Marketplace() {
     } catch (err: any) {
       setError(err.message || 'Unknown error');
       setProperties([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
   };
 
+  // Fetch properties when currentPage, pageSize, or search changes
   useEffect(() => {
-    let ws: WebSocket | null = null;
-    let polling: NodeJS.Timeout | null = null;
-    let closedByClient = false;
+    fetchProperties();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize, search]);
 
-    // Helper to start polling if WS fails
-    const startPolling = () => {
-      if (!polling) {
-        polling = setInterval(fetchProperties, 15000); // 15 second fallback polling
-        pollingRef.current = polling;
-      }
-    };
-
-    // Try to connect to WebSocket for real-time updates
-    try {
-      const wsUrl = (process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5001') + '/ws/marketplace';
-      ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
-
-      ws.onopen = () => {
-        // On connect, fetch initial data
-        fetchProperties();
-        // Stop polling if running
-        if (pollingRef.current) clearInterval(pollingRef.current);
-      };
-      ws.onmessage = (event) => {
-        // Expecting a message like { type: 'property_update' }
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.type === 'property_update') {
-            fetchProperties();
-          }
-        } catch {}
-      };
-      ws.onerror = () => {
-        // On error, fallback to polling
-        startPolling();
-      };
-      ws.onclose = () => {
-        if (!closedByClient) startPolling();
-      };
-    } catch {
-      // If WS fails to construct, fallback to polling
-      startPolling();
-    }
-
-    // Cleanup on unmount
-    return () => {
-      closedByClient = true;
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-    };
-  }, []);
-
-  // Filtered and paginated properties
-  const filtered = properties.filter((p) => {
-    // Text search
-    const s = search.toLowerCase();
-    const matchesText = !search ||
-      p.title?.toLowerCase().includes(s) ||
-      p.district?.toLowerCase().includes(s) ||
-      p.sector?.toLowerCase().includes(s) ||
-      (p.description?.toLowerCase().includes(s) ?? false);
-
-    // Dependent selectors (only use fields that exist in Property interface)
-    // No province, cell, or village in Property interface, so skip those
-    const matchesDistrict = !district || p.district === district;
-    const matchesSector = !sector || p.sector === sector;
-    // No type field in Property interface, so skip type filtering or use a fallback if available
-    const matchesType = true;
-    let matchesPrice = true;
-    if (priceMin || priceMax) {
-      const price = Number(p.price);
-      if (priceMin && price < Number(priceMin)) matchesPrice = false;
-      if (priceMax && price > Number(priceMax)) matchesPrice = false;
-    }
-
-    return matchesText && matchesDistrict && matchesSector && matchesType && matchesPrice;
-  });
-  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
-  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  // Server-side pagination: properties already paginated
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   // Navigation handlers
   const goToPage = (page: number) => {
@@ -393,10 +323,10 @@ export default function Marketplace() {
           {!loading && !error && properties.length === 0 && (
             <div className="text-center py-10 text-gray-400">No properties found.</div>
           )}
-          {!loading && !error && filtered.length > 0 && (
+          {!loading && !error && properties.length > 0 && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
-                {paginated.map((property) => (
+                {properties.map((property) => (
                   <PropertyCard key={property.id} property={property} />
                 ))}
               </div>
