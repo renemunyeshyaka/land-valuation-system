@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
-import MainNavbar from '../../components/MainNavbar';
 
 /**
  * ANALYTICS DASHBOARD PAGE · Land Valuation System
@@ -130,7 +129,7 @@ const Analytics: React.FC = () => {
       {/* MAIN LAYOUT */}
       <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
 
-        <MainNavbar />
+      
 
         {/* MAIN CONTENT */}
         <main className="flex-grow">
