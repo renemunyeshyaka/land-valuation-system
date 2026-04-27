@@ -33,14 +33,32 @@ const Analytics: React.FC = () => {
     setEstimateError(null);
     setEstimateResult(null);
     try {
-      const res = await fetch('http://localhost:5000/api/v1/land-value-estimate', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/estimate-search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),
       });
       if (!res.ok) throw new Error('Failed to fetch estimate');
       const payload = await res.json();
-      setEstimateResult(payload.data || null);
+      const result = payload.data || null;
+      // Robust total calculation (like dashboard)
+      if (result) {
+        const plotSize = params.plot_size_sqm || 0;
+        result.plot_size_sqm = plotSize;
+        const min = Number(result.min_value_per_sqm ?? result.min_value ?? 0);
+        const avg = Number(result.weighted_avg_per_sqm ?? result.weighted_avg_value_per_sqm ?? result.weighted_avg ?? 0);
+        const max = Number(result.max_value_per_sqm ?? result.max_value ?? 0);
+        if (!result.total_min_value || result.total_min_value === 0) {
+          result.total_min_value = Math.round(min * plotSize);
+        }
+        if (!result.total_weighted_avg || result.total_weighted_avg === 0) {
+          result.total_weighted_avg = Math.round(avg * plotSize);
+        }
+        if (!result.total_max_value || result.total_max_value === 0) {
+          result.total_max_value = Math.round(max * plotSize);
+        }
+      }
+      setEstimateResult(result);
     } catch (err: any) {
       setEstimateError(err.message || 'Unknown error');
     } finally {
@@ -135,42 +153,49 @@ const Analytics: React.FC = () => {
         <main className="flex-grow">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
 
-            {/* Quick Land Value Estimate */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-8">
-              <h2 className="text-xl font-bold text-gray-800 mb-5">Quick Land Value Estimate</h2>
-              <LandEstimateForm onEstimate={handleEstimate} disabled={estimateLoading} />
-              {estimateError && <div className="text-red-600 mt-4">{estimateError}</div>}
-              {estimateResult && (
-                <LandEstimateResultCard estimateResult={estimateResult} />
-              )}
+            {/* Land Estimate Search (copied from dashboard) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Left: Land Estimate Search */}
+              <div className="bg-white border border-amber-200 rounded-2xl shadow-sm p-6">
+                <h2 className="text-xl font-bold text-emerald-800 mb-2 flex items-center gap-2">
+                  <i className="fas fa-search-location text-amber-400"></i>
+                  Land Estimate Search
+                </h2>
+                <LandEstimateForm onEstimate={handleEstimate} disabled={estimateLoading} />
+                {estimateError && (
+                  <div className="mt-4 bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-xl max-w-xl">
+                    <i className="fas fa-exclamation-circle mr-2"></i> {estimateError}
+                  </div>
+                )}
+              </div>
+              {/* Right: Land Value Estimate Result */}
+              <div className="flex items-start justify-center">
+                {estimateResult ? (
+                  <LandEstimateResultCard estimateResult={estimateResult} />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 italic p-8">
+                    <span>No estimate result yet.</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-12">
-              <div>
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2">
-                  Analytics
-                </h1>
-                <p className="text-lg text-gray-600">
-                  Insights into valuations, revenue, and user engagement
-                </p>
-              </div>
 
-              {/* Export Buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleExportReport('pdf')}
-                  className="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
-                >
-                  <i className="fas fa-file-pdf"></i>
-                  PDF
-                </button>
-                <button
-                  onClick={() => handleExportReport('csv')}
-                  className="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
-                >
-                  <i className="fas fa-file-csv"></i>
-                  CSV
-                </button>
-              </div>
+            {/* Export Buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleExportReport('pdf')}
+                className="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                <i className="fas fa-file-pdf"></i>
+                PDF
+              </button>
+              <button
+                onClick={() => handleExportReport('csv')}
+                className="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                <i className="fas fa-file-csv"></i>
+                CSV
+              </button>
             </div>
 
             {/* Date Range Selector */}

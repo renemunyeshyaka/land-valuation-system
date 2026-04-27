@@ -244,17 +244,39 @@ function Dashboard() {
       setEstimateError(null);
       setEstimateResult(null);
       try {
-        // Replace with actual API call if available
-        // Example: const response = await fetch('/api/estimate', { ... })
-        // For now, mock a result
-        const mockResult = {
-          ...estimateRequest,
-          valuationPrice: 140000000,
-          createdAt: new Date().toISOString(),
-        };
-        setEstimateResult(mockResult);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/estimate-search`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(estimateRequest),
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+          const apiError = payload?.error;
+          const errorMessage = typeof apiError === 'string' ? apiError : apiError?.message || payload?.message || 'Estimate not found.';
+          throw new Error(errorMessage);
+        }
+        // Always include plot_size_sqm in the result for correct total calculation
+        const result = payload?.data || payload;
+        const plotSize = estimateRequest.plot_size_sqm || estimateRequest.plot_size || 0;
+        if (result) {
+          result.plot_size_sqm = plotSize;
+          // Use both ..._per_sqm and ..._value_per_sqm keys for robustness
+          const min = Number(result.min_value_per_sqm ?? result.min_value ?? 0);
+          const avg = Number(result.weighted_avg_per_sqm ?? result.weighted_avg_value_per_sqm ?? result.weighted_avg ?? 0);
+          const max = Number(result.max_value_per_sqm ?? result.max_value ?? 0);
+          if (!result.total_min_value || result.total_min_value === 0) {
+            result.total_min_value = Math.round(min * plotSize);
+          }
+          if (!result.total_weighted_avg || result.total_weighted_avg === 0) {
+            result.total_weighted_avg = Math.round(avg * plotSize);
+          }
+          if (!result.total_max_value || result.total_max_value === 0) {
+            result.total_max_value = Math.round(max * plotSize);
+          }
+        }
+        setEstimateResult(result);
       } catch (error: any) {
-        setEstimateError('Failed to get estimate. Please try again.');
+        setEstimateError(error.message || 'Failed to get estimate. Please try again.');
       } finally {
         setEstimateLoading(false);
       }
