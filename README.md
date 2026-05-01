@@ -49,6 +49,48 @@ We are open to new partnerships that enhance transparency, trust, and value for 
 
 ## 🚧 Future Features & Planned Integrations
 
+## ⚠️ Subscription Feature Restrictions & Dashboard Behavior
+
+### Feature Access by Subscription Status
+
+The following dashboard features are **disabled** if a user's free subscription ends or a paid subscription expires:
+
+- **Add Property**
+- **Analytics**
+- **Land Estimate Search**
+- **Edit Profile**
+
+When a user's subscription is expired or inactive, these features will be hidden or disabled in the dashboard UI. The user will be prompted to renew or upgrade their subscription to regain access.
+
+#### Property Detail View Restrictions
+
+- Only users with an **active paid subscription** (Basic, Professional, Ultimate, Enterprise) can view full property details in the dashboard and marketplace.
+- Free or expired users will see a prompt to upgrade their plan when attempting to view property details.
+- The system enforces these restrictions both in the frontend and backend APIs.
+
+
+#### Example Feature Access Table
+
+| Feature                | Free (Active) | Free (Expired) | Paid (Active) | Paid (Expired) | Ultimate No Expiry |
+|------------------------|:-------------:|:--------------:|:-------------:|:--------------:|:------------------:|
+| View Properties List   |      ✓        |       ✓        |      ✓        |       ✓        |         ✓          |
+| View Property Details  |      ✗        |       ✗        |      ✓        |       ✗        |         ✓          |
+| Add Property           |      ✓        |       ✗        |      ✓        |       ✗        |         ✓          |
+| Analytics              |      ✗        |       ✗        |      ✓        |       ✗        |         ✓          |
+| Land Estimate Search   |      ✓        |       ✗        |      ✓        |       ✗        |         ✓          |
+| Edit Profile           |      ✓        |       ✗        |      ✓        |       ✗        |         ✓          |
+
+**Ultimate No Expiry Account:**
+- This account type does not require payment and can only be activated by an admin.
+- All features are always enabled, regardless of renewal or expiry.
+- Intended for government officials, accredited partners (e.g., Land Valuers), and university researchers.
+- Used for permanent, privileged access (e.g., for research, regulatory, or partnership purposes).
+
+**Note:**
+- Users are notified in the dashboard when their subscription is expired or inactive.
+- Attempting to access restricted features will prompt the user to renew or upgrade their subscription.
+
+
 - Direct mortgage offers from partner banks
 - Real estate agency listings and syndication
 - Payment gateway expansion (more mobile money, card, and digital payment options)
