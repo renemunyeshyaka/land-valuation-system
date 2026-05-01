@@ -215,7 +215,7 @@ export default function Benefits() {
                   <i className="fas fa-file-contract text-white text-2xl"></i>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Title Verification</h3>
-                <p className="text-gray-600 mb-4">Cross-reference with RDB records to verify ownership, check liens, and ensure clean title transfer.</p>
+                <p className="text-gray-600 mb-4">Cross-reference records to verify ownership, check liens, and ensure clean title transfer.</p>
                 <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
                   <i className="fas fa-check-circle"></i>
                   <span>95% fraud reduction</span>

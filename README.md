@@ -80,15 +80,21 @@ When a user's subscription is expired or inactive, these features will be hidden
 | Land Estimate Search   |      ✓        |       ✗        |      ✓        |       ✗        |         ✓          |
 | Edit Profile           |      ✓        |       ✗        |      ✓        |       ✗        |         ✓          |
 
+
+
 **Ultimate No Expiry Account:**
-- This account type does not require payment and can only be activated by an admin.
-- All features are always enabled, regardless of renewal or expiry.
+- This account type does not require payment and can only be assigned or activated by an admin.
+- All users are by default authenticated with a Free account upon registration.
+- Regular users can only choose from available subscription plans and must pay to upgrade their subscription dashboard account. If payment is not made or a subscription expires, core features will be automatically disabled until renewal.
+- Only the admin can switch a user between Free, Ultimate No Expiry, or admin dashboard access. Regular users cannot change their own account type or access the admin dashboard.
+- All features are always enabled for Ultimate No Expiry accounts, regardless of renewal or expiry.
 - Intended for government officials, accredited partners (e.g., Land Valuers), and university researchers.
 - Used for permanent, privileged access (e.g., for research, regulatory, or partnership purposes).
 
 **Note:**
 - Users are notified in the dashboard when their subscription is expired or inactive.
 - Attempting to access restricted features will prompt the user to renew or upgrade their subscription.
+
 
 
 - Direct mortgage offers from partner banks

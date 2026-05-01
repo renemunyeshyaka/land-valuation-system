@@ -176,8 +176,8 @@ export default function HowItWorks() {
               {/* Step 3 */}
               <div className="step-card text-center hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200 border border-gray-100 bg-white rounded-2xl shadow-md">
                 <div className="step-number w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-600 text-white flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-lg">3</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Download Report</h3>
-                <p className="text-gray-600 mb-4">Get a bank-ready PDF certificate with gazette references and analytics.</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Get Your Report</h3>
+                <p className="text-gray-600 mb-4">Get Price estimation with gazette references and analytics.</p>
                 <div className="inline-flex items-center gap-2 text-emerald-600 text-sm">
                   <i className="fas fa-file-pdf"></i> Accepted by banks
                 </div>
@@ -222,8 +222,8 @@ export default function HowItWorks() {
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
                   <i className="fas fa-file-pdf text-emerald-600 text-xl"></i>
                 </div>
-                <h3 className="font-bold text-lg mb-2">Professional Reports</h3>
-                <p className="text-gray-600 text-sm">Download bank-ready valuation certificates with official gazette references.</p>
+                <h3 className="font-bold text-lg mb-2">Precise Reports</h3>
+                <p className="text-gray-600 text-sm">Land valuation precision with official gazette references.</p>
               </div>
               <div className="feature-box bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200">
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
