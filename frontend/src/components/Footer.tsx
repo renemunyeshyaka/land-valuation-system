@@ -10,6 +10,9 @@ const Footer = () => (
         </div>
         <p className="text-xs mt-2 text-emerald-300">Certified by National Cybersecurity Authority (NCSA)<br/>Data Protection & Privacy Office (DPO)</p>
         <p className="text-sm mt-3">The most trusted land valuation and land marketplace in Rwanda. All gazette data sourced from official publications.</p>
+        <p className="text-xs mt-3 text-emerald-100">
+          The LandVal Search Estimate is not a substitute for professional Land Valuers. It provides a quick, simple, and convenient method to estimate the price of your plot. However, for official documents, you must consult a qualified Land Valuer. Any Land Valuer or government institution can create a free account on LandVal by submitting a request.
+        </p>
         <div className="flex gap-4 mt-5">
           <i className="fab fa-twitter hover:text-white text-xl"></i>
           <i className="fab fa-linkedin hover:text-white text-xl"></i>
