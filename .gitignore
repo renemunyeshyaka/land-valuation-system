@@ -54,7 +54,10 @@ temp/
 tmp/
 uploads/
 
-## Databases and backups - SQL files
+database_export*.sql
+db_export*.sql
+
+# Databases and backups - SQL files
 *.db
 *.sqlite
 *.sqlite3
@@ -65,6 +68,10 @@ backup*.sql
 backup*.dump
 database_export*.sql
 db_export*.sql
+
+# Allow only backend/migrations/ to be tracked for migrations
+!backend/migrations/
+!backend/migrations/**
 
 ## Sensitive database commands and queries
 *kcoduyxv*

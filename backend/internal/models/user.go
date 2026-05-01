@@ -90,6 +90,9 @@ type User struct {
 	// Password Reset
 	PasswordResetToken     string     `gorm:"size:255" json:"password_reset_token"`
 	PasswordResetExpiresAt *time.Time `json:"password_reset_expires_at,omitempty"`
+
+	// Ultimate No Expiry Privilege
+	IsUltimateNoExpiry bool `gorm:"default:false" json:"is_ultimate_no_expiry"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
