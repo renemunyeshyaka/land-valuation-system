@@ -8,6 +8,7 @@
     "start": "PORT=3001 next start",
     "lint": "next lint",
     "test": "jest",
+    "test:e2e": "cypress run",
     "cypress": "cypress open"
   },
   "dependencies": {

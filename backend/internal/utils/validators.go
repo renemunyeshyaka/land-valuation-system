@@ -26,9 +26,10 @@ func ValidateEmail(email string) bool {
 }
 
 // ValidatePhoneNumber validates phone number format (Rwanda format)
+// ValidatePhoneNumber validates phone number format (E.164 international format)
 func ValidatePhoneNumber(phone string) bool {
-	// Accept Rwandan phone numbers: +250XXXXXXXXX or 0XXXXXXXXX
-	pattern := `^(\+250|0)[1-9]\d{8}$`
+	// Accept E.164 international numbers: +[country code][number], 8-15 digits
+	pattern := `^\+[1-9]\d{7,14}$`
 	match, _ := regexp.MatchString(pattern, phone)
 	return match
 }

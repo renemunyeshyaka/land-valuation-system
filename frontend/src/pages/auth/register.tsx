@@ -59,20 +59,11 @@ const Register: React.FC = () => {
       newErrors.lastName = 'Last name is required';
     }
 
-    // Phone validation (Rwanda format or sandbox test numbers)
-    const sandboxTestNumbers = [
-      '46733123450',
-      '46733123451',
-      '46733123452',
-      '46733123453',
-    ];
+    // Phone validation (E.164 international format)
     if (!formData.phone) {
       newErrors.phone = 'Phone number is required';
-    } else if (
-      !/^(\+250|0)7[0-9]{8}$/.test(formData.phone.replace(/\s/g, '')) &&
-      !sandboxTestNumbers.includes(formData.phone)
-    ) {
-      newErrors.phone = 'Enter valid Rwanda phone number (+250 or 07...) or use a sandbox test number.';
+    } else if (!/^\+[1-9]\d{7,14}$/.test(formData.phone.replace(/\s/g, ''))) {
+      newErrors.phone = 'Enter a valid international phone number (e.g., +14155552671)';
     }
 
     setErrors(newErrors);
@@ -249,15 +240,15 @@ const Register: React.FC = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       className={`w-full px-4 py-2.5 border ${errors.phone ? 'border-red-300' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-gray-800 placeholder:text-gray-400`}
-                      placeholder="+250 788 620 201"
+                      placeholder="+14155552671 or +447911123456"
                       disabled={loading}
                     />
                     {errors.phone && (
                       <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
                     )}
                     <p className="mt-1 text-xs text-gray-500">
-                      Format: +250 7XX XXX XXX or 07XX XXX XXX<br />
-                      <span className="text-emerald-700 font-semibold">For sandbox testing, use one of these numbers: 46733123450, 46733123451, 46733123452, 46733123453</span>
+                      Format: <span className="font-mono">+14155552671</span> (US), <span className="font-mono">+447911123456</span> (UK), <span className="font-mono">+250788620201</span> (Rwanda), etc.<br />
+                      Enter your full international phone number in E.164 format.
                     </p>
                   </div>
 
