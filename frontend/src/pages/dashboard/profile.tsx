@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Footer from "../../components/Footer";
 
 interface PublicProperty {
   id: string;
@@ -815,47 +816,7 @@ const Profile: React.FC = () => {
 
           </div>
         </main>
-
-        <footer className="bg-gray-900 text-gray-300 py-12 md:py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-9 h-9 bg-emerald-600 rounded-lg flex items-center justify-center">
-                    <i className="fas fa-map-marked-alt text-white text-lg"></i>
-                  </div>
-                  <span className="text-lg font-bold text-white">LandVal</span>
-                </div>
-                <p className="text-sm text-gray-400">Rwanda's trusted land valuation platform.</p>
-              </div>
-              <div>
-                <h3 className="text-white font-semibold mb-4">Resources</h3>
-                <ul className="space-y-2.5 text-sm">
-                  <li><a href="#" className="hover:text-emerald-400 transition-colors">Docs</a></li>
-                  <li><a href="#" className="hover:text-emerald-400 transition-colors">FAQ</a></li>
-                  <li><Link href="/notifications" className="hover:text-emerald-400 transition-colors">Support</Link></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-white font-semibold mb-4">Company</h3>
-                <ul className="space-y-2.5 text-sm">
-                  <li><a href="#" className="hover:text-emerald-400 transition-colors">About</a></li>
-                  <li><a href="#" className="hover:text-emerald-400 transition-colors">Contact</a></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-white font-semibold mb-4">Legal</h3>
-                <ul className="space-y-2.5 text-sm">
-                  <li><Link href="/legal/privacy" className="hover:text-emerald-400 transition-colors">Privacy</Link></li>
-                  <li><Link href="/legal/terms" className="hover:text-emerald-400 transition-colors">Terms</Link></li>
-                </ul>
-              </div>
-            </div>
-            <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
-              © {new Date().getFullYear()} LandVal. All rights reserved.
-            </div>
-          </div>
-        </footer>
+        <Footer />
 
       </div>
     </>

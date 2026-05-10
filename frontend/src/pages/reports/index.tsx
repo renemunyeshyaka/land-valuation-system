@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import MainNavbar from '../../components/MainNavbar';
+import Footer from "../../components/Footer";
 
 const ReportsPage: React.FC = () => {
   const { status } = useSession();
@@ -149,14 +150,7 @@ const ReportsPage: React.FC = () => {
             </div>
           </div>
         </main>
-
-        <footer className="bg-gray-900 text-gray-300 py-12 md:py-16 mt-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
-              © {new Date().getFullYear()} LandVal. All rights reserved.
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );

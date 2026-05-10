@@ -9,10 +9,7 @@ const Footer = () => (
           <span className="font-bold text-xl">LandVal</span>
         </div>
         <p className="text-xs mt-2 text-emerald-300">Certified by National Cybersecurity Authority (NCSA)<br/>Data Protection & Privacy Office (DPO)</p>
-        <p className="text-sm mt-3">The most trusted land valuation and land marketplace in Rwanda. All gazette data sourced from official publications.</p>
-        <p className="text-xs mt-3 text-emerald-100">
-          The LandVal Search Estimate is not a substitute for professional Land Valuers. It provides a quick, simple, and convenient method to estimate the price of your plot. However, for official documents, you must consult a qualified Land Valuer. Any Land Valuer or government institution can create a free account on LandVal by submitting a request.
-        </p>
+        <p className="text-sm mt-3">All gazette data sourced from official Rwanda Land Authority publications.</p>
         <div className="flex gap-4 mt-5">
           <i className="fab fa-twitter hover:text-white text-xl"></i>
           <i className="fab fa-linkedin hover:text-white text-xl"></i>
@@ -22,8 +19,8 @@ const Footer = () => (
       <div>
         <h4 className="font-bold text-white">Product</h4>
         <ul className="mt-3 space-y-2 text-sm">
-          <li>Valuation</li>
-          <li>Marketplace</li>
+          <li><Link href="/valuation" className="hover:text-white transition">Valuation</Link></li>
+          <li><Link href="/marketplace" className="hover:text-white transition">Marketplace</Link></li>
           <li>Pricing</li>
           <li>API</li>
         </ul>
@@ -31,10 +28,10 @@ const Footer = () => (
       <div>
         <h4 className="font-bold text-white">Resources</h4>
         <ul className="mt-3 space-y-2 text-sm">
-          <li>Gazette 2025</li>
-          <li>Help center</li>
+          <li><Link href="/how-it-works" className="hover:text-white transition">How It Works</Link></li>
+          <li><Link href="/benefits" className="hover:text-white transition">Benefits</Link></li>
+          <li>Help Center</li>
           <li>Blog</li>
-          <li>Developers</li>
         </ul>
       </div>
       <div>
@@ -42,12 +39,12 @@ const Footer = () => (
         <ul className="mt-3 space-y-2 text-sm">
           <li><Link href="/privacy" className="hover:text-white transition">Privacy</Link></li>
           <li><Link href="/terms" className="hover:text-white transition">Terms</Link></li>
-          <li>Copyright©</li>
+          <li>Copyright©2026,<br/>By the Rwanda Development Board (RDB).</li>
         </ul>
       </div>
     </div>
     <div className="border-t border-emerald-800 mt-10 pt-6 text-center text-xs text-emerald-400">
-      © 2026 Land Valuation System Ltd. All rights reserved.
+      Copyright © 2026. By the Rwanda Development Board (RDB).
     </div>
   </footer>
 );
