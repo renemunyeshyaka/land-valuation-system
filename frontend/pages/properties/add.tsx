@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import AddPropertyForm from '../../src/components/AddPropertyForm';
 import FourStepProcess from '../../src/components/FourStepProcess';
+import { fetchWithTokenRefresh } from '../../src/utils/tokenRefresh';
 
 export default function AddPropertyPage() {
   const router = useRouter();
@@ -9,13 +10,42 @@ export default function AddPropertyPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const accessToken = localStorage.getItem('access_token');
-    if (!accessToken) {
-      router.push('/auth/login');
-      return;
-    }
-    setIsAuthenticated(true);
-    setLoading(false);
+    const verifyAccess = async () => {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        router.push('/auth/login');
+        return;
+      }
+
+      try {
+        const response = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/users/profile`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('access_token') || accessToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          router.push('/auth/login');
+          return;
+        }
+
+        const payload = await response.json();
+        const userType = String(payload?.data?.user_type || '').toLowerCase();
+        if (userType === 'government' || userType === 'partner' || userType === 'gov_partner') {
+          router.replace('/partner/dashboard');
+          return;
+        }
+
+        setIsAuthenticated(true);
+      } catch {
+        router.push('/auth/login');
+        return;
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyAccess();
   }, [router]);
 
   if (loading) {

@@ -30,9 +30,16 @@ const NAV = [
   { key: 'data', label: 'System Data', icon: 'fas fa-database' },
 ];
 
+type AdminTabKey = typeof NAV[number]['key'];
+
+const getValidAdminTab = (rawTab: unknown): AdminTabKey => {
+  const tab = typeof rawTab === 'string' ? rawTab : 'overview';
+  return NAV.some((item) => item.key === tab) ? (tab as AdminTabKey) : 'overview';
+};
+
 
 function AdminDashboard() {
-  const [active, setActive] = useState('overview');
+  const [active, setActive] = useState<AdminTabKey>('overview');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
@@ -44,6 +51,24 @@ function AdminDashboard() {
     activeSubscriptions: 0,
   });
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    const tabFromQuery = getValidAdminTab(router.query?.tab);
+    setActive(tabFromQuery);
+  }, [router.isReady, router.query?.tab]);
+
+  const navigateToTab = (tab: AdminTabKey) => {
+    setActive(tab);
+    router.replace(
+      {
+        pathname: '/admin/dashboard',
+        query: { ...router.query, tab },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
 
   const toDisplayName = (user: any) => {
     const first = user?.first_name || user?.firstName || '';
@@ -245,8 +270,10 @@ function AdminDashboard() {
             <button
               key={item.key}
               className={`admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl w-full text-left transition font-medium ${active === item.key ? 'bg-emerald-50 text-emerald-800' : 'text-gray-700 hover:bg-gray-50'}`}
+              aria-current={active === item.key ? 'page' : undefined}
+              data-testid={`admin-nav-${item.key}`}
               onClick={() => {
-                setActive(item.key);
+                navigateToTab(item.key);
               }}
             >
               <i className={`${item.icon} w-5`}></i>
@@ -323,8 +350,10 @@ function AdminDashboard() {
             <button
               key={`mobile-${item.key}`}
               className={`admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl w-full text-left transition font-medium ${active === item.key ? 'bg-emerald-50 text-emerald-800' : 'text-gray-700 hover:bg-gray-50'}`}
+              aria-current={active === item.key ? 'page' : undefined}
+              data-testid={`admin-mobile-nav-${item.key}`}
               onClick={() => {
-                setActive(item.key);
+                navigateToTab(item.key);
                 setMobileNavOpen(false);
               }}
             >

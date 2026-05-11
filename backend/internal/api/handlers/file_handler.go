@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -14,7 +15,6 @@ import (
 
 const (
 	maxFileSize = 2 * 1024 * 1024 // 2 MB per file
-	uploadDir   = "property_images"
 )
 
 var allowedImageTypes = map[string]bool{
@@ -24,11 +24,19 @@ var allowedImageTypes = map[string]bool{
 }
 
 // FileHandler handles file uploads
-type FileHandler struct{}
+type FileHandler struct {
+	uploadDir       string
+	publicURLPrefix string
+	allowDelete     bool
+}
 
 // NewFileHandler creates a new file handler
-func NewFileHandler() *FileHandler {
-	return &FileHandler{}
+func NewFileHandler(uploadDir string, allowDelete bool) *FileHandler {
+	return &FileHandler{
+		uploadDir:       filepath.Clean(uploadDir),
+		publicURLPrefix: "/property_images",
+		allowDelete:     allowDelete,
+	}
 }
 
 // UploadPropertyImage handles property image uploads
@@ -77,7 +85,7 @@ func (h *FileHandler) UploadPropertyImage(c *gin.Context) {
 	}
 
 	// Create upload directory if it doesn't exist
-	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+	if err := os.MkdirAll(h.uploadDir, 0755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to create upload directory",
 		})
@@ -88,10 +96,10 @@ func (h *FileHandler) UploadPropertyImage(c *gin.Context) {
 	ext := filepath.Ext(header.Filename)
 	timestamp := time.Now().UnixNano()
 	filename := fmt.Sprintf("property_%d%s", timestamp, ext)
-	filepath := filepath.Join(uploadDir, filename)
+	filePath := filepath.Join(h.uploadDir, filename)
 
 	// Save file
-	if err := os.WriteFile(filepath, fileBytes, 0644); err != nil {
+	if err := os.WriteFile(filePath, fileBytes, 0644); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to save file",
 		})
@@ -99,7 +107,7 @@ func (h *FileHandler) UploadPropertyImage(c *gin.Context) {
 	}
 
 	// Return the file URL (relative path that can be served)
-	fileURL := "/" + filepath
+	fileURL := h.publicURLPrefix + "/" + filename
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
@@ -118,6 +126,13 @@ func (h *FileHandler) UploadPropertyDocuments(c *gin.Context) {
 
 // DeletePropertyImage handles image deletion
 func (h *FileHandler) DeletePropertyImage(c *gin.Context) {
+	if !h.allowDelete {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "Image deletion is disabled by configuration",
+		})
+		return
+	}
+
 	imageURL := c.Query("url")
 	if imageURL == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -126,27 +141,45 @@ func (h *FileHandler) DeletePropertyImage(c *gin.Context) {
 		return
 	}
 
-	// Remove leading slash if present
-	imageURL = strings.TrimPrefix(imageURL, "/")
-
-	// Verify the file is in the property_images directory (security check)
-	if !strings.HasPrefix(imageURL, uploadDir) {
+	cleanURL := path.Clean(strings.TrimSpace(imageURL))
+	prefix := h.publicURLPrefix + "/"
+	if !strings.HasPrefix(cleanURL, prefix) {
 		c.JSON(http.StatusForbidden, gin.H{
 			"error": "Access denied",
 		})
 		return
 	}
 
-	// Delete the file
-	if err := os.Remove(imageURL); err != nil {
+	filename := strings.TrimPrefix(cleanURL, prefix)
+	if filename == "" || filename != filepath.Base(filename) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid image URL",
+		})
+		return
+	}
+
+	filePath := filepath.Join(h.uploadDir, filename)
+
+	trashDir := filepath.Join(h.uploadDir, ".trash")
+	if err := os.MkdirAll(trashDir, 0755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to delete image",
+			"error": "Failed to prepare trash directory",
+		})
+		return
+	}
+
+	archivedName := fmt.Sprintf("%d_%s", time.Now().UnixNano(), filename)
+	archivePath := filepath.Join(trashDir, archivedName)
+
+	if err := os.Rename(filePath, archivePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to archive image",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "Image deleted successfully",
+		"message": "Image archived successfully",
 	})
 }

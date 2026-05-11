@@ -105,7 +105,7 @@ func main() {
 	router.Use(middleware.RateLimiter(redisCache))
 
 	// Setup routes
-	routes.Setup(router, db, redisCache)
+	routes.Setup(router, db, redisCache, cfg)
 	router.GET("/api/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Create server

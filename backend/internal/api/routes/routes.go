@@ -3,6 +3,7 @@ package routes
 import (
 	"backend/internal/api/handlers"
 	"backend/internal/api/middleware"
+	"backend/internal/config"
 	"backend/internal/repository"
 	"backend/internal/services"
 
@@ -12,24 +13,24 @@ import (
 )
 
 // Setup is an alias for RegisterRoutes for compatibility
-func Setup(router *gin.Engine, db interface{}, redisClient *redis.Client) {
+func Setup(router *gin.Engine, db interface{}, redisClient *redis.Client, cfg *config.Config) {
 	// Type assert db to *gorm.DB if possible
 	var gormDB *gorm.DB
 	if db != nil {
 		gormDB, _ = db.(*gorm.DB)
 	}
-	RegisterRoutes(router, gormDB, redisClient)
+	RegisterRoutes(router, gormDB, redisClient, cfg)
 }
 
 // RegisterRoutes registers all API routes
-func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
+func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client, cfg *config.Config) {
 	// Contact form endpoint (public)
 	router.POST("/api/v1/contact", handlers.ContactFormHandler())
 	// Initialize services and handlers
 	setupAuthRoutes(router, db)
 	setupUserRoutes(router, db)
 	setupPropertyRoutes(router, db)
-	setupFileRoutes(router)
+	setupFileRoutes(router, cfg)
 	setupValuationRoutes(router, db)
 	setupSubscriptionRoutes(router, db)
 	setupPaymentRoutes(router, db, redisClient)
@@ -362,8 +363,8 @@ func setupHealthRoutes(router *gin.Engine, db *gorm.DB) {
 	}
 }
 
-func setupFileRoutes(router *gin.Engine) {
-	fileHandler := handlers.NewFileHandler()
+func setupFileRoutes(router *gin.Engine, cfg *config.Config) {
+	fileHandler := handlers.NewFileHandler(cfg.UploadPath, cfg.AllowImageDelete)
 
 	files := router.Group("/api/v1/files")
 	files.Use(middleware.AuthRequired())
@@ -373,5 +374,5 @@ func setupFileRoutes(router *gin.Engine) {
 	}
 
 	// Serve static files from property_images directory
-	router.Static("/property_images", "./property_images")
+	router.Static("/property_images", cfg.UploadPath)
 }

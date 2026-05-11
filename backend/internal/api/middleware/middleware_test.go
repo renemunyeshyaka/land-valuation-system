@@ -11,6 +11,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func signTestJWT(t *testing.T, userID string, userType string, secret string) string {
+	t.Helper()
+
+	claims := jwt.MapClaims{
+		"user_id":   userID,
+		"user_type": userType,
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(secret))
+	require.NoError(t, err)
+	return tokenString
+}
+
 func TestAuthRequiredSetsContextValues(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	require.NoError(t, os.Setenv("JWT_SECRET", "test-secret"))
@@ -43,4 +56,63 @@ func TestAuthRequiredSetsContextValues(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	require.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestAuthRequired_NoAuthorizationHeader(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.New()
+	r.GET("/protected", AuthRequired(), func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestAdminRequired_AllowsAdminToken(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	require.NoError(t, os.Setenv("JWT_SECRET", "test-secret"))
+	t.Cleanup(func() {
+		_ = os.Unsetenv("JWT_SECRET")
+	})
+
+	token := signTestJWT(t, "42", "admin", "test-secret")
+
+	r := gin.New()
+	r.GET("/admin", AuthRequired(), AdminRequired(), func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/admin", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestAdminRequired_BlocksNonAdminToken(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	require.NoError(t, os.Setenv("JWT_SECRET", "test-secret"))
+	t.Cleanup(func() {
+		_ = os.Unsetenv("JWT_SECRET")
+	})
+
+	token := signTestJWT(t, "77", "government", "test-secret")
+
+	r := gin.New()
+	r.GET("/admin", AuthRequired(), AdminRequired(), func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/admin", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusForbidden, w.Code)
 }

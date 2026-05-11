@@ -38,7 +38,7 @@ Potential and target partners for the Land Valuation System include:
 - **Real Estate Agencies:** Vibe House, Century Real Estate, etc.
 - **Land Surveyors & Valuation Firms**
 - **Government Agencies:** Rwanda Land Management and Use Authority (RLMUA), Rwanda Development Board (RDB, for data only)
-- **Payment Providers:** MTN Mobile Money, Airtel Money, Paystack
+- **Payment Provider:** Flutterwave
 - **Legal Firms:** For land transfer and legal advice
 - **Technology Providers:** Cloud, mapping, and AI/ML services
 - **NGOs & International Development Orgs:** For land transparency and open data

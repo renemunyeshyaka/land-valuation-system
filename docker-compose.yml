@@ -56,6 +56,8 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - UPLOAD_PATH=/app/property_images
+      - ALLOW_IMAGE_DELETE=false
     ports:
       - "8080:8080"
     depends_on:

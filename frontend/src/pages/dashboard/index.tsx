@@ -66,6 +66,54 @@ interface UserData {
   recentValuations: any[];
 }
 
+type DashboardTab = 'overview' | 'profile' | 'estimate' | 'properties' | 'billing' | 'subscription' | 'notifications';
+
+const DASHBOARD_TABS: Array<{ key: DashboardTab; label: string; icon: string }> = [
+  { key: 'overview', label: 'Overview', icon: 'fas fa-home' },
+  { key: 'profile', label: 'Profile', icon: 'fas fa-user-circle' },
+  { key: 'estimate', label: 'Estimate Search', icon: 'fas fa-search-location' },
+  { key: 'properties', label: 'Properties', icon: 'fas fa-building' },
+  { key: 'billing', label: 'Billing', icon: 'fas fa-wallet' },
+  { key: 'subscription', label: 'Subscription', icon: 'fas fa-gem' },
+  { key: 'notifications', label: 'Notifications', icon: 'fas fa-bell' },
+];
+
+const getValidDashboardTab = (rawTab: unknown): DashboardTab => {
+  const tab = typeof rawTab === 'string' ? rawTab : 'overview';
+  return DASHBOARD_TABS.some((item) => item.key === tab) ? (tab as DashboardTab) : 'overview';
+};
+
+const getCachedDashboardUser = (): UserData | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const rawUser = localStorage.getItem('user');
+  if (!rawUser) {
+    return null;
+  }
+
+  try {
+    const userData = JSON.parse(rawUser);
+    const effectiveUserType = String(userData?.user_type || userData?.userType || 'individual');
+    const effectiveSubscriptionTier = String(userData?.subscription_tier || userData?.subscriptionTier || 'free');
+    return {
+      id: String(userData?.id || '1'),
+      email: String(userData?.email || 'user@example.com'),
+      firstName: String(userData?.first_name || userData?.firstName || 'User'),
+      lastName: String(userData?.last_name || userData?.lastName || 'Account'),
+      userType: effectiveUserType,
+      phone: userData?.phone,
+      subscriptionTier: effectiveSubscriptionTier,
+      subscriptionExpiresAt: userData?.subscription_expiry || userData?.subscriptionExpiresAt || null,
+      referralCode: String(userData?.referral_code || `LV-${String(userData?.email || 'USER').split('@')[0]?.toUpperCase()}-2026`),
+      recentValuations: Array.isArray(userData?.recent_valuations) ? userData.recent_valuations : [],
+    };
+  } catch {
+    return null;
+  }
+};
+
 
 function Dashboard() {
         // Handle property edit (PUT request)
@@ -284,8 +332,74 @@ function Dashboard() {
     };
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [user, setUser] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  const scrollToDashboardSection = (sectionId: string) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const activateDashboardTab = (tab: DashboardTab, updateQuery = true) => {
+    setActiveDashboardTab(tab);
+
+    if (updateQuery) {
+      router.replace(
+        {
+          pathname: '/dashboard',
+          query: { ...router.query, tab },
+        },
+        undefined,
+        { shallow: true }
+      );
+    }
+
+    if (tab === 'properties') {
+      handleOpenPropertiesModal();
+      return;
+    }
+
+    if (tab === 'billing') {
+      handleOpenPaymentHistoryModal();
+      return;
+    }
+
+    if (tab === 'estimate') {
+      scrollToDashboardSection('dashboard-estimate');
+      return;
+    }
+
+    if (tab === 'profile') {
+      scrollToDashboardSection('dashboard-profile');
+      return;
+    }
+
+    if (tab === 'subscription') {
+      scrollToDashboardSection('dashboard-subscription');
+      return;
+    }
+
+    if (tab === 'notifications') {
+      scrollToDashboardSection('dashboard-notifications');
+      return;
+    }
+
+    scrollToDashboardSection('dashboard-overview');
+  };
+
+  useEffect(() => {
+    if (!router.isReady) {
+      return;
+    }
+    const tabFromQuery = getValidDashboardTab(router.query?.tab);
+    activateDashboardTab(tabFromQuery, false);
+  }, [router.isReady, router.query?.tab]);
+
+  const [user, setUser] = useState<UserData | null>(() => getCachedDashboardUser());
+  const [loading, setLoading] = useState(() => !getCachedDashboardUser());
   const [authRedirecting, setAuthRedirecting] = useState(false);
   const [selectorError, setSelectorError] = useState<string | null>(null);
   const [tokenExpired, setTokenExpired] = useState(false);
@@ -296,6 +410,7 @@ function Dashboard() {
   const [copied, setCopied] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeDashboardTab, setActiveDashboardTab] = useState<DashboardTab>('overview');
 
   const clearAuthAndRedirectToLogin = () => {
     if (authRedirecting) {
@@ -321,6 +436,21 @@ function Dashboard() {
     setLoading(false);
     // Don't redirect - show a useful error instead
     toast.error('Unable to load profile. Please refresh the page or try again.');
+  };
+
+  const fetchProfileWithTimeout = async (accessToken: string, timeoutMs = 12000) => {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/users/profile`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        signal: controller.signal,
+      });
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
   };
 
   const getAdminExperienceMode = (): 'off' | 'user' | 'ultimate' => {
@@ -434,16 +564,17 @@ function Dashboard() {
         return;
       }
       try {
-        const response = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/users/profile`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const response = await fetchProfileWithTimeout(accessToken);
         if (response.ok) {
           const payload = await response.json();
           if (!payload?.data) {
             router.replace('/auth/login');
             setLoading(false);
+            return;
+          }
+          const userType = String(payload.data.user_type || '').toLowerCase();
+          if ((userType === 'government' || userType === 'partner' || userType === 'gov_partner') && !router.pathname.startsWith('/partner')) {
+            router.replace('/partner/dashboard');
             return;
           }
           // Block banned, inactive, or deleted users (if backend provides status)
@@ -473,7 +604,11 @@ function Dashboard() {
         } else {
           handleProfileFetchError(`Profile endpoint error: ${response.status}`);
         }
-      } catch (error) {
+      } catch (error: any) {
+        if (error?.name === 'AbortError') {
+          handleProfileFetchError('Profile request timed out');
+          return;
+        }
         handleProfileFetchError(error);
       }
     };
@@ -656,6 +791,9 @@ function Dashboard() {
   };
 
   const tierInfo = user ? getTierInfo(user.subscriptionTier) : null;
+  const normalizedUserType = String(user?.userType || '').toLowerCase();
+  const canAddProperty = normalizedUserType !== 'government' && normalizedUserType !== 'partner' && normalizedUserType !== 'gov_partner';
+  const hasStoredAccessToken = typeof window !== 'undefined' && Boolean(localStorage.getItem('access_token'));
   const usedValuations = user?.recentValuations.length || 0;
   const maxValuations = tierInfo?.valuations || 3;
   const unreadNotifications = notifications.filter((item) => !item.read).length;
@@ -666,16 +804,44 @@ function Dashboard() {
     ? new Date(user?.subscriptionExpiresAt as string).toLocaleDateString('en-US')
     : 'Never';
 
-  if (status === 'loading' || loading) {
+  if (loading || authRedirecting) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <i className="fas fa-spinner fa-spin text-4xl text-emerald-700"></i>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <i className="fas fa-spinner fa-spin text-3xl text-emerald-700"></i>
+          <p className="mt-3 text-sm text-gray-600">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
 
   if (!user) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md w-full bg-white border border-gray-200 rounded-xl shadow-sm p-6 text-center">
+          <h1 className="text-lg font-semibold text-gray-800">Unable to load dashboard</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            We could not load your profile right now. Please refresh or sign in again.
+          </p>
+          <div className="mt-5 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              Refresh
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/auth/login')}
+              className="px-4 py-2 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -733,6 +899,27 @@ function Dashboard() {
             {mobileMenuOpen && (
               <div className="lg:hidden fixed left-0 right-0 top-16 bg-white border-b border-gray-200 shadow-lg z-[80] pointer-events-auto">
                 <div className="flex flex-col gap-2 pt-4">
+                  <div className="px-3 pb-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Dashboard Tabs</p>
+                  </div>
+                  {DASHBOARD_TABS.map((tab) => (
+                    <button
+                      key={`mobile-${tab.key}`}
+                      type="button"
+                      onClick={() => {
+                        activateDashboardTab(tab.key);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`px-3 py-2 rounded-md text-left text-sm font-medium ${
+                        activeDashboardTab === tab.key
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'text-gray-800 hover:bg-gray-50'
+                      }`}
+                    >
+                      <i className={`${tab.icon} mr-2`}></i>
+                      {tab.label}
+                    </button>
+                  ))}
                   <Link
                     href="/dashboard/profile"
                     className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
@@ -741,6 +928,7 @@ function Dashboard() {
                     <i className="fas fa-user-circle mr-2"></i>
                     View Profile
                   </Link>
+                  {canAddProperty && (
                   <Link
                     href="/properties/add"
                     className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
@@ -749,6 +937,7 @@ function Dashboard() {
                     <i className="fas fa-plus-circle mr-2"></i>
                     Add Property
                   </Link>
+                  )}
                   <Link
                     href="/dashboard/subscription"
                     className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
@@ -784,6 +973,31 @@ function Dashboard() {
         {/* MAIN CONTENT */}
         <main className="flex-grow">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+            <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
+              <aside className="bg-white border border-gray-100 rounded-lg shadow-sm p-3 h-fit lg:sticky lg:top-24">
+                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide px-3 py-2">Dashboard Menu</h2>
+                <nav className="space-y-1">
+                  {DASHBOARD_TABS.map((tab) => (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      data-testid={`user-dashboard-tab-${tab.key}`}
+                      aria-current={activeDashboardTab === tab.key ? 'page' : undefined}
+                      onClick={() => activateDashboardTab(tab.key)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeDashboardTab === tab.key
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <i className={`${tab.icon} mr-2`}></i>
+                      {tab.label}
+                    </button>
+                  ))}
+                </nav>
+              </aside>
+
+              <div>
             {/* Admin Experience Selector for Admins */}
             {selectorError && (
               <div className="mb-4 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
@@ -801,16 +1015,18 @@ function Dashboard() {
               </div>
             )}
             {/* Quick Navigation - moved above FourStepProcess as requested */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+            <div id="dashboard-overview" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+              {canAddProperty && (
               <Link
                 href="/properties/add"
                 className="flex flex-col items-center gap-3 p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 border border-emerald-600 rounded-lg hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all group"
               >
                 <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <i className="fas fa-plus-circle text-emerald-700 text-xl"></i>
+                <i className="fas fa-plus-circle text-emerald-700 text-xl"></i>
                 </div>
                 <span className="text-sm font-semibold text-white">Add Property</span>
               </Link>
+              )}
               <Link
                 href="/analytics"
                 className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
@@ -832,7 +1048,7 @@ function Dashboard() {
               {/* View Properties quick nav card (profile modal version) */}
               <button
                 type="button"
-                onClick={handleOpenPropertiesModal}
+                onClick={() => activateDashboardTab('properties')}
                 className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
               >
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
@@ -843,7 +1059,7 @@ function Dashboard() {
               {/* Payment History quick nav card */}
               <button
                 type="button"
-                onClick={handleOpenPaymentHistoryModal}
+                onClick={() => activateDashboardTab('billing')}
                 className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-blue-200 transition-all group"
               >
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
@@ -989,7 +1205,16 @@ function Dashboard() {
                       <span className="ml-3 text-gray-600">Loading...</span>
                     </div>
                   ) : paymentError ? (
-                    <div className="text-red-600 py-4">{paymentError}</div>
+                    <div className="py-4">
+                      <div className="text-red-600 mb-3">{paymentError}</div>
+                      <button
+                        type="button"
+                        onClick={() => fetchPayments(paymentTab)}
+                        className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium"
+                      >
+                        Retry
+                      </button>
+                    </div>
                   ) : payments.length === 0 ? (
                     <div className="text-gray-600 py-4">No payment records found.</div>
                   ) : (
@@ -1033,7 +1258,7 @@ function Dashboard() {
               </div>
             )}
             {/* Two-column layout for Land Estimate Search and Result */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div id="dashboard-estimate" className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* Left: Land Estimate Search */}
               <div className="bg-white border border-amber-200 rounded-2xl shadow-sm p-6">
                 <h2 className="text-xl font-bold text-emerald-800 mb-2 flex items-center gap-2">
@@ -1068,7 +1293,7 @@ function Dashboard() {
               <div className="lg:col-span-2 space-y-6">
 
                 {/* Profile Card */}
-                <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6">
+                <div id="dashboard-profile" className="bg-white border border-gray-100 rounded-lg shadow-sm p-6">
                   <div className="flex items-start justify-between mb-4">
                     <h2 className="text-xl font-semibold text-gray-800">Profile Overview</h2>
                     <Link
@@ -1208,7 +1433,7 @@ function Dashboard() {
                   </div>
                 </div>
 
-                <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6">
+                <div id="dashboard-notifications" className="bg-white border border-gray-100 rounded-lg shadow-sm p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-gray-800">Admin Notifications</h2>
                     {unreadNotifications > 0 && (
@@ -1296,10 +1521,12 @@ function Dashboard() {
             </div>
 
             {/* Subscription Plans Selector */}
-            <div className="mt-16 mb-12">
+            <div id="dashboard-subscription" className="mt-16 mb-12">
               <SubscriptionSelector currentPlan={user.subscriptionTier} />
             </div>
 
+              </div>
+            </div>
           </div>
         </main>
 

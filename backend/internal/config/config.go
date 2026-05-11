@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -51,8 +52,9 @@ type Config struct {
 	EmailFrom    string
 
 	// File Upload
-	MaxFileSize int64
-	UploadPath  string
+	MaxFileSize      int64
+	UploadPath       string
+	AllowImageDelete bool
 
 	// Rate Limiting
 	RateLimit      int
@@ -102,8 +104,9 @@ func Load() (*Config, error) {
 		SMTPPassword: getEnv("SMTP_PASSWORD", getEnv("EMAIL_PASS", "")),
 		EmailFrom:    getEnv("EMAIL_FROM", getEnv("SMTP_FROM", "noreply@landvaluationsystem.rw")),
 
-		MaxFileSize: getEnvAsInt64("MAX_FILE_SIZE", 10*1024*1024), // 10MB
-		UploadPath:  getEnv("UPLOAD_PATH", "./uploads"),
+		MaxFileSize:      getEnvAsInt64("MAX_FILE_SIZE", 10*1024*1024), // 10MB
+		UploadPath:       resolveUploadPath(getEnv("UPLOAD_PATH", "./property_images")),
+		AllowImageDelete: getEnvAsBool("ALLOW_IMAGE_DELETE", false),
 
 		RateLimit:      getEnvAsInt("RATE_LIMIT", 100),
 		RateLimitBurst: getEnvAsInt("RATE_LIMIT_BURST", 200),
@@ -142,7 +145,39 @@ func (c *Config) validate() error {
 	if c.MapboxToken == "" {
 		return fmt.Errorf("MAPBOX_TOKEN is required")
 	}
+
+	if c.UploadPath == "" {
+		return fmt.Errorf("UPLOAD_PATH is required")
+	}
+
+	if err := os.MkdirAll(c.UploadPath, 0755); err != nil {
+		return fmt.Errorf("failed to create upload path: %w", err)
+	}
+
+	writeCheck := filepath.Join(c.UploadPath, ".landval_write_test")
+	if err := os.WriteFile(writeCheck, []byte("ok"), 0644); err != nil {
+		return fmt.Errorf("upload path is not writable: %w", err)
+	}
+	_ = os.Remove(writeCheck)
+
 	return nil
+}
+
+func resolveUploadPath(raw string) string {
+	if raw == "" {
+		return ""
+	}
+
+	if filepath.IsAbs(raw) {
+		return filepath.Clean(raw)
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return filepath.Clean(raw)
+	}
+
+	return filepath.Clean(filepath.Join(wd, raw))
 }
 
 func getEnv(key, defaultValue string) string {
@@ -165,6 +200,15 @@ func getEnvAsInt64(key string, defaultValue int64) int64 {
 	if value := os.Getenv(key); value != "" {
 		if intVal, err := strconv.ParseInt(value, 10, 64); err == nil {
 			return intVal
+		}
+	}
+	return defaultValue
+}
+
+func getEnvAsBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if boolVal, err := strconv.ParseBool(value); err == nil {
+			return boolVal
 		}
 	}
 	return defaultValue

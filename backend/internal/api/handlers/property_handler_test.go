@@ -4,8 +4,10 @@ import (
 	"backend/internal/models"
 	"backend/internal/repository"
 	"errors"
+	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -136,4 +138,30 @@ func TestInterestedPropertyHandler_PersistsInterested(t *testing.T) {
 	require.Equal(t, 200, w2.Code)
 	db.First(&updated, property.ID)
 	require.Equal(t, 2, updated.Interested)
+}
+
+func TestCreateProperty_BlocksGovernmentPartnerRoles(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	blockedRoles := []string{"government", "partner", "gov_partner"}
+
+	for _, blockedRole := range blockedRoles {
+		t.Run(blockedRole, func(t *testing.T) {
+			handler := &PropertyHandler{}
+			r := gin.New()
+			r.POST("/properties", func(c *gin.Context) {
+				c.Set("user_id", "101")
+				c.Set("user_type", blockedRole)
+				handler.CreateProperty(c)
+			})
+
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "/properties", strings.NewReader(`{"title":"x"}`))
+			req.Header.Set("Content-Type", "application/json")
+			r.ServeHTTP(w, req)
+
+			require.Equal(t, http.StatusForbidden, w.Code)
+			require.Contains(t, w.Body.String(), "Add Property is not available")
+		})
+	}
 }

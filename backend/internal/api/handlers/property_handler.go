@@ -248,6 +248,15 @@ func (h *PropertyHandler) CreateProperty(c *gin.Context) {
 		return
 	}
 
+	if rawUserType, ok := c.Get("user_type"); ok {
+		userType, _ := rawUserType.(string)
+		normalized := strings.ToLower(strings.TrimSpace(userType))
+		if normalized == "government" || normalized == "partner" || normalized == "gov_partner" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Add Property is not available for government/partner accounts"})
+			return
+		}
+	}
+
 	var req struct {
 		Title            string   `json:"title" binding:"required"`
 		Description      string   `json:"description"`
