@@ -4,6 +4,7 @@ import axios from 'axios';
 import { signOut } from 'next-auth/react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import { clearAuth } from '@/utils/tokenRefresh';
 import { refreshAccessToken } from '@/utils/tokenRefresh';
 import Footer from '@/components/Footer';
 import UserManagement from '@/components/admin/UserManagement';
@@ -55,6 +56,16 @@ function AdminDashboard() {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
   const frontendBaseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXTAUTH_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001');
   const logoutCallbackUrl = `${frontendBaseUrl.replace(/\/$/, '')}/auth/login`;
+  const handleLogout = async () => {
+    clearAuth();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('admin_experience_mode');
+    }
+    await signOut({ redirect: false, callbackUrl: logoutCallbackUrl });
+    if (typeof window !== 'undefined') {
+      window.location.href = logoutCallbackUrl;
+    }
+  };
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -313,7 +324,7 @@ function AdminDashboard() {
           </div>
           <button
             className="w-full flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 font-medium transition"
-            onClick={() => signOut({ callbackUrl: logoutCallbackUrl })}
+            onClick={handleLogout}
           >
             <i className="fas fa-sign-out-alt"></i>
             Logout
@@ -393,7 +404,7 @@ function AdminDashboard() {
           </div>
           <button
             className="w-full flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 font-medium transition"
-            onClick={() => signOut({ callbackUrl: logoutCallbackUrl })}
+            onClick={handleLogout}
           >
             <i className="fas fa-sign-out-alt"></i>
             Logout
