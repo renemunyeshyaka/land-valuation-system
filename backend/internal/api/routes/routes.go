@@ -201,6 +201,7 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 	// Payment history/summary handler
 	txnRepo := repository.NewTransactionRepository(db)
 	paymentHistorySummaryHandler := handlers.NewPaymentHistorySummaryHandler(txnRepo)
+	refundHandler := handlers.NewRefundHandler(db)
 
 	payments := router.Group("/api/v1/payments")
 	{
@@ -218,6 +219,8 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 			// Payment history and summary endpoints
 			protected.GET("/history", paymentHistorySummaryHandler.GetPaymentHistory)
 			protected.GET("/summary", paymentHistorySummaryHandler.GetPaymentSummary)
+			protected.POST("/refunds", refundHandler.CreateRefundRequest)
+			protected.GET("/refunds", refundHandler.GetUserRefundRequests)
 		}
 	}
 
@@ -262,6 +265,7 @@ func setupAdminRoutes(router *gin.Engine, db *gorm.DB) {
 	admin := router.Group("/api/v1/admin")
 	admin.Use(middleware.AuthRequired(), middleware.AdminRequired())
 	{
+		refundHandler := handlers.NewRefundHandler(db)
 		admin.GET("/users", adminHandler.GetAllUsers)
 		admin.GET("/user-roles", adminHandler.GetUserRoles)
 		admin.GET("/users/list", userHandler.ListUsers) // New paginated/filterable endpoint
@@ -282,6 +286,8 @@ func setupAdminRoutes(router *gin.Engine, db *gorm.DB) {
 		admin.POST("/properties/:id/approve", adminHandler.ApproveProperty)
 		admin.POST("/properties/:id/reject", adminHandler.RejectProperty)
 		admin.GET("/notifications", adminHandler.GetAllNotifications)
+		admin.GET("/refunds", refundHandler.GetAllRefundRequests)
+		admin.PUT("/refunds/:id/status", refundHandler.UpdateRefundStatus)
 	}
 }
 

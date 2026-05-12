@@ -16,6 +16,7 @@ import Payments from '@/components/admin/Payments';
 import SystemHealth from '@/components/admin/SystemHealth';
 import DataImportExport from '@/components/admin/DataImportExport';
 import NotificationManagement from '@/components/admin/NotificationManagement';
+import Refunds from '@/components/admin/Refunds';
 
 const NAV = [
   { key: 'overview', label: 'Dashboard', icon: 'fas fa-tachometer-alt' },
@@ -27,7 +28,8 @@ const NAV = [
   { key: 'analytics', label: 'Analytics', icon: 'fas fa-chart-line' },
   { key: 'support', label: 'Support', icon: 'fas fa-headset' },
   { key: 'system', label: 'System', icon: 'fas fa-sliders-h' },
-  { key: 'data', label: 'System Data', icon: 'fas fa-database' },
+  { key: 'data',    label: 'System Data', icon: 'fas fa-database' },
+  { key: 'refunds', label: 'Refunds',     icon: 'fas fa-undo-alt' },
 ];
 
 type AdminTabKey = typeof NAV[number]['key'];
@@ -226,7 +228,8 @@ function AdminDashboard() {
       case 'analytics': return <AnalyticsRevenue />;
       case 'support': return <SupportModeration />;
       case 'system': return <SystemHealth />;
-      case 'data': return <DataImportExport />;
+      case 'data':    return <DataImportExport />;
+      case 'refunds':  return <Refunds />;
       case 'overview':
       default:
         return (

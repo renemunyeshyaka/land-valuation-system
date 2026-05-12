@@ -56,6 +56,32 @@
             <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50" data-section="gazette">
                 <i class="fas fa-book-open w-5"></i><span>Gazette Manager</span>
             </a>
+
+            <!-- REFUNDS GROUP -->
+            <div class="pt-2 pb-1">
+                <p class="px-4 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Finance</p>
+            </div>
+            <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50" data-section="refunds">
+                <i class="fas fa-undo-alt w-5 text-rose-500"></i><span>Refunds</span>
+                <span id="refundBadge" class="ml-auto text-[11px] bg-rose-100 text-rose-700 font-semibold px-2 py-0.5 rounded-full">4</span>
+            </a>
+            <!-- Sub-items rendered as indented links -->
+            <a href="#" class="admin-nav-link flex items-center gap-3 pl-10 pr-4 py-2 rounded-xl text-gray-500 text-sm hover:bg-rose-50 hover:text-rose-700" data-section="refunds" data-refund-tab="pending">
+                <i class="fas fa-clock w-4"></i><span>Pending Requests</span>
+            </a>
+            <a href="#" class="admin-nav-link flex items-center gap-3 pl-10 pr-4 py-2 rounded-xl text-gray-500 text-sm hover:bg-emerald-50 hover:text-emerald-700" data-section="refunds" data-refund-tab="approved">
+                <i class="fas fa-check-circle w-4"></i><span>Approved</span>
+            </a>
+            <a href="#" class="admin-nav-link flex items-center gap-3 pl-10 pr-4 py-2 rounded-xl text-gray-500 text-sm hover:bg-gray-50" data-section="refunds" data-refund-tab="rejected">
+                <i class="fas fa-times-circle w-4"></i><span>Rejected</span>
+            </a>
+            <a href="#" class="admin-nav-link flex items-center gap-3 pl-10 pr-4 py-2 rounded-xl text-gray-500 text-sm hover:bg-gray-50" data-section="refunds" data-refund-tab="history">
+                <i class="fas fa-history w-4"></i><span>Refund History</span>
+            </a>
+            <a href="#" class="admin-nav-link flex items-center gap-3 pl-10 pr-4 py-2 rounded-xl text-gray-500 text-sm hover:bg-gray-50" data-section="refund-policy">
+                <i class="fas fa-file-contract w-4"></i><span>Refund Policy</span>
+            </a>
+
             <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50" data-section="settings">
                 <i class="fas fa-sliders-h w-5"></i><span>System Settings</span>
             </a>
@@ -132,6 +158,243 @@
                 <div class="bg-white rounded-2xl p-6 shadow-sm"><h2 class="text-xl font-bold">Official Gazette Zones 2025</h2><div class="mt-4 grid gap-3"><div class="flex justify-between border-b pb-2"><span>Kigali Urban Core</span><span>Coeff: 2.8</span><button class="text-emerald-600 text-xs">edit</button></div><div class="flex justify-between border-b pb-2"><span>Eastern Province (Irrigation)</span><span>Coeff: 1.2</span><button class="text-emerald-600">edit</button></div><div class="flex justify-between border-b pb-2"><span>Northern Highlands</span><span>Coeff: 1.35</span><button class="text-emerald-600">edit</button></div><div class="flex justify-between border-b pb-2"><span>Lake Kivu Belt</span><span>Coeff: 1.85</span><button class="text-emerald-600">edit</button></div></div><button class="mt-5 bg-gray-100 px-6 py-2 rounded-xl">Import Gazette XML</button></div>
             </div>
 
+            <!-- REFUNDS -->
+            <div id="section-refunds" class="admin-section hidden">
+                <!-- Stats row -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-rose-500 card-hover">
+                        <p class="text-gray-500 text-sm">Pending Requests</p>
+                        <p class="text-3xl font-bold text-gray-800" id="stat-pending">4</p>
+                        <span class="text-xs text-rose-600">Awaiting review</span>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-emerald-500 card-hover">
+                        <p class="text-gray-500 text-sm">Approved This Month</p>
+                        <p class="text-3xl font-bold text-gray-800" id="stat-approved">7</p>
+                        <span class="text-xs text-emerald-600">Rwf 28.4M returned</span>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-gray-400 card-hover">
+                        <p class="text-gray-500 text-sm">Rejected This Month</p>
+                        <p class="text-3xl font-bold text-gray-800" id="stat-rejected">2</p>
+                        <span class="text-xs text-gray-500">Policy ineligible</span>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-amber-400 card-hover">
+                        <p class="text-gray-500 text-sm">Avg. Processing Time</p>
+                        <p class="text-3xl font-bold text-gray-800">3.2d</p>
+                        <span class="text-xs text-amber-600">SLA: 5 days</span>
+                    </div>
+                </div>
+
+                <!-- Filter tabs + search -->
+                <div class="bg-white rounded-2xl shadow-sm p-5 mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <div class="flex gap-2 flex-wrap" id="refundTabBtns">
+                            <button class="refund-tab-btn px-4 py-1.5 rounded-full text-sm font-medium bg-rose-600 text-white" data-tab="all">All</button>
+                            <button class="refund-tab-btn px-4 py-1.5 rounded-full text-sm font-medium border text-gray-600 hover:bg-rose-50" data-tab="pending">Pending</button>
+                            <button class="refund-tab-btn px-4 py-1.5 rounded-full text-sm font-medium border text-gray-600 hover:bg-emerald-50" data-tab="approved">Approved</button>
+                            <button class="refund-tab-btn px-4 py-1.5 rounded-full text-sm font-medium border text-gray-600 hover:bg-gray-50" data-tab="rejected">Rejected</button>
+                            <button class="refund-tab-btn px-4 py-1.5 rounded-full text-sm font-medium border text-gray-600 hover:bg-gray-50" data-tab="escalated">Escalated</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="relative">
+                                <input id="refundSearch" type="text" placeholder="Search by Ref, User, Parcel…" class="pl-8 pr-3 py-1.5 border rounded-lg text-sm w-52 focus:outline-none focus:ring-1 focus:ring-rose-400">
+                                <i class="fas fa-search absolute left-2.5 top-2.5 text-gray-400 text-xs"></i>
+                            </div>
+                            <button class="border px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><i class="fas fa-download mr-1"></i>Export</button>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="overflow-auto scrollable-table">
+                        <table class="w-full text-sm" id="refundTable">
+                            <thead class="bg-gray-50 text-gray-600">
+                                <tr>
+                                    <th class="p-3 text-left">Ref ID</th>
+                                    <th class="p-3 text-left">User</th>
+                                    <th class="p-3 text-left">Parcel</th>
+                                    <th class="p-3 text-right">Paid (RWF)</th>
+                                    <th class="p-3 text-right">Refund Req.</th>
+                                    <th class="p-3 text-left">Reason</th>
+                                    <th class="p-3 text-left">Submitted</th>
+                                    <th class="p-3 text-left">Status</th>
+                                    <th class="p-3 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="refundTableBody">
+                                <tr data-status="pending">
+                                    <td class="p-3 font-mono text-xs">RFD-2025-001</td>
+                                    <td class="p-3">Claire Uwase</td>
+                                    <td class="p-3">KGL-4390</td>
+                                    <td class="p-3 text-right">620,000,000</td>
+                                    <td class="p-3 text-right">620,000,000</td>
+                                    <td class="p-3">Duplicate payment</td>
+                                    <td class="p-3 text-gray-500">08 May 2026</td>
+                                    <td class="p-3"><span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-medium">Pending</span></td>
+                                    <td class="p-3 text-center">
+                                        <button class="text-emerald-600 hover:underline text-xs mr-2 refund-approve-btn" title="Approve"><i class="fas fa-check"></i> Approve</button>
+                                        <button class="text-rose-500 hover:underline text-xs mr-2 refund-reject-btn" title="Reject"><i class="fas fa-times"></i> Reject</button>
+                                        <button class="text-blue-500 hover:underline text-xs refund-view-btn" title="View"><i class="fas fa-eye"></i></button>
+                                    </td>
+                                </tr>
+                                <tr data-status="pending">
+                                    <td class="p-3 font-mono text-xs">RFD-2025-002</td>
+                                    <td class="p-3">John Mugabo</td>
+                                    <td class="p-3">RUH-443</td>
+                                    <td class="p-3 text-right">55,000,000</td>
+                                    <td class="p-3 text-right">27,500,000</td>
+                                    <td class="p-3">Valuation dispute</td>
+                                    <td class="p-3 text-gray-500">07 May 2026</td>
+                                    <td class="p-3"><span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-medium">Pending</span></td>
+                                    <td class="p-3 text-center">
+                                        <button class="text-emerald-600 hover:underline text-xs mr-2 refund-approve-btn"><i class="fas fa-check"></i> Approve</button>
+                                        <button class="text-rose-500 hover:underline text-xs mr-2 refund-reject-btn"><i class="fas fa-times"></i> Reject</button>
+                                        <button class="text-blue-500 hover:underline text-xs refund-view-btn"><i class="fas fa-eye"></i></button>
+                                    </td>
+                                </tr>
+                                <tr data-status="pending">
+                                    <td class="p-3 font-mono text-xs">RFD-2025-003</td>
+                                    <td class="p-3">Kwibuka Ltd</td>
+                                    <td class="p-3">MUS-12A</td>
+                                    <td class="p-3 text-right">375,000,000</td>
+                                    <td class="p-3 text-right">375,000,000</td>
+                                    <td class="p-3">Deal cancelled by seller</td>
+                                    <td class="p-3 text-gray-500">06 May 2026</td>
+                                    <td class="p-3"><span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs font-medium">Escalated</span></td>
+                                    <td class="p-3 text-center">
+                                        <button class="text-emerald-600 hover:underline text-xs mr-2 refund-approve-btn"><i class="fas fa-check"></i> Approve</button>
+                                        <button class="text-rose-500 hover:underline text-xs mr-2 refund-reject-btn"><i class="fas fa-times"></i> Reject</button>
+                                        <button class="text-blue-500 hover:underline text-xs refund-view-btn"><i class="fas fa-eye"></i></button>
+                                    </td>
+                                </tr>
+                                <tr data-status="pending">
+                                    <td class="p-3 font-mono text-xs">RFD-2025-004</td>
+                                    <td class="p-3">Maria Uwimana</td>
+                                    <td class="p-3">RDB-3772</td>
+                                    <td class="p-3 text-right">217,000,000</td>
+                                    <td class="p-3 text-right">217,000,000</td>
+                                    <td class="p-3">KYC verification failed</td>
+                                    <td class="p-3 text-gray-500">05 May 2026</td>
+                                    <td class="p-3"><span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-medium">Pending</span></td>
+                                    <td class="p-3 text-center">
+                                        <button class="text-emerald-600 hover:underline text-xs mr-2 refund-approve-btn"><i class="fas fa-check"></i> Approve</button>
+                                        <button class="text-rose-500 hover:underline text-xs mr-2 refund-reject-btn"><i class="fas fa-times"></i> Reject</button>
+                                        <button class="text-blue-500 hover:underline text-xs refund-view-btn"><i class="fas fa-eye"></i></button>
+                                    </td>
+                                </tr>
+                                <tr data-status="approved">
+                                    <td class="p-3 font-mono text-xs">RFD-2025-005</td>
+                                    <td class="p-3">Diaspora Inv.</td>
+                                    <td class="p-3">KGL-990</td>
+                                    <td class="p-3 text-right">220,000,000</td>
+                                    <td class="p-3 text-right">220,000,000</td>
+                                    <td class="p-3">Title transfer error</td>
+                                    <td class="p-3 text-gray-500">01 May 2026</td>
+                                    <td class="p-3"><span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs font-medium">Approved</span></td>
+                                    <td class="p-3 text-center">
+                                        <button class="text-blue-500 hover:underline text-xs refund-view-btn"><i class="fas fa-eye"></i> View</button>
+                                    </td>
+                                </tr>
+                                <tr data-status="rejected">
+                                    <td class="p-3 font-mono text-xs">RFD-2025-006</td>
+                                    <td class="p-3">Habimana J.</td>
+                                    <td class="p-3">RUH-1023</td>
+                                    <td class="p-3 text-right">145,000,000</td>
+                                    <td class="p-3 text-right">145,000,000</td>
+                                    <td class="p-3">Change of mind</td>
+                                    <td class="p-3 text-gray-500">28 Apr 2026</td>
+                                    <td class="p-3"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-medium">Rejected</span></td>
+                                    <td class="p-3 text-center">
+                                        <button class="text-blue-500 hover:underline text-xs refund-view-btn"><i class="fas fa-eye"></i> View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
+                        <span>Showing <span id="refundCount">6</span> refund records</span>
+                        <div class="flex gap-2">
+                            <button class="border rounded px-3 py-1 hover:bg-gray-50">Prev</button>
+                            <button class="bg-rose-600 text-white rounded px-3 py-1">1</button>
+                            <button class="border rounded px-3 py-1 hover:bg-gray-50">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulk actions bar -->
+                <div class="bg-white rounded-2xl shadow-sm p-5">
+                    <h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-bolt text-amber-500 mr-2"></i>Bulk Actions</h3>
+                    <div class="flex flex-wrap gap-3">
+                        <button class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-emerald-700"><i class="fas fa-check mr-1"></i>Approve Selected</button>
+                        <button class="bg-rose-500 text-white px-4 py-2 rounded-xl text-sm hover:bg-rose-600"><i class="fas fa-times mr-1"></i>Reject Selected</button>
+                        <button class="bg-amber-400 text-white px-4 py-2 rounded-xl text-sm hover:bg-amber-500"><i class="fas fa-exclamation-triangle mr-1"></i>Escalate to Finance</button>
+                        <button class="border text-gray-600 px-4 py-2 rounded-xl text-sm hover:bg-gray-50"><i class="fas fa-envelope mr-1"></i>Request More Info</button>
+                        <button class="border text-gray-600 px-4 py-2 rounded-xl text-sm hover:bg-gray-50"><i class="fas fa-file-pdf mr-1"></i>Generate Report</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REFUND POLICY -->
+            <div id="section-refund-policy" class="admin-section hidden">
+                <div class="bg-white rounded-2xl shadow-sm p-6 max-w-3xl">
+                    <h2 class="text-xl font-bold mb-1">Refund Policy Configuration</h2>
+                    <p class="text-gray-500 text-sm mb-5">Define eligibility rules, windows, and processing limits for all refund categories.</p>
+                    <div class="space-y-5">
+                        <div class="border rounded-xl p-4">
+                            <h4 class="font-semibold text-gray-700 mb-3">Eligibility Windows</h4>
+                            <div class="grid sm:grid-cols-2 gap-4 text-sm">
+                                <label class="block">Duplicate payment window (days)
+                                    <input type="number" value="30" class="mt-1 border rounded-lg w-full p-2 focus:outline-none focus:ring-1 focus:ring-rose-400">
+                                </label>
+                                <label class="block">Valuation dispute window (days)
+                                    <input type="number" value="14" class="mt-1 border rounded-lg w-full p-2 focus:outline-none focus:ring-1 focus:ring-rose-400">
+                                </label>
+                                <label class="block">Cancelled deal window (days)
+                                    <input type="number" value="7" class="mt-1 border rounded-lg w-full p-2 focus:outline-none focus:ring-1 focus:ring-rose-400">
+                                </label>
+                                <label class="block">KYC-related window (days)
+                                    <input type="number" value="60" class="mt-1 border rounded-lg w-full p-2 focus:outline-none focus:ring-1 focus:ring-rose-400">
+                                </label>
+                            </div>
+                        </div>
+                        <div class="border rounded-xl p-4">
+                            <h4 class="font-semibold text-gray-700 mb-3">Auto-Approval Rules</h4>
+                            <div class="space-y-3 text-sm">
+                                <label class="flex items-center justify-between">
+                                    <span>Auto-approve duplicate payments ≤ Rwf 5M</span>
+                                    <input type="checkbox" checked class="w-4 h-4 accent-emerald-600">
+                                </label>
+                                <label class="flex items-center justify-between">
+                                    <span>Auto-approve cancelled deals within 48 h</span>
+                                    <input type="checkbox" checked class="w-4 h-4 accent-emerald-600">
+                                </label>
+                                <label class="flex items-center justify-between">
+                                    <span>Require Finance Director approval for refunds &gt; Rwf 100M</span>
+                                    <input type="checkbox" checked class="w-4 h-4 accent-emerald-600">
+                                </label>
+                                <label class="flex items-center justify-between">
+                                    <span>Notify user via SMS on status change</span>
+                                    <input type="checkbox" checked class="w-4 h-4 accent-emerald-600">
+                                </label>
+                            </div>
+                        </div>
+                        <div class="border rounded-xl p-4">
+                            <h4 class="font-semibold text-gray-700 mb-3">Processing Limits</h4>
+                            <div class="grid sm:grid-cols-2 gap-4 text-sm">
+                                <label class="block">SLA target (days)
+                                    <input type="number" value="5" class="mt-1 border rounded-lg w-full p-2 focus:outline-none focus:ring-1 focus:ring-rose-400">
+                                </label>
+                                <label class="block">Max single refund (Rwf M)
+                                    <input type="number" value="500" class="mt-1 border rounded-lg w-full p-2 focus:outline-none focus:ring-1 focus:ring-rose-400">
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button class="bg-rose-600 text-white px-6 py-2 rounded-xl hover:bg-rose-700">Save Policy</button>
+                            <button class="border px-6 py-2 rounded-xl text-gray-600 hover:bg-gray-50">Reset to Defaults</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- SETTINGS -->
             <div id="section-settings" class="admin-section hidden">
                 <div class="bg-white rounded-2xl p-6"><h2 class="text-xl font-bold">System Preferences</h2><div class="space-y-4 mt-4"><label class="flex justify-between"><span>Enable diaspora matching AI</span><input type="checkbox" checked class="toggle"></label><label class="flex justify-between"><span>Require 2FA for admin</span><input type="checkbox"></label><label class="flex justify-between"><span>Auto-publish gazette updates</span><input type="checkbox" checked></label><hr><button class="bg-emerald-700 text-white px-6 py-2 rounded-xl">Save Settings</button><button class="ml-3 border px-6 py-2 rounded-xl">Regenerate API Keys</button></div></div>
@@ -143,7 +406,7 @@
 <script>
     // ---------- admin dashboard interactive ----------
     // hide all sections, show selected
-    const sections = ['overview', 'properties', 'users', 'valuations', 'transactions', 'gazette', 'settings'];
+    const sections = ['overview', 'properties', 'users', 'valuations', 'transactions', 'gazette', 'refunds', 'refund-policy', 'settings'];
     function showSection(sectionId) {
         sections.forEach(sec => {
             const el = document.getElementById(`section-${sec}`);
@@ -173,6 +436,97 @@
             if (section) showSection(section);
         });
     });
+    // Refund sub-nav: jump to section AND activate tab
+    document.querySelectorAll('[data-refund-tab]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSection('refunds');
+            const tab = link.getAttribute('data-refund-tab');
+            if (tab) filterRefunds(tab);
+        });
+    });
+
+    // Refund tab filter buttons
+    document.querySelectorAll('.refund-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.getAttribute('data-tab');
+            filterRefunds(tab);
+        });
+    });
+
+    function filterRefunds(tab) {
+        const rows = document.querySelectorAll('#refundTableBody tr');
+        let count = 0;
+        rows.forEach(row => {
+            const status = row.getAttribute('data-status');
+            const show = tab === 'all' || status === tab ||
+                (tab === 'escalated' && row.querySelector('.text-orange-700'));
+            row.style.display = show ? '' : 'none';
+            if (show) count++;
+        });
+        document.getElementById('refundCount').textContent = count;
+        document.querySelectorAll('.refund-tab-btn').forEach(b => {
+            const isActive = b.getAttribute('data-tab') === tab;
+            b.classList.toggle('bg-rose-600', isActive);
+            b.classList.toggle('text-white', isActive);
+            b.classList.toggle('border', !isActive);
+            b.classList.toggle('text-gray-600', !isActive);
+        });
+    }
+
+    // Inline approve/reject
+    document.addEventListener('click', function(e) {
+        const row = e.target.closest('tr');
+        if (!row) return;
+        if (e.target.closest('.refund-approve-btn')) {
+            row.setAttribute('data-status', 'approved');
+            const badge = row.querySelector('span[class*="rounded-full"]');
+            if (badge) { badge.className = 'bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs font-medium'; badge.textContent = 'Approved'; }
+            const actions = row.querySelector('td:last-child');
+            if (actions) actions.innerHTML = '<button class="text-blue-500 hover:underline text-xs refund-view-btn"><i class="fas fa-eye"></i> View</button>';
+            updateRefundStats();
+        } else if (e.target.closest('.refund-reject-btn')) {
+            row.setAttribute('data-status', 'rejected');
+            const badge = row.querySelector('span[class*="rounded-full"]');
+            if (badge) { badge.className = 'bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-medium'; badge.textContent = 'Rejected'; }
+            const actions = row.querySelector('td:last-child');
+            if (actions) actions.innerHTML = '<button class="text-blue-500 hover:underline text-xs refund-view-btn"><i class="fas fa-eye"></i> View</button>';
+            updateRefundStats();
+        }
+    });
+
+    function updateRefundStats() {
+        const rows = document.querySelectorAll('#refundTableBody tr');
+        let pending = 0, approved = 0, rejected = 0;
+        rows.forEach(r => {
+            const s = r.getAttribute('data-status');
+            if (s === 'pending') pending++;
+            if (s === 'approved') approved++;
+            if (s === 'rejected') rejected++;
+        });
+        const pendingEl = document.getElementById('stat-pending'); if (pendingEl) pendingEl.textContent = pending;
+        const approvedEl = document.getElementById('stat-approved'); if (approvedEl) approvedEl.textContent = approved;
+        const rejectedEl = document.getElementById('stat-rejected'); if (rejectedEl) rejectedEl.textContent = rejected;
+        const badge = document.getElementById('refundBadge'); if (badge) badge.textContent = pending;
+    }
+
+    // Refund search
+    const refundSearch = document.getElementById('refundSearch');
+    if (refundSearch) {
+        refundSearch.addEventListener('input', function() {
+            const q = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#refundTableBody tr');
+            let count = 0;
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const visible = text.includes(q);
+                row.style.display = visible ? '' : 'none';
+                if (visible) count++;
+            });
+            document.getElementById('refundCount').textContent = count;
+        });
+    }
+
     document.querySelectorAll('[data-section-link]').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();

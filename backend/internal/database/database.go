@@ -86,6 +86,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.Notification{},
 		&models.Subscription{},
 		&models.Transaction{},
+		&models.RefundRequest{},
 		&models.PropertyBoost{},
 		&models.MarketplaceListing{},
 	)
@@ -123,6 +124,7 @@ func RunSQLMigrations(db *gorm.DB) error {
 		"011_create_gazette_land_prices_table.sql",
 		"012_create_active_gazette_prices_view.sql",
 		"014_add_property_admin_hierarchy_fields.sql",
+		"015_create_refund_requests_table.sql",
 	}
 
 	// Find migrations directory

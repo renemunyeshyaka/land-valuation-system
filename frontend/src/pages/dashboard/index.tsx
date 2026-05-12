@@ -66,7 +66,18 @@ interface UserData {
   recentValuations: any[];
 }
 
-type DashboardTab = 'overview' | 'profile' | 'estimate' | 'properties' | 'billing' | 'subscription' | 'notifications';
+interface RefundRequest {
+  id: string;
+  paymentId: string;
+  amount: number;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected' | 'escalated';
+  createdAt: string;
+}
+
+type RefundFilterStatus = 'all' | 'pending' | 'approved' | 'rejected' | 'escalated';
+
+type DashboardTab = 'overview' | 'profile' | 'estimate' | 'properties' | 'billing' | 'refunds' | 'subscription' | 'notifications';
 
 const DASHBOARD_TABS: Array<{ key: DashboardTab; label: string; icon: string }> = [
   { key: 'overview', label: 'Overview', icon: 'fas fa-home' },
@@ -74,6 +85,7 @@ const DASHBOARD_TABS: Array<{ key: DashboardTab; label: string; icon: string }> 
   { key: 'estimate', label: 'Estimate Search', icon: 'fas fa-search-location' },
   { key: 'properties', label: 'Properties', icon: 'fas fa-building' },
   { key: 'billing', label: 'Billing', icon: 'fas fa-wallet' },
+  { key: 'refunds', label: 'Refunds', icon: 'fas fa-undo-alt' },
   { key: 'subscription', label: 'Subscription', icon: 'fas fa-gem' },
   { key: 'notifications', label: 'Notifications', icon: 'fas fa-bell' },
 ];
@@ -190,6 +202,20 @@ function Dashboard() {
   const [payments, setPayments] = useState<any[]>([]);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [showRefundsModal, setShowRefundsModal] = useState(false);
+  const [refundablePayments, setRefundablePayments] = useState<any[]>([]);
+  const [refundRequests, setRefundRequests] = useState<RefundRequest[]>([]);
+  const [refundLoading, setRefundLoading] = useState(false);
+  const [refundError, setRefundError] = useState<string | null>(null);
+  const [selectedRefundPaymentId, setSelectedRefundPaymentId] = useState('');
+  const [refundAmount, setRefundAmount] = useState<number>(0);
+  const [refundReason, setRefundReason] = useState('');
+  const [refundFilterStatus, setRefundFilterStatus] = useState<RefundFilterStatus>('all');
+  const [refundFromDate, setRefundFromDate] = useState('');
+  const [refundToDate, setRefundToDate] = useState('');
+  const [refundPage, setRefundPage] = useState(1);
+  const [refundLimit] = useState(8);
+  const [refundTotal, setRefundTotal] = useState(0);
 
   // Fetch properties based on selected tab
   const fetchProperties = async (tab: 'public' | 'registered' | 'mine') => {
@@ -238,11 +264,17 @@ function Dashboard() {
         throw new Error('Failed to fetch payment history');
       }
       const data = await response.json();
-      let txns = Array.isArray(data?.data) ? data.data : [];
+      const payload = data?.data;
+      let txns = Array.isArray(payload?.transactions)
+        ? payload.transactions
+        : (Array.isArray(payload) ? payload : []);
       if (tab === 'success') {
-        txns = txns.filter((t: any) => t.status === 'success');
+        txns = txns.filter((t: any) => {
+          const status = String(t.status || t.payment_status || '').toLowerCase();
+          return status === 'success' || status === 'completed';
+        });
       } else if (tab === 'failed') {
-        txns = txns.filter((t: any) => t.status === 'failed');
+        txns = txns.filter((t: any) => String(t.status || t.payment_status || '').toLowerCase() === 'failed');
       }
       setPayments(txns);
     } catch (err: any) {
@@ -267,6 +299,194 @@ function Dashboard() {
   const handlePaymentTabChange = (tab: 'all' | 'success' | 'failed') => {
     setPaymentTab(tab);
     fetchPayments(tab);
+  };
+
+  const fetchRefundablePayments = async () => {
+    setRefundLoading(true);
+    setRefundError(null);
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/payments/history`;
+    const options: RequestInit = {};
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (accessToken) {
+      options.headers = { Authorization: `Bearer ${accessToken}` };
+    }
+
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error('Failed to load refundable payments');
+      }
+      const data = await response.json();
+      const payload = data?.data;
+      const txns = Array.isArray(payload?.transactions)
+        ? payload.transactions
+        : (Array.isArray(payload) ? payload : []);
+      const successful = txns.filter((txn: any) => {
+        const status = String(txn?.status || txn?.payment_status || '').toLowerCase();
+        return status === 'success' || status === 'completed';
+      });
+      setRefundablePayments(successful);
+      if (successful.length > 0 && !selectedRefundPaymentId) {
+        setSelectedRefundPaymentId(String(successful[0].id || successful[0].reference || ''));
+        setRefundAmount(Number(successful[0].amount || successful[0].amount_rwf || 0));
+      }
+    } catch (err: any) {
+      setRefundError(err.message || 'Failed to load refundable payments');
+      setRefundablePayments([]);
+    } finally {
+      setRefundLoading(false);
+    }
+  };
+
+  const fetchRefundRequests = async (opts?: {
+    page?: number;
+    status?: RefundFilterStatus;
+    from?: string;
+    to?: string;
+  }) => {
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (!accessToken) {
+      setRefundRequests([]);
+      setRefundTotal(0);
+      return;
+    }
+
+    const targetPage = opts?.page ?? refundPage;
+    const targetStatus = opts?.status ?? refundFilterStatus;
+    const targetFrom = opts?.from ?? refundFromDate;
+    const targetTo = opts?.to ?? refundToDate;
+
+    const params = new URLSearchParams();
+    params.set('page', String(targetPage));
+    params.set('limit', String(refundLimit));
+    if (targetStatus !== 'all') {
+      params.set('status', targetStatus);
+    }
+    if (targetFrom) {
+      params.set('from', targetFrom);
+    }
+    if (targetTo) {
+      params.set('to', targetTo);
+    }
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/payments/refunds?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to load refund requests');
+    }
+
+    const data = await response.json();
+    const envelope = data?.data;
+    const rows = Array.isArray(envelope?.data)
+      ? envelope.data
+      : (Array.isArray(data?.data) ? data.data : []);
+    const total = Number(envelope?.total || rows.length || 0);
+    const currentPage = Number(envelope?.page || targetPage || 1);
+    const normalized: RefundRequest[] = rows.map((item: any) => ({
+      id: String(item.id),
+      paymentId: String(item.transaction_id || item.transaction?.id || ''),
+      amount: Number(item.requested_amount || 0),
+      reason: String(item.reason || ''),
+      status: String(item.status || 'pending').toLowerCase() as RefundRequest['status'],
+      createdAt: String(item.created_at || new Date().toISOString()),
+    }));
+    setRefundRequests(normalized);
+    setRefundTotal(total);
+    setRefundPage(currentPage);
+  };
+
+  const handleOpenRefundsModal = () => {
+    setShowRefundsModal(true);
+    setRefundReason('');
+    setRefundAmount(0);
+    setSelectedRefundPaymentId('');
+    setRefundFilterStatus('all');
+    setRefundFromDate('');
+    setRefundToDate('');
+    setRefundPage(1);
+    fetchRefundablePayments();
+    fetchRefundRequests().catch((err: any) => {
+      setRefundError(err?.message || 'Failed to load refund requests');
+    });
+  };
+
+  const handleCloseRefundsModal = () => {
+    setShowRefundsModal(false);
+    setRefundError(null);
+    setRefundReason('');
+    setRefundAmount(0);
+    setSelectedRefundPaymentId('');
+  };
+
+  useEffect(() => {
+    if (!showRefundsModal) {
+      return;
+    }
+    fetchRefundRequests().catch((err: any) => {
+      setRefundError(err?.message || 'Failed to load refund requests');
+    });
+  }, [showRefundsModal, refundFilterStatus, refundFromDate, refundToDate]);
+
+  const handleSelectRefundPayment = (paymentId: string) => {
+    setSelectedRefundPaymentId(paymentId);
+    const selected = refundablePayments.find((txn) => String(txn.id || txn.reference || '') === paymentId);
+    setRefundAmount(Number(selected?.amount || 0));
+  };
+
+  const submitRefundRequest = async () => {
+    const payment = refundablePayments.find((txn) => String(txn.id || txn.reference || '') === selectedRefundPaymentId);
+    if (!payment) {
+      toast.error('Please select a payment first.');
+      return;
+    }
+
+    if (!refundReason.trim() || refundReason.trim().length < 8) {
+      toast.error('Please provide a clear reason (at least 8 characters).');
+      return;
+    }
+
+    const paymentAmount = Number(payment.amount || payment.amount_rwf || 0);
+    const requestedAmount = Number(refundAmount || 0);
+    if (requestedAmount <= 0) {
+      toast.error('Refund amount must be greater than zero.');
+      return;
+    }
+    if (requestedAmount > paymentAmount) {
+      toast.error('Refund amount cannot exceed paid amount.');
+      return;
+    }
+
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (!accessToken) {
+      toast.error('Not authenticated. Please sign in again.');
+      return;
+    }
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/payments/refunds`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        transaction_id: Number(payment.id),
+        requested_amount: requestedAmount,
+        reason: refundReason.trim(),
+      }),
+    });
+
+    if (!response.ok) {
+      const errPayload = await response.json().catch(() => null);
+      const details = errPayload?.error?.details || errPayload?.error?.message || 'Failed to submit refund request';
+      toast.error(String(details));
+      return;
+    }
+
+    await fetchRefundRequests();
+    setRefundReason('');
+    toast.success('Refund request submitted successfully.');
   };
 
   // Open modal and fetch properties for default tab
@@ -364,6 +584,11 @@ function Dashboard() {
 
     if (tab === 'billing') {
       handleOpenPaymentHistoryModal();
+      return;
+    }
+
+    if (tab === 'refunds') {
+      handleOpenRefundsModal();
       return;
     }
 
@@ -1235,6 +1460,184 @@ function Dashboard() {
                         </div>
                       ))}
                     </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {showRefundsModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                <div className="bg-white rounded-lg shadow-lg max-w-3xl w-full p-6 relative animate-fade-in max-h-[90vh] overflow-y-auto">
+                  <button
+                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
+                    onClick={handleCloseRefundsModal}
+                    aria-label="Close"
+                  >
+                    &times;
+                  </button>
+                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i className="fas fa-undo-alt"></i>
+                    Request a Refund
+                  </h2>
+
+                  {refundLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <i className="fas fa-spinner fa-spin text-2xl text-emerald-700"></i>
+                      <span className="ml-3 text-gray-600">Loading refundable payments...</span>
+                    </div>
+                  ) : refundError ? (
+                    <div className="py-4">
+                      <div className="text-red-600 mb-3">{refundError}</div>
+                      <button
+                        type="button"
+                        onClick={fetchRefundablePayments}
+                        className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-medium"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 mb-5">
+                        <h3 className="font-semibold text-emerald-900 mb-3">New refund request</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Select payment</label>
+                            <select
+                              value={selectedRefundPaymentId}
+                              onChange={(e) => handleSelectRefundPayment(e.target.value)}
+                              className="w-full border rounded-lg px-3 py-2 text-sm"
+                            >
+                              <option value="">Choose a successful payment</option>
+                              {refundablePayments.map((txn) => {
+                                const key = String(txn.id || txn.reference || '');
+                                return (
+                                  <option key={key} value={key}>
+                                    {(txn.description || 'Payment')} - RWF {Number(txn.amount || 0).toLocaleString()}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Refund amount (RWF)</label>
+                            <input
+                              type="number"
+                              min={0}
+                              value={refundAmount}
+                              onChange={(e) => setRefundAmount(Number(e.target.value))}
+                              className="w-full border rounded-lg px-3 py-2 text-sm"
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                            <textarea
+                              rows={3}
+                              value={refundReason}
+                              onChange={(e) => setRefundReason(e.target.value)}
+                              placeholder="Explain why you are requesting a refund"
+                              className="w-full border rounded-lg px-3 py-2 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          onClick={submitRefundRequest}
+                          className="mt-4 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-medium"
+                        >
+                          Submit Refund Request
+                        </button>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-gray-800 mb-3">Your refund requests</h3>
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          <select
+                            value={refundFilterStatus}
+                            onChange={(e) => {
+                              setRefundPage(1);
+                              setRefundFilterStatus(e.target.value as RefundFilterStatus);
+                            }}
+                            className="border rounded-lg px-2 py-1.5 text-sm"
+                          >
+                            <option value="all">All statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="escalated">Escalated</option>
+                          </select>
+                          <input
+                            type="date"
+                            value={refundFromDate}
+                            onChange={(e) => {
+                              setRefundPage(1);
+                              setRefundFromDate(e.target.value);
+                            }}
+                            className="border rounded-lg px-2 py-1.5 text-sm"
+                          />
+                          <input
+                            type="date"
+                            value={refundToDate}
+                            onChange={(e) => {
+                              setRefundPage(1);
+                              setRefundToDate(e.target.value);
+                            }}
+                            className="border rounded-lg px-2 py-1.5 text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => fetchRefundRequests()}
+                            className="border px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50"
+                          >
+                            Refresh
+                          </button>
+                        </div>
+                        {refundRequests.length === 0 ? (
+                          <div className="text-gray-600 py-2">You have not submitted any refund requests yet.</div>
+                        ) : (
+                          <div className="overflow-y-auto max-h-72 divide-y divide-gray-100 border border-gray-100 rounded-lg">
+                            {refundRequests.map((request) => (
+                              <div key={request.id} className="p-3 flex items-start justify-between gap-3">
+                                <div>
+                                  <div className="font-semibold text-gray-800">{request.id}</div>
+                                  <div className="text-sm text-gray-600">Payment: {request.paymentId}</div>
+                                  <div className="text-sm text-gray-600">Amount: RWF {request.amount.toLocaleString()}</div>
+                                  <div className="text-sm text-gray-500">{request.reason}</div>
+                                </div>
+                                <div className="text-right">
+                                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${request.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : request.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                                    {request.status}
+                                  </span>
+                                  <div className="text-xs text-gray-400 mt-2">
+                                    {new Date(request.createdAt).toLocaleDateString('en-US')}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div className="mt-3 flex items-center justify-between text-sm">
+                          <span className="text-gray-500">Page {refundPage} of {Math.max(1, Math.ceil(refundTotal / refundLimit))}</span>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => fetchRefundRequests({ page: Math.max(1, refundPage - 1) })}
+                              disabled={refundPage <= 1}
+                              className="border rounded-lg px-3 py-1.5 disabled:opacity-50"
+                            >
+                              Prev
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => fetchRefundRequests({ page: Math.min(Math.max(1, Math.ceil(refundTotal / refundLimit)), refundPage + 1) })}
+                              disabled={refundPage >= Math.max(1, Math.ceil(refundTotal / refundLimit))}
+                              className="border rounded-lg px-3 py-1.5 disabled:opacity-50"
+                            >
+                              Next
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
