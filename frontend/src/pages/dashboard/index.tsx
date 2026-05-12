@@ -202,6 +202,8 @@ function Dashboard() {
   const [propertyLimit] = useState(8);
   const [propertyTotal, setPropertyTotal] = useState(0);
   const [selectedProperty, setSelectedProperty] = useState<any | null>(null);
+  const [selectedPropertyImageIndex, setSelectedPropertyImageIndex] = useState(0);
+  const [isPropertyLightboxOpen, setIsPropertyLightboxOpen] = useState(false);
   const [propertyDetailLoading, setPropertyDetailLoading] = useState(false);
   const [propertyDetailError, setPropertyDetailError] = useState<string | null>(null);
   const [propertySavingId, setPropertySavingId] = useState<number | null>(null);
@@ -273,6 +275,8 @@ function Dashboard() {
   const fetchPropertyDetail = async (propertyId: number | string) => {
     setPropertyDetailLoading(true);
     setPropertyDetailError(null);
+    setSelectedPropertyImageIndex(0);
+    setIsPropertyLightboxOpen(false);
     setSelectedProperty({});
 
     try {
@@ -340,6 +344,71 @@ function Dashboard() {
       setPropertySavingId(null);
     }
   };
+
+  const propertyImages = Array.isArray(selectedProperty?.images) ? selectedProperty.images : [];
+
+  const showPreviousPropertyImage = () => {
+    if (propertyImages.length < 2) {
+      return;
+    }
+
+    setSelectedPropertyImageIndex((currentIndex) =>
+      currentIndex === 0 ? propertyImages.length - 1 : currentIndex - 1
+    );
+  };
+
+  const showNextPropertyImage = () => {
+    if (propertyImages.length < 2) {
+      return;
+    }
+
+    setSelectedPropertyImageIndex((currentIndex) =>
+      currentIndex === propertyImages.length - 1 ? 0 : currentIndex + 1
+    );
+  };
+
+  useEffect(() => {
+    if (!selectedProperty) {
+      return;
+    }
+
+    const handlePropertyKeyboardNavigation = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (isPropertyLightboxOpen) {
+          setIsPropertyLightboxOpen(false);
+          return;
+        }
+
+        setSelectedProperty(null);
+        setSelectedPropertyImageIndex(0);
+        return;
+      }
+
+      if (propertyImages.length < 2) {
+        return;
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        setSelectedPropertyImageIndex((currentIndex) =>
+          currentIndex === 0 ? propertyImages.length - 1 : currentIndex - 1
+        );
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        setSelectedPropertyImageIndex((currentIndex) =>
+          currentIndex === propertyImages.length - 1 ? 0 : currentIndex + 1
+        );
+      }
+    };
+
+    window.addEventListener('keydown', handlePropertyKeyboardNavigation);
+
+    return () => {
+      window.removeEventListener('keydown', handlePropertyKeyboardNavigation);
+    };
+  }, [selectedProperty, isPropertyLightboxOpen, propertyImages.length]);
 
   // Payment History API fetch
   const fetchPayments = async (tab: 'all' | 'success' | 'failed') => {
@@ -1585,7 +1654,11 @@ function Dashboard() {
                       <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full p-6 relative">
                         <button
                           className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
-                          onClick={() => setSelectedProperty(null)}
+                          onClick={() => {
+                            setSelectedProperty(null);
+                            setSelectedPropertyImageIndex(0);
+                            setIsPropertyLightboxOpen(false);
+                          }}
                           aria-label="Close property details"
                         >
                           &times;
@@ -1596,8 +1669,71 @@ function Dashboard() {
                         ) : propertyDetailError ? (
                           <div className="py-4 text-red-600">{propertyDetailError}</div>
                         ) : (
-                          <div className="space-y-3 text-sm text-gray-700">
-                            <div><span className="font-semibold">UPI:</span> {selectedProperty.upi || 'N/A'}</div>
+                          <div className="space-y-4 text-sm text-gray-700">
+                            {propertyImages.length > 0 ? (
+                              <div className="space-y-3">
+                                <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
+                                  <button
+                                    type="button"
+                                    className="block w-full"
+                                    onClick={() => setIsPropertyLightboxOpen(true)}
+                                    aria-label="Open larger property image"
+                                  >
+                                    <img
+                                      src={propertyImages[selectedPropertyImageIndex] || propertyImages[0]}
+                                      alt={selectedProperty.title || 'Property image'}
+                                      className="h-64 w-full object-cover"
+                                    />
+                                  </button>
+                                  {propertyImages.length > 1 ? (
+                                    <>
+                                      <button
+                                        type="button"
+                                        onClick={showPreviousPropertyImage}
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-3 py-2 text-lg text-gray-700 shadow hover:bg-white"
+                                        aria-label="Show previous property image"
+                                      >
+                                        ‹
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={showNextPropertyImage}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-3 py-2 text-lg text-gray-700 shadow hover:bg-white"
+                                        aria-label="Show next property image"
+                                      >
+                                        ›
+                                      </button>
+                                      <div className="absolute bottom-3 right-3 rounded-full bg-black/65 px-3 py-1 text-xs text-white">
+                                        {selectedPropertyImageIndex + 1} / {propertyImages.length}
+                                      </div>
+                                    </>
+                                  ) : null}
+                                </div>
+                                {propertyImages.length > 1 ? (
+                                  <div className="flex gap-2 overflow-x-auto pb-1">
+                                    {propertyImages.map((image: string, index: number) => (
+                                      <button
+                                        key={`${image}-${index}`}
+                                        type="button"
+                                        onClick={() => setSelectedPropertyImageIndex(index)}
+                                        className={`overflow-hidden rounded-md border ${selectedPropertyImageIndex === index ? 'border-emerald-600 ring-2 ring-emerald-200' : 'border-gray-200'} shrink-0`}
+                                        aria-label={`View property image ${index + 1}`}
+                                      >
+                                        <img
+                                          src={image}
+                                          alt={`${selectedProperty.title || 'Property image'} ${index + 1}`}
+                                          className="h-16 w-20 object-cover"
+                                        />
+                                      </button>
+                                    ))}
+                                  </div>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-gray-500">
+                                No property image available
+                              </div>
+                            )}
                             <div><span className="font-semibold">Location:</span> {[selectedProperty.province, selectedProperty.district, selectedProperty.sector, selectedProperty.cell, selectedProperty.village].filter(Boolean).join(' / ') || 'N/A'}</div>
                             <div><span className="font-semibold">Type:</span> {selectedProperty.property_type || 'N/A'}</div>
                             <div><span className="font-semibold">Status:</span> {selectedProperty.status || 'N/A'}</div>
@@ -1609,6 +1745,45 @@ function Dashboard() {
                       </div>
                     </div>
                   )}
+                  {selectedProperty && isPropertyLightboxOpen && propertyImages.length > 0 && !propertyDetailLoading && !propertyDetailError ? (
+                    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/85 p-4">
+                      <button
+                        type="button"
+                        className="absolute right-5 top-5 text-4xl text-white hover:text-gray-200"
+                        onClick={() => setIsPropertyLightboxOpen(false)}
+                        aria-label="Close image viewer"
+                      >
+                        &times;
+                      </button>
+                      {propertyImages.length > 1 ? (
+                        <button
+                          type="button"
+                          onClick={showPreviousPropertyImage}
+                          className="absolute left-5 top-1/2 -translate-y-1/2 rounded-full bg-white/15 px-4 py-3 text-3xl text-white hover:bg-white/25"
+                          aria-label="Show previous property image"
+                        >
+                          ‹
+                        </button>
+                      ) : null}
+                      <div className="max-h-full max-w-6xl">
+                        <img
+                          src={propertyImages[selectedPropertyImageIndex] || propertyImages[0]}
+                          alt={selectedProperty.title || 'Property image'}
+                          className="max-h-[85vh] max-w-full rounded-lg object-contain"
+                        />
+                      </div>
+                      {propertyImages.length > 1 ? (
+                        <button
+                          type="button"
+                          onClick={showNextPropertyImage}
+                          className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-white/15 px-4 py-3 text-3xl text-white hover:bg-white/25"
+                          aria-label="Show next property image"
+                        >
+                          ›
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
               )}
 
