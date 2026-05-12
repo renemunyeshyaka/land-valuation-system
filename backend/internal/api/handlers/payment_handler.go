@@ -186,7 +186,7 @@ func (h *PaymentHandler) InitiateMobileMoneyPayment(c *gin.Context) {
 // @Success 200 {object} utils.APIResponse "Payment status retrieved"
 // @Failure 404 {object} utils.APIResponse "Transaction not found"
 // @Failure 500 {object} utils.APIResponse "Server error"
-// @Router /payments/{transaction_id}/status [get]
+// @Router /payments/status/{transaction_id} [get]
 func (h *PaymentHandler) CheckPaymentStatus(c *gin.Context) {
 	transactionID := c.Param("transaction_id")
 	provider := strings.TrimSpace(c.Query("provider"))

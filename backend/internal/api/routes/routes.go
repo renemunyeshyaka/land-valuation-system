@@ -230,7 +230,7 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 		{
 			// Mobile Money (active)
 			protected.POST("/mobile-money", paymentHandler.InitiateMobileMoneyPayment)
-			protected.GET("/:transaction_id/status", paymentHandler.CheckPaymentStatus)
+			protected.GET("/status/:transaction_id", paymentHandler.CheckPaymentStatus)
 
 			// Payment history and summary endpoints
 			protected.GET("/history", paymentHistorySummaryHandler.GetPaymentHistory)

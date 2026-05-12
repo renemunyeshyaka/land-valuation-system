@@ -1468,7 +1468,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/payments/{transaction_id}/status": {
+        "/payments/status/{transaction_id}": {
             "get": {
                 "description": "Retrieve the current status of a payment transaction",
                 "consumes": [
