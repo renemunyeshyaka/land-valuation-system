@@ -623,6 +623,277 @@ func (h *PropertyHandler) ListMyProperties(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Your properties retrieved successfully", "data": properties, "total": int(total), "page": page, "limit": limit})
 }
 
+// ListDashboardProperties returns dashboard-ready properties for the authenticated user
+func (h *PropertyHandler) ListDashboardProperties(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "details": err.Error()})
+		return
+	}
+
+	tab := strings.ToLower(strings.TrimSpace(c.DefaultQuery("tab", "all")))
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "12"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 12
+	}
+
+	query := h.propertyRepo.DB().Model(&models.Property{})
+
+	if tab == "owned" {
+		query = query.Where("owner_id = ?", userID)
+	} else if tab == "saved" {
+		query = query.Joins("JOIN user_saved_properties usp ON usp.property_id = properties.id").Where("usp.user_id = ?", userID)
+	} else if tab == "recent" || tab == "recently_viewed" {
+		query = query.Joins("JOIN user_property_views upv ON upv.property_id = properties.id").Where("upv.user_id = ?", userID)
+	} else {
+		query = query.Where("visibility IN ? OR owner_id = ?", []string{"public", "registered"}, userID)
+	}
+
+	if search := strings.TrimSpace(c.Query("search")); search != "" {
+		like := "%" + search + "%"
+		query = query.Where("title ILIKE ? OR description ILIKE ? OR district ILIKE ? OR sector ILIKE ? OR cell ILIKE ? OR upi ILIKE ?", like, like, like, like, like, like)
+	}
+
+	if district := strings.TrimSpace(c.Query("district")); district != "" {
+		query = query.Where("district = ?", district)
+	}
+	if cell := strings.TrimSpace(c.Query("cell")); cell != "" {
+		query = query.Where("cell = ?", cell)
+	}
+	if status := strings.TrimSpace(c.Query("status")); status != "" {
+		query = query.Where("status = ?", status)
+	}
+
+	if minPrice := strings.TrimSpace(c.Query("min_price")); minPrice != "" {
+		if v, parseErr := strconv.ParseFloat(minPrice, 64); parseErr == nil {
+			query = query.Where("price >= ?", v)
+		}
+	}
+	if maxPrice := strings.TrimSpace(c.Query("max_price")); maxPrice != "" {
+		if v, parseErr := strconv.ParseFloat(maxPrice, 64); parseErr == nil {
+			query = query.Where("price <= ?", v)
+		}
+	}
+	if minArea := strings.TrimSpace(c.Query("min_area")); minArea != "" {
+		if v, parseErr := strconv.ParseFloat(minArea, 64); parseErr == nil {
+			query = query.Where("land_size >= ?", v)
+		}
+	}
+	if maxArea := strings.TrimSpace(c.Query("max_area")); maxArea != "" {
+		if v, parseErr := strconv.ParseFloat(maxArea, 64); parseErr == nil {
+			query = query.Where("land_size <= ?", v)
+		}
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count properties", "details": err.Error()})
+		return
+	}
+
+	orderBy := "created_at DESC"
+	sort := strings.ToLower(strings.TrimSpace(c.DefaultQuery("sort", "newest")))
+	switch sort {
+	case "oldest":
+		orderBy = "created_at ASC"
+	case "price_asc":
+		orderBy = "price ASC"
+	case "price_desc":
+		orderBy = "price DESC"
+	case "area_asc":
+		orderBy = "land_size ASC"
+	case "area_desc":
+		orderBy = "land_size DESC"
+	}
+
+	if tab == "recommended" {
+		orderBy = "views DESC, created_at DESC"
+	}
+	if tab == "recent" || tab == "recently_viewed" {
+		orderBy = "upv.last_viewed_at DESC"
+	}
+
+	offset := (page - 1) * limit
+	var properties []models.Property
+	if err := query.Order(orderBy).Offset(offset).Limit(limit).Find(&properties).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list properties", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "Dashboard properties retrieved successfully",
+		"data":     properties,
+		"total":    int(total),
+		"page":     page,
+		"limit":    limit,
+		"has_next": page*limit < int(total),
+		"tab":      tab,
+	})
+}
+
+// GetDashboardProperty returns a single property for authenticated dashboard users
+func (h *PropertyHandler) GetDashboardProperty(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "details": err.Error()})
+		return
+	}
+
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid property ID", "details": err.Error()})
+		return
+	}
+
+	property, err := h.propertyRepo.FindByID(uint(id), "Owner")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve property", "details": err.Error()})
+		return
+	}
+	if property == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Property not found"})
+		return
+	}
+
+	if property.Visibility == "only_me" && property.OwnerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "This property is private", "details": "Only the owner can view this property"})
+		return
+	}
+
+	if property.Visibility == "registered" || property.Visibility == "public" || property.OwnerID == userID {
+		_ = h.propertyRepo.IncrementViews(uint(id))
+		c.JSON(http.StatusOK, gin.H{"message": "Property retrieved successfully", "data": property})
+		return
+	}
+
+	c.JSON(http.StatusForbidden, gin.H{"error": "You are not allowed to view this property"})
+}
+
+// SaveDashboardProperty saves a property for the authenticated user.
+func (h *PropertyHandler) SaveDashboardProperty(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "details": err.Error()})
+		return
+	}
+
+	var req struct {
+		PropertyID uint `json:"property_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil || req.PropertyID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request", "details": "property_id is required"})
+		return
+	}
+
+	property, err := h.propertyRepo.FindByID(req.PropertyID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find property", "details": err.Error()})
+		return
+	}
+	if property == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Property not found"})
+		return
+	}
+
+	if property.Visibility == "only_me" && property.OwnerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "This property is private"})
+		return
+	}
+
+	var existingCount int64
+	if err := h.propertyRepo.DB().Table("user_saved_properties").
+		Where("user_id = ? AND property_id = ?", userID, req.PropertyID).
+		Count(&existingCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save property", "details": err.Error()})
+		return
+	}
+
+	if existingCount == 0 {
+		if err := h.propertyRepo.DB().Exec("INSERT INTO user_saved_properties (user_id, property_id) VALUES (?, ?)", userID, req.PropertyID).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save property", "details": err.Error()})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Property saved successfully"})
+}
+
+// UnsaveDashboardProperty removes a saved property for the authenticated user.
+func (h *PropertyHandler) UnsaveDashboardProperty(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "details": err.Error()})
+		return
+	}
+
+	propertyID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid property ID", "details": err.Error()})
+		return
+	}
+
+	if err := h.propertyRepo.DB().Exec("DELETE FROM user_saved_properties WHERE user_id = ? AND property_id = ?", userID, uint(propertyID)).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unsave property", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Property unsaved successfully"})
+}
+
+// MarkDashboardPropertyViewed updates recently viewed history for the authenticated user.
+func (h *PropertyHandler) MarkDashboardPropertyViewed(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "details": err.Error()})
+		return
+	}
+
+	propertyID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid property ID", "details": err.Error()})
+		return
+	}
+
+	property, err := h.propertyRepo.FindByID(uint(propertyID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find property", "details": err.Error()})
+		return
+	}
+	if property == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Property not found"})
+		return
+	}
+
+	if property.Visibility == "only_me" && property.OwnerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "This property is private"})
+		return
+	}
+
+	nowExpr := "NOW()"
+	if h.propertyRepo.DB().Dialector.Name() == "sqlite" {
+		nowExpr = "CURRENT_TIMESTAMP"
+	}
+
+	query := "INSERT INTO user_property_views (user_id, property_id, last_viewed_at, created_at, updated_at) VALUES (?, ?, " + nowExpr + ", " + nowExpr + ", " + nowExpr + ")"
+	if h.propertyRepo.DB().Dialector.Name() == "postgres" {
+		query += " ON CONFLICT (user_id, property_id) DO UPDATE SET last_viewed_at = EXCLUDED.last_viewed_at, updated_at = EXCLUDED.updated_at"
+	} else {
+		query += " ON CONFLICT(user_id, property_id) DO UPDATE SET last_viewed_at = excluded.last_viewed_at, updated_at = excluded.updated_at"
+	}
+
+	if err := h.propertyRepo.DB().Exec(query, userID, uint(propertyID)).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to record viewed property", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Property view recorded"})
+}
+
 // SearchNearby godoc
 // @Summary Search properties by UPI or filters
 // @Description Search properties using either an exact UPI match or one or more filters: property_type, max_price, or latitude+longitude+radius_km. Returns a paginated response envelope.

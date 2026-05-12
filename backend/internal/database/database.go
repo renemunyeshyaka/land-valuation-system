@@ -82,6 +82,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.User{},
 		&models.GazetteLandPrice{},
 		&models.Property{},
+		&models.UserPropertyView{},
 		&models.Valuation{},
 		&models.Notification{},
 		&models.Subscription{},
@@ -125,6 +126,7 @@ func RunSQLMigrations(db *gorm.DB) error {
 		"012_create_active_gazette_prices_view.sql",
 		"014_add_property_admin_hierarchy_fields.sql",
 		"015_create_refund_requests_table.sql",
+		"016_dashboard_property_indexes_and_views.sql",
 	}
 
 	// Find migrations directory

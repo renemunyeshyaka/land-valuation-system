@@ -191,10 +191,20 @@ function Dashboard() {
     };
   // Modal state and logic for View Properties (profile version)
   const [showPropertiesModal, setShowPropertiesModal] = useState(false);
-  const [propertyTab, setPropertyTab] = useState<'public' | 'registered' | 'mine'>('public');
+  const [propertyTab, setPropertyTab] = useState<'all' | 'owned' | 'saved' | 'recent' | 'recommended'>('all');
   const [properties, setProperties] = useState<any[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(false);
   const [propertiesError, setPropertiesError] = useState<string | null>(null);
+  const [propertySearch, setPropertySearch] = useState('');
+  const [propertyDistrict, setPropertyDistrict] = useState('');
+  const [propertyStatus, setPropertyStatus] = useState('');
+  const [propertyPage, setPropertyPage] = useState(1);
+  const [propertyLimit] = useState(8);
+  const [propertyTotal, setPropertyTotal] = useState(0);
+  const [selectedProperty, setSelectedProperty] = useState<any | null>(null);
+  const [propertyDetailLoading, setPropertyDetailLoading] = useState(false);
+  const [propertyDetailError, setPropertyDetailError] = useState<string | null>(null);
+  const [propertySavingId, setPropertySavingId] = useState<number | null>(null);
 
   // --- Payment History modal state and logic ---
   const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
@@ -217,23 +227,33 @@ function Dashboard() {
   const [refundLimit] = useState(8);
   const [refundTotal, setRefundTotal] = useState(0);
 
-  // Fetch properties based on selected tab
-  const fetchProperties = async (tab: 'public' | 'registered' | 'mine') => {
+  // Fetch properties for dashboard property browser
+  const fetchProperties = async (tab: 'all' | 'owned' | 'saved' | 'recent' | 'recommended', page = 1) => {
     setPropertiesLoading(true);
     setPropertiesError(null);
-    let url = '';
-    let options: RequestInit = {};
-    if (tab === 'public') {
-      url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/properties?visibility=public`;
-    } else if (tab === 'registered') {
-      url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/properties?visibility=registered`;
-    } else if (tab === 'mine') {
-      url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/properties/my`;
-      const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-      if (accessToken) {
-        options.headers = { Authorization: `Bearer ${accessToken}` };
-      }
+
+    const query = new URLSearchParams({
+      tab,
+      page: String(page),
+      limit: String(propertyLimit),
+    });
+    if (propertySearch.trim()) {
+      query.set('search', propertySearch.trim());
     }
+    if (propertyDistrict.trim()) {
+      query.set('district', propertyDistrict.trim());
+    }
+    if (propertyStatus.trim()) {
+      query.set('status', propertyStatus.trim());
+    }
+
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/dashboard/properties?${query.toString()}`;
+    const options: RequestInit = {};
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (accessToken) {
+      options.headers = { Authorization: `Bearer ${accessToken}` };
+    }
+
     try {
       const response = await fetch(url, options);
       if (!response.ok) {
@@ -241,10 +261,83 @@ function Dashboard() {
       }
       const data = await response.json();
       setProperties(data?.data || []);
+      setPropertyPage(Number(data?.page || page));
+      setPropertyTotal(Number(data?.total || 0));
     } catch (err: any) {
       setPropertiesError(err.message || 'Failed to fetch properties');
     } finally {
       setPropertiesLoading(false);
+    }
+  };
+
+  const fetchPropertyDetail = async (propertyId: number | string) => {
+    setPropertyDetailLoading(true);
+    setPropertyDetailError(null);
+    setSelectedProperty({});
+
+    try {
+      const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+      if (!accessToken) {
+        throw new Error('Not authenticated. Please sign in again.');
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/dashboard/properties/${propertyId}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch property details');
+      }
+
+      const data = await response.json();
+      setSelectedProperty(data?.data || null);
+
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/dashboard/properties/view/${propertyId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    } catch (err: any) {
+      setPropertyDetailError(err.message || 'Failed to fetch property details');
+    } finally {
+      setPropertyDetailLoading(false);
+    }
+  };
+
+  const toggleSaveProperty = async (propertyId: number, isSaved: boolean) => {
+    try {
+      const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+      if (!accessToken) {
+        toast.error('Not authenticated. Please sign in again.');
+        return;
+      }
+
+      setPropertySavingId(propertyId);
+      const url = isSaved
+        ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/dashboard/properties/save/${propertyId}`
+        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/dashboard/properties/save`;
+
+      const response = await fetch(url, {
+        method: isSaved ? 'DELETE' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: isSaved ? undefined : JSON.stringify({ property_id: propertyId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update saved properties');
+      }
+
+      toast.success(isSaved ? 'Property removed from saved list.' : 'Property saved successfully.');
+      await fetchProperties(propertyTab, propertyPage);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update saved properties');
+    } finally {
+      setPropertySavingId(null);
     }
   };
 
@@ -492,20 +585,36 @@ function Dashboard() {
   // Open modal and fetch properties for default tab
   const handleOpenPropertiesModal = () => {
     setShowPropertiesModal(true);
-    setPropertyTab('public');
-    fetchProperties('public');
+    setPropertyTab('all');
+    setPropertyPage(1);
+    fetchProperties('all', 1);
   };
 
   const handleClosePropertiesModal = () => {
     setShowPropertiesModal(false);
     setProperties([]);
     setPropertiesError(null);
+    setSelectedProperty(null);
+    setPropertyDetailError(null);
   };
 
   // Handle tab change
-  const handleTabChange = (tab: 'public' | 'registered' | 'mine') => {
+  const handleTabChange = (tab: 'all' | 'owned' | 'saved' | 'recent' | 'recommended') => {
     setPropertyTab(tab);
-    fetchProperties(tab);
+    setPropertyPage(1);
+    fetchProperties(tab, 1);
+  };
+
+  const handlePropertyPageChange = (nextPage: number) => {
+    if (nextPage < 1) {
+      return;
+    }
+    fetchProperties(propertyTab, nextPage);
+  };
+
+  const applyPropertyFilters = () => {
+    setPropertyPage(1);
+    fetchProperties(propertyTab, 1);
   };
     // Handles land estimate form submission
     const handleEstimate = async (estimateRequest: any) => {
@@ -1297,7 +1406,7 @@ function Dashboard() {
 
               {showPropertiesModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                  <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative animate-fade-in">
+                  <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 relative animate-fade-in">
                     <button
                       className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
                       onClick={handleClosePropertiesModal}
@@ -1307,27 +1416,72 @@ function Dashboard() {
                     </button>
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                       <i className="fas fa-building"></i>
-                      View Properties
+                      My Properties
                     </h2>
                     {/* Selector Tabs */}
                     <div className="flex gap-2 mb-4">
                       <button
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'public' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
-                        onClick={() => handleTabChange('public')}
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        onClick={() => handleTabChange('all')}
                       >
-                        Public
+                        All Visible
                       </button>
                       <button
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'registered' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
-                        onClick={() => handleTabChange('registered')}
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'owned' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        onClick={() => handleTabChange('owned')}
                       >
-                        Registered
+                        Owned
                       </button>
                       <button
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'mine' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
-                        onClick={() => handleTabChange('mine')}
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'saved' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        onClick={() => handleTabChange('saved')}
                       >
-                        Only mine
+                        Saved
+                      </button>
+                      <button
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'recent' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        onClick={() => handleTabChange('recent')}
+                      >
+                        Recently Viewed
+                      </button>
+                      <button
+                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'recommended' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        onClick={() => handleTabChange('recommended')}
+                      >
+                        Recommended
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-2 mb-4">
+                      <input
+                        type="text"
+                        value={propertySearch}
+                        onChange={(e) => setPropertySearch(e.target.value)}
+                        placeholder="Search title, district, UPI"
+                        className="md:col-span-2 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={propertyDistrict}
+                        onChange={(e) => setPropertyDistrict(e.target.value)}
+                        placeholder="District"
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                      <select
+                        value={propertyStatus}
+                        onChange={(e) => setPropertyStatus(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      >
+                        <option value="">All statuses</option>
+                        <option value="available">Available</option>
+                        <option value="pending">Pending</option>
+                        <option value="sold">Sold</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={applyPropertyFilters}
+                        className="px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-medium"
+                      >
+                        Apply
                       </button>
                     </div>
                     {propertiesLoading ? (
@@ -1346,7 +1500,7 @@ function Dashboard() {
                             <div className="flex items-center justify-between">
                               <div>
                                 <div className="font-semibold text-gray-800">{prop.title || 'Untitled Property'}</div>
-                                <div className="text-sm text-gray-500">{prop.location}</div>
+                                <div className="text-sm text-gray-500">{[prop.district, prop.sector, prop.cell].filter(Boolean).join(' / ') || 'Location not specified'}</div>
                                 {prop.price && (
                                   <div className="text-sm text-emerald-700 font-bold">RWF {prop.price.toLocaleString()}</div>
                                 )}
@@ -1355,7 +1509,25 @@ function Dashboard() {
                                 )}
                               </div>
                               <div className="flex flex-col items-end gap-2">
-                                {prop.owner_id === user.id && propertyTab === 'mine' && (
+                                <button
+                                  className="px-3 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700"
+                                  onClick={() => fetchPropertyDetail(prop.id)}
+                                >
+                                  <i className="fas fa-eye mr-1"></i>View
+                                </button>
+                                <button
+                                  className="px-3 py-1 text-xs bg-amber-500 text-white rounded hover:bg-amber-600 disabled:opacity-60"
+                                  disabled={propertySavingId === Number(prop.id)}
+                                  onClick={() => toggleSaveProperty(Number(prop.id), propertyTab === 'saved')}
+                                >
+                                  <i className={`fas ${propertyTab === 'saved' ? 'fa-bookmark' : 'fa-bookmark'} mr-1`}></i>
+                                  {propertySavingId === Number(prop.id)
+                                    ? 'Saving...'
+                                    : propertyTab === 'saved'
+                                      ? 'Unsave'
+                                      : 'Save'}
+                                </button>
+                                {Number(prop.owner_id) === Number(user?.id) && propertyTab === 'owned' && (
                                   <button
                                     className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
                                     onClick={() => handleOpenEditModal(prop)}
@@ -1372,6 +1544,30 @@ function Dashboard() {
                         ))}
                       </div>
                     )}
+                    <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
+                      <span>
+                        Showing {(propertyPage - 1) * propertyLimit + (properties.length > 0 ? 1 : 0)}-
+                        {(propertyPage - 1) * propertyLimit + properties.length} of {propertyTotal}
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handlePropertyPageChange(propertyPage - 1)}
+                          disabled={propertyPage <= 1 || propertiesLoading}
+                          className="px-3 py-1 rounded border border-gray-300 disabled:opacity-50"
+                        >
+                          Previous
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handlePropertyPageChange(propertyPage + 1)}
+                          disabled={propertyPage * propertyLimit >= propertyTotal || propertiesLoading}
+                          className="px-3 py-1 rounded border border-gray-300 disabled:opacity-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   {/* User Edit Property Modal */}
                   {editModalOpen && editForm && (
@@ -1383,6 +1579,35 @@ function Dashboard() {
                       provinceNames={provinceNames}
                       adminHierarchy={adminHierarchy}
                     />
+                  )}
+                  {selectedProperty && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50">
+                      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full p-6 relative">
+                        <button
+                          className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
+                          onClick={() => setSelectedProperty(null)}
+                          aria-label="Close property details"
+                        >
+                          &times;
+                        </button>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-3">{selectedProperty.title || 'Property Details'}</h3>
+                        {propertyDetailLoading ? (
+                          <div className="py-8 text-gray-600">Loading property details...</div>
+                        ) : propertyDetailError ? (
+                          <div className="py-4 text-red-600">{propertyDetailError}</div>
+                        ) : (
+                          <div className="space-y-3 text-sm text-gray-700">
+                            <div><span className="font-semibold">UPI:</span> {selectedProperty.upi || 'N/A'}</div>
+                            <div><span className="font-semibold">Location:</span> {[selectedProperty.province, selectedProperty.district, selectedProperty.sector, selectedProperty.cell, selectedProperty.village].filter(Boolean).join(' / ') || 'N/A'}</div>
+                            <div><span className="font-semibold">Type:</span> {selectedProperty.property_type || 'N/A'}</div>
+                            <div><span className="font-semibold">Status:</span> {selectedProperty.status || 'N/A'}</div>
+                            <div><span className="font-semibold">Land Size:</span> {selectedProperty.land_size || 0} {selectedProperty.size_unit || 'sqm'}</div>
+                            <div><span className="font-semibold">Price:</span> RWF {Number(selectedProperty.price || 0).toLocaleString()}</div>
+                            <div><span className="font-semibold">Description:</span> {selectedProperty.description || 'No description provided.'}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}

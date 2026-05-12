@@ -39,6 +39,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client, 
 	setupNotificationRoutes(router, db)
 	setupExchangeRateRoutes(router, redisClient)
 	setupReferralRoutes(router, db)
+	setupDashboardRoutes(router, db)
 	setupHealthRoutes(router, db)
 
 	// Land Value Estimation endpoint
@@ -154,6 +155,21 @@ func setupPropertyRoutes(router *gin.Engine, db *gorm.DB) {
 	marketplace := router.Group("/api/v1/marketplace")
 	{
 		marketplace.GET("/properties-for-sale", marketplaceHandler.GetPropertyListingsOnSale)
+	}
+}
+
+func setupDashboardRoutes(router *gin.Engine, db *gorm.DB) {
+	propertyRepo := repository.NewPropertyRepository(db)
+	propertyHandler := handlers.NewPropertyHandler(propertyRepo)
+
+	dashboard := router.Group("/api/v1/dashboard")
+	dashboard.Use(middleware.AuthRequired())
+	{
+		dashboard.GET("/properties", propertyHandler.ListDashboardProperties)
+		dashboard.GET("/properties/:id", propertyHandler.GetDashboardProperty)
+		dashboard.POST("/properties/save", propertyHandler.SaveDashboardProperty)
+		dashboard.DELETE("/properties/save/:id", propertyHandler.UnsaveDashboardProperty)
+		dashboard.POST("/properties/view/:id", propertyHandler.MarkDashboardPropertyViewed)
 	}
 }
 
