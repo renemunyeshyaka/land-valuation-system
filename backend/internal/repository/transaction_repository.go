@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"strings"
+	"time"
 
 	"backend/internal/models"
 
@@ -13,6 +15,14 @@ import (
 
 type TransactionRepository struct {
 	db *gorm.DB
+}
+
+type TransactionListFilters struct {
+	Status string
+	Method string
+	Search string
+	From   *time.Time
+	To     *time.Time
 }
 
 func NewTransactionRepository(db *gorm.DB) *TransactionRepository {
@@ -68,10 +78,35 @@ func (r *TransactionRepository) UpdateStatus(ctx context.Context, transactionID 
 
 // ListByUser retrieves transactions for a user with pagination
 func (r *TransactionRepository) ListByUser(ctx context.Context, userID uint, page, pageSize int) ([]models.Transaction, int64, error) {
+	return r.ListByUserFiltered(ctx, userID, page, pageSize, TransactionListFilters{})
+}
+
+// ListByUserFiltered retrieves transactions for a user with pagination and optional filters
+func (r *TransactionRepository) ListByUserFiltered(ctx context.Context, userID uint, page, pageSize int, filters TransactionListFilters) ([]models.Transaction, int64, error) {
 	var transactions []models.Transaction
 	var total int64
 
 	query := r.db.WithContext(ctx).Model(&models.Transaction{}).Where("user_id = ? OR buyer_id = ?", userID, userID)
+
+	if normalized := strings.TrimSpace(strings.ToLower(filters.Status)); normalized != "" && normalized != "all" {
+		query = query.Where("LOWER(status) = ?", normalized)
+	}
+	if normalized := strings.TrimSpace(strings.ToLower(filters.Method)); normalized != "" && normalized != "all" {
+		query = query.Where("LOWER(payment_method) = ?", normalized)
+	}
+	if normalized := strings.TrimSpace(filters.Search); normalized != "" {
+		like := "%" + normalized + "%"
+		query = query.Where(
+			"(CAST(id AS TEXT) ILIKE ? OR COALESCE(description, '') ILIKE ? OR COALESCE(payment_reference, '') ILIKE ? OR COALESCE(provider_transaction_id, '') ILIKE ?)",
+			like, like, like, like,
+		)
+	}
+	if filters.From != nil {
+		query = query.Where("created_at >= ?", filters.From)
+	}
+	if filters.To != nil {
+		query = query.Where("created_at <= ?", filters.To)
+	}
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -88,10 +123,15 @@ func (r *TransactionRepository) ListByUser(ctx context.Context, userID uint, pag
 
 // GetByUserID alias for ListByUser - accepts string userID for compatibility
 func (r *TransactionRepository) GetByUserID(ctx context.Context, userID string, offset, limit int) ([]models.Transaction, int64, error) {
+	return r.GetByUserIDFiltered(ctx, userID, offset, limit, TransactionListFilters{})
+}
+
+// GetByUserIDFiltered returns transactions for a user using legacy offset/limit semantics with optional filters
+func (r *TransactionRepository) GetByUserIDFiltered(ctx context.Context, userID string, offset, limit int, filters TransactionListFilters) ([]models.Transaction, int64, error) {
 	userIDUint, _ := strconv.ParseUint(userID, 10, 32)
 	page := (offset / limit) + 1
 
-	return r.ListByUser(ctx, uint(userIDUint), page, limit)
+	return r.ListByUserFiltered(ctx, uint(userIDUint), page, limit, filters)
 }
 
 // ListBySubscription retrieves transactions for a subscription

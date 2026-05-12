@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"backend/internal/repository"
 	"backend/internal/services"
 	"backend/internal/utils"
 
@@ -160,7 +161,7 @@ func (h *SubscriptionHandler) GetBillingHistory(c *gin.Context) {
 		limit = 10
 	}
 
-	invoices, total, err := h.subscriptionService.GetBillingHistory(c.Request.Context(), userID, page, limit)
+	invoices, total, err := h.subscriptionService.GetBillingHistory(c.Request.Context(), userID, page, limit, repository.TransactionListFilters{})
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve billing history", err.Error())
 		return

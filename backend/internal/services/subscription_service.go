@@ -196,9 +196,9 @@ func (s *SubscriptionService) CancelSubscription(ctx context.Context, userID, re
 }
 
 // GetBillingHistory retrieves user billing history
-func (s *SubscriptionService) GetBillingHistory(ctx context.Context, userID string, page, limit int) ([]map[string]interface{}, int, error) {
+func (s *SubscriptionService) GetBillingHistory(ctx context.Context, userID string, page, limit int, filters repository.TransactionListFilters) ([]map[string]interface{}, int, error) {
 	offset := (page - 1) * limit
-	transactions, total, err := s.txnRepo.GetByUserID(ctx, userID, offset, limit)
+	transactions, total, err := s.txnRepo.GetByUserIDFiltered(ctx, userID, offset, limit, filters)
 	if err != nil {
 		return nil, 0, err
 	}

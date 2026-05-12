@@ -44,6 +44,7 @@ export default function Refunds() {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [total, setTotal] = useState(0);
+  const [decisionNotes, setDecisionNotes] = useState<Record<string, string>>({});
 
   const [policy, setPolicy] = useState({
     duplicateWindow: 30,
@@ -136,13 +137,22 @@ export default function Refunds() {
         return;
       }
 
+      const note = String(decisionNotes[id] || '').trim();
+      const actionLabel = status.charAt(0).toUpperCase() + status.slice(1);
+      const confirmed = window.confirm(
+        `Confirm refund action: ${actionLabel}?${note ? `\n\nAdmin note: ${note}` : ''}`
+      );
+      if (!confirmed) {
+        return;
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/admin/refunds/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, admin_note: note }),
       });
 
       if (!response.ok) {
@@ -150,6 +160,7 @@ export default function Refunds() {
         throw new Error(errPayload?.error?.details || 'Failed to update refund status');
       }
 
+      setDecisionNotes((prev) => ({ ...prev, [id]: '' }));
       await fetchRefunds();
     } catch (err: any) {
       setError(err?.message || 'Failed to update refund status');
@@ -290,7 +301,7 @@ export default function Refunds() {
                     <th className="p-3 text-left">Parcel</th>
                     <th className="p-3 text-right">Paid (RWF)</th>
                     <th className="p-3 text-right">Req. (RWF)</th>
-                    <th className="p-3 text-left">Reason</th>
+                    <th className="p-3 text-left">Reason / Notes</th>
                     <th className="p-3 text-left">Submitted</th>
                     <th className="p-3 text-left">Status</th>
                     <th className="p-3 text-center">Actions</th>
@@ -314,7 +325,19 @@ export default function Refunds() {
                       <td className="p-3">{r.parcel}</td>
                       <td className="p-3 text-right">{fmt(r.paid)}</td>
                       <td className="p-3 text-right">{fmt(r.requested)}</td>
-                      <td className="p-3">{r.reason}</td>
+                      <td className="p-3">
+                        <p>{r.reason}</p>
+                        <input
+                          type="text"
+                          value={decisionNotes[r.id] ?? ''}
+                          onChange={(e) => setDecisionNotes((prev) => ({ ...prev, [r.id]: e.target.value }))}
+                          placeholder="Optional admin note"
+                          className="mt-2 w-full border rounded-md px-2 py-1 text-xs"
+                        />
+                        {r.adminNote ? (
+                          <p className="mt-1 text-xs text-gray-500">Latest note: {r.adminNote}</p>
+                        ) : null}
+                      </td>
                       <td className="p-3 text-gray-500">{r.submitted}</td>
                       <td className="p-3">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${STATUS_BADGE[r.status]}`}>

@@ -234,6 +234,7 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 
 			// Payment history and summary endpoints
 			protected.GET("/history", paymentHistorySummaryHandler.GetPaymentHistory)
+			protected.GET("/:id", paymentHistorySummaryHandler.GetPaymentHistoryItem)
 			protected.GET("/summary", paymentHistorySummaryHandler.GetPaymentSummary)
 			protected.POST("/refunds", refundHandler.CreateRefundRequest)
 			protected.GET("/refunds", refundHandler.GetUserRefundRequests)

@@ -620,6 +620,13 @@ function Dashboard() {
       return;
     }
 
+    const confirmed = window.confirm(
+      `Submit refund request for RWF ${requestedAmount.toLocaleString()}?\n\nReason: ${refundReason.trim()}`
+    );
+    if (!confirmed) {
+      return;
+    }
+
     const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
     if (!accessToken) {
       toast.error('Not authenticated. Please sign in again.');
