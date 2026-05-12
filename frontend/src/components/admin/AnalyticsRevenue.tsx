@@ -71,7 +71,7 @@ const AnalyticsRevenue: React.FC = () => {
   const formatMoney = (v: any) => Number(v || 0).toLocaleString();
 
   return (
-    <div style={{ maxWidth: 900, margin: '2rem auto', background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px #0001', padding: '2rem' }}>
+    <div style={{ width: '100%', maxWidth: '100%', margin: 0, background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px #0001', padding: '1.25rem' }}>
       <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1.5rem', color: '#2d6a4f' }}>Analytics & Revenue</h2>
       {/* Search bar with Search and Clear buttons */}
       <div style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center' }}>

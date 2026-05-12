@@ -821,6 +821,8 @@ function Dashboard() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDashboardTab, setActiveDashboardTab] = useState<DashboardTab>('overview');
+  const frontendBaseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXTAUTH_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001');
+  const logoutCallbackUrl = `${frontendBaseUrl.replace(/\/$/, '')}/auth/login`;
 
   const clearAuthAndRedirectToLogin = () => {
     if (authRedirecting) {
@@ -835,8 +837,8 @@ function Dashboard() {
 
   const handleLogout = async () => {
     clearAuth();
-    await signOut({ redirect: false });
-    router.push('/auth/login');
+    await signOut({ redirect: false, callbackUrl: logoutCallbackUrl });
+    window.location.href = logoutCallbackUrl;
   };
 
   const handleProfileFetchError = (error: any) => {

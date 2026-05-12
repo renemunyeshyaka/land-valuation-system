@@ -53,6 +53,8 @@ function AdminDashboard() {
     activeSubscriptions: 0,
   });
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+  const frontendBaseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXTAUTH_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001');
+  const logoutCallbackUrl = `${frontendBaseUrl.replace(/\/$/, '')}/auth/login`;
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -311,7 +313,7 @@ function AdminDashboard() {
           </div>
           <button
             className="w-full flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 font-medium transition"
-            onClick={() => signOut({ callbackUrl: '/auth/login' })}
+            onClick={() => signOut({ callbackUrl: logoutCallbackUrl })}
           >
             <i className="fas fa-sign-out-alt"></i>
             Logout
@@ -391,7 +393,7 @@ function AdminDashboard() {
           </div>
           <button
             className="w-full flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 font-medium transition"
-            onClick={() => signOut({ callbackUrl: '/auth/login' })}
+            onClick={() => signOut({ callbackUrl: logoutCallbackUrl })}
           >
             <i className="fas fa-sign-out-alt"></i>
             Logout
@@ -402,7 +404,7 @@ function AdminDashboard() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-screen">
         {/* Top header */}
-        <header className="bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+        <header className="bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-200 px-4 md:px-5 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
             <button
               type="button"
@@ -424,7 +426,7 @@ function AdminDashboard() {
         </header>
 
         {/* Section Content */}
-        <div className="flex-1 p-6 md:p-8">
+        <div className="flex-1 p-3 md:p-4 lg:p-5">
           {renderSection()}
         </div>
         <Footer />

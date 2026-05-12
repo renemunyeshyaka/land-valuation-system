@@ -226,7 +226,7 @@ const UserManagement: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: '2rem auto', background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px #0001', padding: '2rem' }}>
+    <div style={{ width: '100%', maxWidth: '100%', margin: 0, background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px #0001', padding: '1.25rem' }}>
       <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1.5rem', color: '#2d6a4f' }}>User Management</h2>
       <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
         <button onClick={() => { setShowAdd(true); reset(); }} style={{ background: '#2d6a4f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.75rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Add User</button>
@@ -261,7 +261,8 @@ const UserManagement: React.FC = () => {
           <p>Loading users...</p>
         ) : (
           <>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
+            <div style={{ width: '100%', overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16, minWidth: 920 }}>
               <thead>
                 <tr style={{ background: '#f3f4f6' }}>
                   <th style={{ padding: 8, border: '1px solid #eee' }}>User ID</th>
@@ -280,14 +281,17 @@ const UserManagement: React.FC = () => {
                     <td style={{ padding: 8, border: '1px solid #eee' }}>{user.last_name}</td>
                     <td style={{ padding: 8, border: '1px solid #eee' }}>{user.email}</td>
                     <td style={{ padding: 8, border: '1px solid #eee' }}>{getUserStatusLabel(user)}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee' }}>
-                      <button onClick={() => { setEditUser(user); setShowEdit(true); reset({ ...user, status: getEditableStatus(user) }); }} style={{ marginRight: 8, background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                      <button onClick={() => setDeleteUserId(user.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                    <td style={{ padding: 8, border: '1px solid #eee', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'inline-flex', gap: 8, whiteSpace: 'nowrap' }}>
+                        <button onClick={() => { setEditUser(user); setShowEdit(true); reset({ ...user, status: getEditableStatus(user) }); }} style={{ background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                        <button onClick={() => setDeleteUserId(user.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, gap: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 14, color: '#666' }}>Page {currentPage} of {totalPages}</span>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
