@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import PartnerDashboardPage from './dashboard';
+import PartnerDashboardPage from '../../../pages/partner/dashboard';
 
 const pushMock = jest.fn();
 const replaceMock = jest.fn();
@@ -18,7 +18,7 @@ jest.mock('next/router', () => ({
   useRouter: () => routerState,
 }));
 
-jest.mock('../../utils/tokenRefresh', () => ({
+jest.mock('@/utils/tokenRefresh', () => ({
   clearAuth: jest.fn(),
   fetchWithTokenRefresh: (...args: any[]) => fetchWithTokenRefreshMock(...args),
 }));

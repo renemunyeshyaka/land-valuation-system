@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import AddPropertyPage from './add';
+import AddPropertyPage from '../../../../pages/properties/add';
 
 const pushMock = jest.fn();
 const replaceMock = jest.fn();
@@ -13,15 +13,15 @@ jest.mock('next/router', () => ({
   }),
 }));
 
-jest.mock('../../src/utils/tokenRefresh', () => ({
+jest.mock('@/utils/tokenRefresh', () => ({
   fetchWithTokenRefresh: (...args: any[]) => fetchWithTokenRefreshMock(...args),
 }));
 
-jest.mock('../../src/components/AddPropertyForm', () => function MockAddPropertyForm() {
+jest.mock('@/components/AddPropertyForm', () => function MockAddPropertyForm() {
   return <div data-testid="add-property-form">mock form</div>;
 });
 
-jest.mock('../../src/components/FourStepProcess', () => function MockFourStepProcess() {
+jest.mock('@/components/FourStepProcess', () => function MockFourStepProcess() {
   return <div data-testid="four-step-process">mock steps</div>;
 });
 

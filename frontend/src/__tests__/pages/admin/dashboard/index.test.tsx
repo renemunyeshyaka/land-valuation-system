@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import AdminDashboard from './index';
+import AdminDashboard from '../../../../pages/admin/dashboard/index';
 
 const replaceMock = jest.fn();
 
