@@ -51,10 +51,17 @@ const getCachedPartnerUser = (): PartnerUser | null => {
 
 export default function PartnerDashboardPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(() => !getCachedPartnerUser());
+  const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<PartnerTab>('overview');
-  const [user, setUser] = useState<PartnerUser | null>(() => getCachedPartnerUser());
+  const [user, setUser] = useState<PartnerUser | null>(null);
+
+  useEffect(() => {
+    const cachedUser = getCachedPartnerUser();
+    if (cachedUser) {
+      setUser(cachedUser);
+    }
+  }, []);
 
   useEffect(() => {
     if (!router.isReady) return;

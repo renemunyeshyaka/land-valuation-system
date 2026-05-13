@@ -47,6 +47,7 @@ function AdminDashboard() {
   const router = useRouter();
   const { data: session } = useSession();
   const [profile, setProfile] = useState<{ fullName: string; firstName: string; email: string } | null>(null);
+  const [cachedProfile, setCachedProfile] = useState<{ fullName: string; firstName: string; email: string } | null>(null);
   const [overview, setOverview] = useState({
     totalProperties: 0,
     activeUsers: 0,
@@ -107,6 +108,10 @@ function AdminDashboard() {
       return null;
     }
   };
+
+  useEffect(() => {
+    setCachedProfile(getStoredUserProfile());
+  }, []);
 
   const getAuthToken = () => {
     if (session && (session as any).accessToken) return (session as any).accessToken as string;
@@ -258,10 +263,9 @@ function AdminDashboard() {
 
   // Prefer profile from backend, fallback to session/local user cache
   const sessionName = session?.user?.name || null;
-  const storedProfile = getStoredUserProfile();
-  const fullName = profile?.fullName || sessionName || storedProfile?.fullName || 'Admin';
-  const firstName = profile?.firstName || (sessionName ? sessionName.split(' ')[0] : (storedProfile?.firstName || 'Admin'));
-  const email = profile?.email || session?.user?.email || storedProfile?.email || 'No email';
+  const fullName = profile?.fullName || sessionName || cachedProfile?.fullName || 'Admin';
+  const firstName = profile?.firstName || (sessionName ? sessionName.split(' ')[0] : (cachedProfile?.firstName || 'Admin'));
+  const email = profile?.email || session?.user?.email || cachedProfile?.email || 'No email';
 
   const switchToUltimateDashboard = () => {
     if (typeof window !== 'undefined') {
@@ -271,7 +275,7 @@ function AdminDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Sidebar */}
       <aside className="admin-sidebar w-72 bg-white border-r border-gray-200 shadow-xl z-20 flex-shrink-0 overflow-y-auto hidden lg:block">
         <div className="px-6 py-6 flex items-center gap-2 border-b border-gray-100">

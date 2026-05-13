@@ -808,8 +808,8 @@ function Dashboard() {
     activateDashboardTab(tabFromQuery, false);
   }, [router.isReady, router.query?.tab]);
 
-  const [user, setUser] = useState<UserData | null>(() => getCachedDashboardUser());
-  const [loading, setLoading] = useState(() => !getCachedDashboardUser());
+  const [user, setUser] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [authRedirecting, setAuthRedirecting] = useState(false);
   const [selectorError, setSelectorError] = useState<string | null>(null);
   const [tokenExpired, setTokenExpired] = useState(false);
@@ -823,6 +823,24 @@ function Dashboard() {
   const [activeDashboardTab, setActiveDashboardTab] = useState<DashboardTab>('overview');
   const frontendBaseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXTAUTH_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001');
   const logoutCallbackUrl = `${frontendBaseUrl.replace(/\/$/, '')}/auth/login`;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const cachedUser = getCachedDashboardUser();
+    if (cachedUser) {
+      setUser((current) => current || cachedUser);
+      setLoading(false);
+      return;
+    }
+
+    const accessToken = localStorage.getItem('access_token');
+    if (!accessToken) {
+      setLoading(false);
+    }
+  }, []);
 
   const clearAuthAndRedirectToLogin = () => {
     if (authRedirecting) {
@@ -1205,7 +1223,6 @@ function Dashboard() {
   const tierInfo = user ? getTierInfo(user.subscriptionTier) : null;
   const normalizedUserType = String(user?.userType || '').toLowerCase();
   const canAddProperty = normalizedUserType !== 'government' && normalizedUserType !== 'partner' && normalizedUserType !== 'gov_partner';
-  const hasStoredAccessToken = typeof window !== 'undefined' && Boolean(localStorage.getItem('access_token'));
   const usedValuations = user?.recentValuations.length || 0;
   const maxValuations = tierInfo?.valuations || 3;
   const unreadNotifications = notifications.filter((item) => !item.read).length;
