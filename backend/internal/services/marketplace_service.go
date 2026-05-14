@@ -110,24 +110,24 @@ func (s *MarketplaceService) GetAllPropertiesOnSaleWithFilters(ctx context.Conte
 
 	// Add location filters
 	if province != "" {
-		query = query.Where("LOWER(province) = ?", province)
+		query = query.Where("LOWER(province) = LOWER(?)", province)
 	}
 	if district != "" {
-		query = query.Where("LOWER(district) = ?", district)
+		query = query.Where("LOWER(district) = LOWER(?)", district)
 	}
 	if sector != "" {
-		query = query.Where("LOWER(sector) = ?", sector)
+		query = query.Where("LOWER(sector) = LOWER(?)", sector)
 	}
 	if cell != "" {
-		query = query.Where("LOWER(cell) = ?", cell)
+		query = query.Where("LOWER(cell) = LOWER(?)", cell)
 	}
 	if village != "" {
-		query = query.Where("LOWER(village) = ?", village)
+		query = query.Where("LOWER(village) = LOWER(?)", village)
 	}
 
 	// Add property type filter
 	if propertyType != "" {
-		query = query.Where("LOWER(property_type) = ?", propertyType)
+		query = query.Where("LOWER(property_type) = LOWER(?)", propertyType)
 	}
 
 	// Add price range filters
