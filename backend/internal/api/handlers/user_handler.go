@@ -72,10 +72,35 @@ type UserHandler struct {
 }
 
 type AdminUpdateUserRequest struct {
-	FirstName string `json:"first_name" binding:"required,min=1"`
-	LastName  string `json:"last_name" binding:"required,min=1"`
-	Email     string `json:"email" binding:"required,email"`
-	Status    string `json:"status" binding:"omitempty,oneof=pending active"`
+	FirstName          string `json:"first_name" binding:"required,min=1"`
+	LastName           string `json:"last_name" binding:"required,min=1"`
+	Email              string `json:"email" binding:"required,email"`
+	Phone              string `json:"phone"`
+	NationalID         string `json:"national_id"`
+	UserType           string `json:"user_type" binding:"omitempty,oneof=individual agent corporate government admin partner gov_partner"`
+	FullName           string `json:"full_name"`
+	CompanyName        string `json:"company_name"`
+	BusinessLicense    string `json:"business_license"`
+	PreferredLanguage  string `json:"preferred_language"`
+	LanguagePreference string `json:"language_preference"`
+	City               string `json:"city"`
+	Country            string `json:"country"`
+	Bio                string `json:"bio"`
+	ProfileImage       string `json:"profile_image"`
+	ProfilePictureURL  string `json:"profile_picture_url"`
+	SubscriptionTier   string `json:"subscription_tier" binding:"omitempty,oneof=free basic professional ultimate"`
+	SubscriptionStatus string `json:"subscription_status" binding:"omitempty,oneof=inactive active past_due cancelled"`
+	KYCStatus          string `json:"kyc_status" binding:"omitempty,oneof=pending submitted verified rejected active approved"`
+	Status             string `json:"status" binding:"omitempty,oneof=pending active"`
+	IsActive           *bool  `json:"is_active"`
+	EmailVerified      *bool  `json:"email_verified"`
+	IsVerified         *bool  `json:"is_verified"`
+	IsDiaspora         *bool  `json:"is_diaspora"`
+	NotificationEmail  *bool  `json:"notification_email"`
+	NotificationSMS    *bool  `json:"notification_sms"`
+	TwoFactorEnabled   *bool  `json:"two_factor_enabled"`
+	TwoFAEnabled       *bool  `json:"two_fa_enabled"`
+	IsUltimateNoExpiry *bool  `json:"is_ultimate_no_expiry"`
 }
 
 // ExportUsers allows admin to export user data as CSV or PDF
@@ -175,10 +200,42 @@ func (h *UserHandler) UpdateUserByAdmin(c *gin.Context) {
 	updatedUser, err := h.userService.UpdateUserByAdmin(
 		c.Request.Context(),
 		userID,
-		req.FirstName,
-		req.LastName,
-		req.Email,
+		&models.User{
+			FirstName:          req.FirstName,
+			LastName:           req.LastName,
+			Email:              req.Email,
+			Phone:              req.Phone,
+			NationalID:         req.NationalID,
+			UserType:           req.UserType,
+			FullName:           req.FullName,
+			CompanyName:        req.CompanyName,
+			BusinessLicense:    req.BusinessLicense,
+			PreferredLanguage:  req.PreferredLanguage,
+			LanguagePreference: req.LanguagePreference,
+			City:               req.City,
+			Country:            req.Country,
+			Bio:                req.Bio,
+			ProfileImage:       req.ProfileImage,
+			ProfilePictureURL:  req.ProfilePictureURL,
+			SubscriptionTier:   req.SubscriptionTier,
+			SubscriptionStatus: req.SubscriptionStatus,
+			KYCStatus:          req.KYCStatus,
+		},
 		req.Status,
+		req.IsActive,
+		req.EmailVerified,
+		req.IsVerified,
+		req.IsDiaspora,
+		req.NotificationEmail,
+		req.NotificationSMS,
+		req.TwoFactorEnabled,
+		req.TwoFAEnabled,
+		req.IsUltimateNoExpiry,
+		&services.AdminUserAuditMetadata{
+			ActorUserID: c.MustGet("user_id").(string),
+			IPAddress:   c.ClientIP(),
+			UserAgent:   c.Request.UserAgent(),
+		},
 	)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Failed to update user", err.Error())

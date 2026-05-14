@@ -3,6 +3,63 @@ import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import { refreshAccessToken } from '../../utils/tokenRefresh';
 
+type AuditActionMeta = {
+  label: string;
+  category: string;
+  badgeBg: string;
+  badgeColor: string;
+};
+
+const ACTION_META_MAP: Record<string, AuditActionMeta> = {
+  admin_user_role_updated: {
+    label: 'User Role Updated',
+    category: 'Role',
+    badgeBg: '#f3e8ff',
+    badgeColor: '#6b21a8',
+  },
+  admin_user_access_updated: {
+    label: 'User Access Updated',
+    category: 'Access',
+    badgeBg: '#ede9fe',
+    badgeColor: '#5b21b6',
+  },
+  admin_user_profile_updated: {
+    label: 'User Profile Updated',
+    category: 'Profile',
+    badgeBg: '#e0f2fe',
+    badgeColor: '#0369a1',
+  },
+};
+
+const humanizeAction = (action: string) =>
+  action
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+
+const getAuditActionMeta = (rawAction: unknown): AuditActionMeta => {
+  const action = String(rawAction || '').trim();
+  if (!action) {
+    return {
+      label: '-',
+      category: 'Other',
+      badgeBg: '#f3f4f6',
+      badgeColor: '#374151',
+    };
+  }
+
+  const exact = ACTION_META_MAP[action.toLowerCase()];
+  if (exact) return exact;
+
+  return {
+    label: humanizeAction(action),
+    category: 'Other',
+    badgeBg: '#f3f4f6',
+    badgeColor: '#374151',
+  };
+};
+
 const SupportModeration = () => {
   const [search, setSearch] = useState('');
   const [tickets, setTickets] = useState<any[]>([]);
@@ -127,21 +184,39 @@ const SupportModeration = () => {
                   <th style={{ padding: 8, border: '1px solid #eee' }}>Log ID</th>
                   <th style={{ padding: 8, border: '1px solid #eee' }}>User</th>
                   <th style={{ padding: 8, border: '1px solid #eee' }}>Action</th>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Category</th>
                   <th style={{ padding: 8, border: '1px solid #eee' }}>Timestamp</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((t) => (
-                  <tr key={t.id}>
+                  <tr key={t.id} data-testid={`audit-log-row-${t.id}`}>
                     <td style={{ padding: 8, border: '1px solid #eee' }}>{t.id}</td>
                     <td style={{ padding: 8, border: '1px solid #eee' }}>{t.user_id || '-'}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee' }}>{t.action || '-'}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>{getAuditActionMeta(t.action).label}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>
+                      <span
+                        data-testid={`audit-category-badge-${t.id}`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: 999,
+                          fontWeight: 700,
+                          fontSize: 12,
+                          background: getAuditActionMeta(t.action).badgeBg,
+                          color: getAuditActionMeta(t.action).badgeColor,
+                        }}
+                      >
+                        {getAuditActionMeta(t.action).category}
+                      </span>
+                    </td>
                     <td style={{ padding: 8, border: '1px solid #eee' }}>{t.timestamp || '-'}</td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={4} style={{ padding: 12, border: '1px solid #eee', textAlign: 'center', color: '#666' }}>No logs found</td>
+                    <td colSpan={5} style={{ padding: 12, border: '1px solid #eee', textAlign: 'center', color: '#666' }}>No logs found</td>
                   </tr>
                 )}
               </tbody>

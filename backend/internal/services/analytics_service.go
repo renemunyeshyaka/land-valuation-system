@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -124,14 +126,107 @@ func (s *AnalyticsService) ExportReport(ctx context.Context, userID, format stri
 
 // GetRevenueAnalytics retrieves revenue analytics (admin)
 func (s *AnalyticsService) GetRevenueAnalytics(ctx context.Context, timeRange string) (map[string]interface{}, error) {
-	// TODO: Calculate platform-wide revenue
-	revenue := map[string]interface{}{
-		"total_revenue":        5000000,
-		"subscription_revenue": 3000000,
-		"valuation_revenue":    2000000,
-		"active_users":         125,
-		"mrr":                  500000,
+	if s.db == nil {
+		return map[string]interface{}{
+			"total_revenue":           0,
+			"subscription_revenue":    0,
+			"valuation_revenue":       0,
+			"premium_feature_revenue": 0,
+			"active_users":            0,
+			"mrr":                     0,
+			"range":                   normalizeAnalyticsRange(timeRange),
+		}, nil
 	}
 
-	return revenue, nil
+	start, end := analyticsRangeBounds(timeRange, time.Now())
+	monthStart := time.Date(end.Year(), end.Month(), 1, 0, 0, 0, 0, end.Location())
+
+	type revenueAggregate struct {
+		TotalRevenue          float64
+		SubscriptionRevenue   float64
+		ValuationRevenue      float64
+		PremiumFeatureRevenue float64
+	}
+
+	var totals revenueAggregate
+	err := s.db.WithContext(ctx).
+		Table("transactions").
+		Select(`
+			COALESCE(SUM(CASE
+				WHEN LOWER(transaction_type) IN ('subscription', 'valuation', 'premium_feature') THEN amount
+				ELSE 0
+			END), 0) AS total_revenue,
+			COALESCE(SUM(CASE
+				WHEN LOWER(transaction_type) = 'subscription' THEN amount
+				ELSE 0
+			END), 0) AS subscription_revenue,
+			COALESCE(SUM(CASE
+				WHEN LOWER(transaction_type) = 'valuation' THEN amount
+				ELSE 0
+			END), 0) AS valuation_revenue,
+			COALESCE(SUM(CASE
+				WHEN LOWER(transaction_type) = 'premium_feature' THEN amount
+				ELSE 0
+			END), 0) AS premium_feature_revenue`).
+		Where("created_at >= ? AND created_at <= ?", start, end).
+		Where("LOWER(status) = ? OR LOWER(payment_status) IN ?", "completed", []string{"success", "verified", "blockchain_confirmed"}).
+		Scan(&totals).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var activeUsers int64
+	if err := s.db.WithContext(ctx).Table("users").Where("is_active = ? AND deleted_at IS NULL", true).Count(&activeUsers).Error; err != nil {
+		return nil, err
+	}
+
+	var mrr float64
+	err = s.db.WithContext(ctx).
+		Table("transactions").
+		Select("COALESCE(SUM(amount), 0)").
+		Where("created_at >= ? AND created_at <= ?", monthStart, end).
+		Where("LOWER(transaction_type) = ?", "subscription").
+		Where("LOWER(status) = ? OR LOWER(payment_status) IN ?", "completed", []string{"success", "verified", "blockchain_confirmed"}).
+		Scan(&mrr).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]interface{}{
+		"total_revenue":           totals.TotalRevenue,
+		"subscription_revenue":    totals.SubscriptionRevenue,
+		"valuation_revenue":       totals.ValuationRevenue,
+		"premium_feature_revenue": totals.PremiumFeatureRevenue,
+		"active_users":            activeUsers,
+		"mrr":                     mrr,
+		"range":                   normalizeAnalyticsRange(timeRange),
+		"range_start":             start,
+		"range_end":               end,
+	}, nil
+}
+
+func normalizeAnalyticsRange(timeRange string) string {
+	normalized := strings.ToLower(strings.TrimSpace(timeRange))
+	switch normalized {
+	case "7d", "30d", "90d", "180d", "1y", "12m":
+		return normalized
+	default:
+		return "30d"
+	}
+}
+
+func analyticsRangeBounds(timeRange string, now time.Time) (time.Time, time.Time) {
+	end := now
+	switch normalizeAnalyticsRange(timeRange) {
+	case "7d":
+		return end.AddDate(0, 0, -7), end
+	case "90d":
+		return end.AddDate(0, 0, -90), end
+	case "180d":
+		return end.AddDate(0, 0, -180), end
+	case "1y", "12m":
+		return end.AddDate(-1, 0, 0), end
+	default:
+		return end.AddDate(0, 0, -30), end
+	}
 }
