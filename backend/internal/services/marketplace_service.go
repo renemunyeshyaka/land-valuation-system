@@ -89,6 +89,84 @@ func (s *MarketplaceService) GetAllPropertiesOnSale(ctx context.Context, page, l
 	return listings, int(total), nil
 }
 
+// GetAllPropertiesOnSaleWithFilters retrieves properties for sale with optional filters
+func (s *MarketplaceService) GetAllPropertiesOnSaleWithFilters(ctx context.Context, page, limit int,
+	province, district, sector, cell, village, propertyType, search string, priceMin, priceMax int64) ([]interface{}, int, error) {
+
+	var properties []models.Property
+	var total int64
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+
+	offset := (page - 1) * limit
+	query := s.db.WithContext(ctx).Model(&models.Property{}).
+		Where("visibility = ?", "public").
+		Where("LOWER(status) NOT IN ?", []string{"sold", "rented"})
+
+	// Add location filters
+	if province != "" {
+		query = query.Where("LOWER(province) = ?", province)
+	}
+	if district != "" {
+		query = query.Where("LOWER(district) = ?", district)
+	}
+	if sector != "" {
+		query = query.Where("LOWER(sector) = ?", sector)
+	}
+	if cell != "" {
+		query = query.Where("LOWER(cell) = ?", cell)
+	}
+	if village != "" {
+		query = query.Where("LOWER(village) = ?", village)
+	}
+
+	// Add property type filter
+	if propertyType != "" {
+		query = query.Where("LOWER(property_type) = ?", propertyType)
+	}
+
+	// Add price range filters
+	if priceMin > 0 {
+		query = query.Where("price >= ?", priceMin)
+	}
+	if priceMax > 0 {
+		query = query.Where("price <= ?", priceMax)
+	}
+
+	// Add search filter (search in title and description)
+	if search != "" {
+		query = query.Where("LOWER(title) LIKE ? OR LOWER(description) LIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	// Get total count
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Fetch results with pagination
+	err := query.
+		Limit(limit).
+		Offset(offset).
+		Order("created_at DESC").
+		Find(&properties).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Convert to []interface{} for compatibility
+	listings := make([]interface{}, len(properties))
+	for i, p := range properties {
+		listings[i] = p
+	}
+	return listings, int(total), nil
+}
+
 func NewMarketplaceService(db *gorm.DB) *MarketplaceService {
 	return &MarketplaceService{
 		db: db,

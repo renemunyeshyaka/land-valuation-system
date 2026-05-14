@@ -97,14 +97,33 @@ func (h *MarketplaceHandler) SyncMarketplaceAPIs(c *gin.Context) {
 // @Produce json
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
+// @Param province query string false "Filter by province"
+// @Param district query string false "Filter by district"
+// @Param sector query string false "Filter by sector"
+// @Param cell query string false "Filter by cell"
+// @Param village query string false "Filter by village"
+// @Param property_type query string false "Filter by property type"
+// @Param price_min query int false "Minimum price"
+// @Param price_max query int false "Maximum price"
+// @Param search query string false "Search in title and description"
 // @Success 200 {object} utils.APIResponse
 // @Failure 500 {object} utils.APIResponse
 // @Router /marketplace/properties-for-sale [get]
 func (h *MarketplaceHandler) GetPropertyListingsOnSale(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	province := c.Query("province")
+	district := c.Query("district")
+	sector := c.Query("sector")
+	cell := c.Query("cell")
+	village := c.Query("village")
+	propertyType := c.Query("property_type")
+	search := c.Query("search")
+	priceMin, _ := strconv.ParseInt(c.Query("price_min"), 10, 64)
+	priceMax, _ := strconv.ParseInt(c.Query("price_max"), 10, 64)
 
-	listings, total, err := h.marketplaceService.GetAllPropertiesOnSale(c.Request.Context(), page, limit)
+	listings, total, err := h.marketplaceService.GetAllPropertiesOnSaleWithFilters(
+		c.Request.Context(), page, limit, province, district, sector, cell, village, propertyType, search, priceMin, priceMax)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve listings", err.Error())
 		return

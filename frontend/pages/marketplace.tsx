@@ -111,8 +111,18 @@ export default function Marketplace() {
       const params = new URLSearchParams();
       params.append('page', String(currentPage));
       params.append('limit', String(pageSize));
-      if (search) params.append('search', search); // Optionally pass search to backend if supported
-      // TODO: Add filter params if backend supports them
+      
+      // Add filter parameters
+      if (search) params.append('search', search);
+      if (province) params.append('province', province);
+      if (district) params.append('district', district);
+      if (sector) params.append('sector', sector);
+      if (cell) params.append('cell', cell);
+      if (village) params.append('village', village);
+      if (type) params.append('property_type', type);
+      if (priceMin) params.append('price_min', priceMin);
+      if (priceMax) params.append('price_max', priceMax);
+      
       const res = await fetch(`${apiUrl}/api/v1/marketplace/properties-for-sale?${params.toString()}&t=${Date.now()}`, {
         cache: 'no-store',
       });
@@ -325,19 +335,24 @@ export default function Marketplace() {
             >
               {priceRanges.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
-            {/* Text search */}
-            <input
-              type="text"
-              placeholder="Search by title, district, sector, or description..."
-              value={search}
-              onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            {/* Search Button */}
+            <button
+              className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition"
+              onClick={() => {
+                setCurrentPage(1);
+                fetchProperties();
+              }}
+              type="button"
+            >
+              <i className="fas fa-search mr-2"></i>Search
+            </button>
             {/* Clear button */}
             <button
               className="w-full px-4 py-2 bg-gray-200 rounded-lg text-gray-700 font-semibold hover:bg-gray-300"
               onClick={() => {
                 setSearch(''); setProvince(''); setDistrict(''); setSector(''); setCell(''); setVillage(''); setType(''); setPriceMin(''); setPriceMax(''); setCurrentPage(1);
+                // Fetch without filters
+                setTimeout(() => fetchProperties(), 0);
               }}
               type="button"
             >
