@@ -5,7 +5,7 @@
 -- Properties table indexes for location-based search
 CREATE INDEX IF NOT EXISTS idx_properties_district_sector ON properties(district, sector);
 CREATE INDEX IF NOT EXISTS idx_properties_location_coords ON properties(latitude, longitude);
-CREATE INDEX IF NOT EXISTS idx_properties_area ON properties(area_sqm);
+-- CREATE INDEX IF NOT EXISTS idx_properties_area ON properties(area_sqm); -- Removed: area_sqm does not exist in properties
 CREATE INDEX IF NOT EXISTS idx_properties_market_price ON properties(market_price_rwf);
 CREATE INDEX IF NOT EXISTS idx_properties_created_at ON properties(created_at);
 
