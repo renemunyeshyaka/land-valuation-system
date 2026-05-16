@@ -38,6 +38,7 @@ script/
 
 ## Build outputs
 dist/
+backend/property_images/
 build/
 .next/
 out/
