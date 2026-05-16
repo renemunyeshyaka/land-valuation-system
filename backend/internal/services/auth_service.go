@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"strings"
 	"time"
 
 	"backend/internal/models"
@@ -100,14 +101,22 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*model
 	if err != nil {
 		return nil, errors.New("invalid credentials")
 	}
+	if user == nil {
+		return nil, errors.New("invalid credentials")
+	}
+
+	// FIX: Convert $2b$ to $2a$ for Go compatibility
+	hash := user.PasswordHash
+	if strings.HasPrefix(hash, "$2b$") {
+		hash = "$2a$" + hash[4:]
+	}
 
 	// Check if email is verified
 	if !user.EmailVerified {
 		return nil, errors.New("email not verified. Please check your email for verification code")
 	}
 
-	// Verify password
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	if err != nil {
 		return nil, errors.New("invalid credentials")
 	}
