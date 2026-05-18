@@ -363,9 +363,9 @@ export default function Marketplace() {
           {loading && (
             <div className="text-center py-10 text-lg text-gray-500">Loading properties...</div>
           )}
-          {!loading && loadTime !== null && (
+          {/* {!loading && loadTime !== null && (
             <div className="text-center text-xs text-gray-400 mb-2">First load time: {formatSeconds(loadTime)} (max 10s target)</div>
-          )}
+          )} */}
           {error && (
             <div className="text-center py-10 text-red-500">{error}</div>
           )}
