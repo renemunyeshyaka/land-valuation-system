@@ -254,29 +254,29 @@ const NotificationManagement: React.FC = () => {
           <table className="min-w-full bg-white rounded shadow text-sm">
             <thead>
               <tr>
-                <th className="px-3 py-2 border-b">ID</th>
+                <th className="px-3 py-2 border-b hidden md:table-cell">ID</th>
                 <th className="px-3 py-2 border-b">Title</th>
                 <th className="px-3 py-2 border-b">Message</th>
-                <th className="px-3 py-2 border-b">Type</th>
-                <th className="px-3 py-2 border-b">User ID</th>
-                <th className="px-3 py-2 border-b">Sent By</th>
-                <th className="px-3 py-2 border-b">Created At</th>
+                <th className="px-3 py-2 border-b hidden md:table-cell">Type</th>
+                <th className="px-3 py-2 border-b hidden lg:table-cell">User ID</th>
+                <th className="px-3 py-2 border-b hidden lg:table-cell">Sent By</th>
+                <th className="px-3 py-2 border-b hidden sm:table-cell">Created At</th>
                 <th className="px-3 py-2 border-b">Actions</th>
               </tr>
             </thead>
             <tbody>
               {Array.isArray(notifications) && notifications.map((n) => (
                 <tr key={n.id}>
-                  <td className="px-3 py-2 border-b">{n.id}</td>
+                  <td className="px-3 py-2 border-b hidden md:table-cell">{n.id}</td>
                   <td className="px-3 py-2 border-b">{n.title}</td>
-                  <td className="px-3 py-2 border-b">{n.message}</td>
-                  <td className="px-3 py-2 border-b">{n.type}</td>
-                  <td className="px-3 py-2 border-b">{n.user_id || '-'}</td>
-                  <td className="px-3 py-2 border-b">{n.sent_by || '-'}</td>
-                  <td className="px-3 py-2 border-b">{n.created_at ? new Date(n.created_at).toLocaleString() : '-'}</td>
-                  <td className="px-3 py-2 border-b">
-                    <button className="text-blue-600 hover:underline mr-2" onClick={() => handleEdit(n)}>Edit</button>
-                    <button className="text-red-600 hover:underline" onClick={() => handleDelete(n.id)}>Delete</button>
+                  <td className="px-3 py-2 border-b max-w-[200px] truncate">{n.message}</td>
+                  <td className="px-3 py-2 border-b hidden md:table-cell">{n.type}</td>
+                  <td className="px-3 py-2 border-b hidden lg:table-cell">{n.user_id || '-'}</td>
+                  <td className="px-3 py-2 border-b hidden lg:table-cell">{n.sent_by || '-'}</td>
+                  <td className="px-3 py-2 border-b hidden sm:table-cell">{n.created_at ? new Date(n.created_at).toLocaleString() : '-'}</td>
+                  <td className="px-3 py-2 border-b whitespace-nowrap">
+                    <button className="text-blue-600 hover:underline mr-2 text-xs" onClick={() => handleEdit(n)}>Edit</button>
+                    <button className="text-red-600 hover:underline text-xs" onClick={() => handleDelete(n.id)}>Delete</button>
                   </td>
                 </tr>
               ))}

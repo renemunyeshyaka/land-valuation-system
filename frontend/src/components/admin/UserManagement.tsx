@@ -471,13 +471,13 @@ const UserManagement: React.FC = () => {
         <button disabled style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.75rem 1.5rem', fontWeight: 600, cursor: 'not-allowed', opacity: 0.7 }}>Delete User (select row)</button>
       </div>
       {/* Search bar with Search and Clear buttons */}
-      <div style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center' }}>
+      <div style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           type="text"
           placeholder="Search by name, email, phone, or national ID..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ width: 320, padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
+          style={{ width: 'min(320px, 100%)', padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
         />
         <button
           onClick={() => fetchUsers(search, 1)}
@@ -499,36 +499,35 @@ const UserManagement: React.FC = () => {
         ) : (
           <>
             <div style={{ width: '100%', overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16, minWidth: 920 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16, minWidth: 650 }}>
               <thead>
                 <tr style={{ background: '#f3f4f6' }}>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>User ID</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>First Name</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Last Name</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Email</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>User Type</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Ultimate No Expiry</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Status</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Actions</th>
+                  <th style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>ID</th>
+                  <th style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>First Name</th>
+                  <th style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>Last Name</th>
+                  <th style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>Email</th>
+                  <th style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>Type</th>
+                  <th className="hidden sm:table-cell" style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>Ultimate</th>
+                  <th style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>Status</th>
+                  <th style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12, minWidth: 80 }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {Array.isArray(users) && users.map(user => (
                   <tr key={user.id}>
-                    <td style={{ padding: 8, border: '1px solid #eee', fontFamily: 'monospace' }}>{String(user.id)}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee' }}>{user.first_name}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee' }}>{user.last_name}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee' }}>{user.email}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee' }}>{user.user_type || 'individual'}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee' }}>{user.is_ultimate_no_expiry ? 'Yes' : 'No'}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee' }}>{getUserStatusLabel(user)}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee', whiteSpace: 'nowrap' }}>
-                      <div style={{ display: 'inline-flex', gap: 8, whiteSpace: 'nowrap' }}>
-                        <button onClick={() => { setViewUser(user); setShowView(true); }} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>View</button>
-                        <button onClick={() => openEdit(user)} style={{ background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                        <button onClick={() => openManageRole(user)} style={{ background: '#6b21a8', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Role</button>
-                        <button onClick={() => openManageAccess(user)} style={{ background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Ultimate</button>
-                        <button onClick={() => setDeleteUserId(user.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                    <td style={{ padding: '6px 4px', border: '1px solid #eee', fontFamily: 'monospace', fontSize: 11 }}>{String(user.id)}</td>
+                    <td style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>{user.first_name}</td>
+                    <td style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>{user.last_name}</td>
+                    <td style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 11, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</td>
+                    <td style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 11 }}>{user.user_type || '-'}</td>
+                    <td className="hidden sm:table-cell" style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 11 }}>{user.is_ultimate_no_expiry ? 'Yes' : 'No'}</td>
+                    <td style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 11 }}>{getUserStatusLabel(user)}</td>
+                    <td style={{ padding: '6px 4px', border: '1px solid #eee' }}>
+                      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                        <button onClick={() => { setViewUser(user); setShowView(true); }} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, padding: '0.25rem 0.45rem', fontSize: 11, fontWeight: 600, cursor: 'pointer' }} title="View"><i className="fas fa-eye"></i></button>
+                        <button onClick={() => openEdit(user)} style={{ background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 4, padding: '0.25rem 0.45rem', fontSize: 11, fontWeight: 600, cursor: 'pointer' }} title="Edit"><i className="fas fa-edit"></i></button>
+                        <button onClick={() => openManageRole(user)} style={{ background: '#6b21a8', color: '#fff', border: 'none', borderRadius: 4, padding: '0.25rem 0.45rem', fontSize: 11, fontWeight: 600, cursor: 'pointer' }} title="Role"><i className="fas fa-user-tag"></i></button>
+                        <button onClick={() => setDeleteUserId(user.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 4, padding: '0.25rem 0.45rem', fontSize: 11, fontWeight: 600, cursor: 'pointer' }} title="Delete"><i className="fas fa-trash"></i></button>
                       </div>
                     </td>
                   </tr>
@@ -577,8 +576,8 @@ const UserManagement: React.FC = () => {
 
       {/* Add User Modal */}
       {showAdd && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <form onSubmit={handleSubmit(onAdd)} style={{ background: '#fff', padding: 32, borderRadius: 12, minWidth: 320 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
+          <form onSubmit={handleSubmit(onAdd)} style={{ background: '#fff', padding: '24px 16px', borderRadius: 12, width: 'min(600px, 100%)', maxHeight: '90vh', overflowY: 'auto' }}>
             <h3 style={{ marginBottom: 16 }}>Add User</h3>
             <input {...register('first_name', { required: true })} placeholder="First Name" style={{ width: '100%', marginBottom: 12, padding: 8 }} />
             <input {...register('last_name', { required: true })} placeholder="Last Name" style={{ width: '100%', marginBottom: 12, padding: 8 }} />
@@ -644,7 +643,7 @@ const UserManagement: React.FC = () => {
       {/* Edit User Modal */}
       {showEdit && editUser && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <form onSubmit={handleSubmit(onEdit)} style={{ background: '#fff', padding: 32, borderRadius: 12, width: 'min(920px, 94vw)', maxHeight: '86vh', overflowY: 'auto' }}>
+          <form onSubmit={handleSubmit(onEdit)} style={{ background: '#fff', padding: '24px 16px', borderRadius: 12, width: 'min(920px, 96vw)', maxHeight: '90vh', overflowY: 'auto' }}>
             <h3 style={{ marginBottom: 16 }}>Edit User</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
               <input {...register('first_name', { required: true })} placeholder="First Name" style={{ width: '100%', padding: 8 }} />
@@ -709,7 +708,7 @@ const UserManagement: React.FC = () => {
 
       {showManageRole && roleUser && (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <form onSubmit={handleSubmitRole(onManageRole)} style={{ background: '#fff', padding: 32, borderRadius: 12, width: 'min(680px, 94vw)', maxHeight: '86vh', overflowY: 'auto' }}>
+      <form onSubmit={handleSubmitRole(onManageRole)} style={{ background: '#fff', padding: '24px 16px', borderRadius: 12, width: 'min(680px, 96vw)', maxHeight: '90vh', overflowY: 'auto' }}>
         <h3 style={{ marginBottom: 12 }}>Manage Role</h3>
         <p style={{ marginTop: 0, marginBottom: 16, color: '#4b5563' }}>
           Use this flow only for role changes. This directly affects authorization and admin access.
@@ -751,7 +750,7 @@ const UserManagement: React.FC = () => {
 
       {showManageAccess && accessUser && (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <form onSubmit={handleSubmitAccess(onManageAccess)} style={{ background: '#fff', padding: 32, borderRadius: 12, width: 'min(760px, 94vw)', maxHeight: '86vh', overflowY: 'auto' }}>
+      <form onSubmit={handleSubmitAccess(onManageAccess)} style={{ background: '#fff', padding: '24px 16px', borderRadius: 12, width: 'min(760px, 96vw)', maxHeight: '90vh', overflowY: 'auto' }}>
         <h3 style={{ marginBottom: 12 }}>Manage Access Overrides</h3>
         <p style={{ marginTop: 0, marginBottom: 16, color: '#4b5563' }}>
           Use this flow for subscription, verification, 2FA, and privileged-access overrides only.

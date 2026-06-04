@@ -363,18 +363,18 @@ const MarketplaceManagement = () => {
         <button disabled style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.75rem 1.5rem', fontWeight: 600, cursor: 'not-allowed', opacity: 0.7 }}>Remove Listing (select row)</button>
       </div>
       {/* Search + filter controls */}
-      <div style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ marginBottom: 24, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           type="text"
-          placeholder="Search listings by title or status..."
+          placeholder="Search by title..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ width: 320, padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
+          style={{ width: 'min(220px, 100%)', padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
         />
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
-          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc', minWidth: 140 }}
+          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc', width: 'min(140px, 100%)' }}
         >
           <option value="">All Statuses</option>
           <option value="available">available</option>
@@ -385,7 +385,7 @@ const MarketplaceManagement = () => {
         <select
           value={visibilityFilter}
           onChange={e => setVisibilityFilter(e.target.value)}
-          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc', minWidth: 160 }}
+          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc', width: 'min(140px, 100%)' }}
         >
           <option value="">All Visibility</option>
           <option value="public">public</option>
@@ -395,7 +395,7 @@ const MarketplaceManagement = () => {
         <select
           value={typeFilter}
           onChange={e => setTypeFilter(e.target.value)}
-          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc', minWidth: 160 }}
+          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc', width: 'min(140px, 100%)' }}
         >
           <option value="">All Types</option>
           <option value="residential">residential</option>
@@ -429,17 +429,15 @@ const MarketplaceManagement = () => {
           <p>Loading listings...</p>
         ) : (
           <>
-            <div style={{ width: '100%', overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16, minWidth: 1050 }}>
+        <div style={{ width: '100%', overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16, minWidth: 700 }}>
               <thead>
                 <tr style={{ background: '#f3f4f6' }}>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Image</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Title</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Location</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Type</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Status</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Map</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Actions</th>
+                  <th style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>Listing</th>
+                  <th style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>Type</th>
+                  <th style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>Status</th>
+                  <th style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>Map</th>
+                  <th style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12, minWidth: 70 }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -467,49 +465,51 @@ const MarketplaceManagement = () => {
                       })
                       .map(listing => (
                         <tr key={listing.id}>
-                          <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>
-                            {getPrimaryImage(listing) ? (
-                              <button
-                                type="button"
-                                onClick={() => openGallery(listing)}
-                                style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
-                                title="View all images"
-                              >
-                                <img
-                                  src={getPrimaryImage(listing) as string}
-                                  alt={listing.title || 'Property image'}
-                                  style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
-                                  onError={(e) => {
-                                    (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
-                              </button>
-                            ) : (
-                              <span style={{ color: '#9ca3af', fontSize: 12 }}>No image</span>
-                            )}
+                          <td style={{ padding: '6px 4px', border: '1px solid #eee' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              {getPrimaryImage(listing) ? (
+                                <button
+                                  type="button"
+                                  onClick={() => openGallery(listing)}
+                                  style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}
+                                  title="View all images"
+                                >
+                                  <img
+                                    src={getPrimaryImage(listing) as string}
+                                    alt={listing.title || 'Property image'}
+                                    style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6, border: '1px solid #ddd' }}
+                                    onError={(e) => {
+                                      (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                    }}
+                                  />
+                                </button>
+                              ) : null}
+                              <div>
+                                <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }}>{listing.title || '-'}</div>
+                                <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>{getLocationText(listing)}</div>
+                              </div>
+                            </div>
                           </td>
-                          <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.title || '-'}</td>
-                          <td style={{ padding: 8, border: '1px solid #eee' }}>{getLocationText(listing)}</td>
-                          <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.property_type || listing.type || '-'}</td>
-                          <td style={{ padding: 8, border: '1px solid #eee' }}>{listing.status || '-'}</td>
-                          <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>
+                          <td style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>{listing.property_type || listing.type || '-'}</td>
+                          <td style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>{listing.status || '-'}</td>
+                          <td style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12, textAlign: 'center' }}>
                             {getGoogleMapsLink(listing) ? (
                               <a
                                 href={getGoogleMapsLink(listing) as string}
                                 target="_blank"
                                 rel="noreferrer"
-                                style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}
+                                style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none', fontSize: 11 }}
                               >
-                                Open Map
+                                Maps
                               </a>
                             ) : (
-                              <span style={{ color: '#9ca3af', fontSize: 12 }}>N/A</span>
+                              <span style={{ color: '#9ca3af', fontSize: 11 }}>-</span>
                             )}
                           </td>
-                          <td style={{ padding: 8, border: '1px solid #eee', whiteSpace: 'nowrap' }}>
-                            <div style={{ display: 'inline-flex', gap: 8, whiteSpace: 'nowrap' }}>
-                              <button onClick={() => openEditModal(listing)} style={{ background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                              <button onClick={() => setDeleteId(listing.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                          <td style={{ padding: '6px 4px', border: '1px solid #eee', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'flex', gap: 4 }}>
+                              <button onClick={() => openEditModal(listing)} style={{ background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 4, padding: '0.25rem 0.45rem', fontSize: 11, cursor: 'pointer' }} title="Edit"><i className="fas fa-edit"></i></button>
+                              <button onClick={() => setDeleteId(listing.id)} style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 4, padding: '0.25rem 0.45rem', fontSize: 11, cursor: 'pointer' }} title="Delete"><i className="fas fa-trash"></i></button>
                             </div>
                           </td>
                         </tr>
@@ -569,7 +569,7 @@ const MarketplaceManagement = () => {
               type: (form.elements.namedItem('type') as HTMLInputElement).value,
               status: (form.elements.namedItem('status') as HTMLInputElement).value
             });
-          }} style={{ background: '#fff', padding: 32, borderRadius: 12, minWidth: 320 }}>
+          }} style={{ background: '#fff', padding: '24px 16px', borderRadius: 12, width: 'min(480px, 96vw)', maxHeight: '90vh', overflowY: 'auto' }}>
             <h3 style={{ marginBottom: 16 }}>Add Listing</h3>
             <input name="title" placeholder="Title" style={{ width: '100%', marginBottom: 12, padding: 8 }} required />
             <input name="location" placeholder="Location" style={{ width: '100%', marginBottom: 12, padding: 8 }} required />
@@ -664,7 +664,7 @@ const MarketplaceManagement = () => {
       {/* Delete Listing Confirmation */}
       {deleteId && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', padding: 32, borderRadius: 12, minWidth: 320 }}>
+          <div style={{ background: '#fff', padding: 24, borderRadius: 12, width: 'min(480px, 96vw)', maxHeight: '90vh', overflowY: 'auto' }}>
             <h3 style={{ marginBottom: 16 }}>Delete Listing</h3>
             <p>Are you sure you want to delete this listing?</p>
             <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>

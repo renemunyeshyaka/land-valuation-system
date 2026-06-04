@@ -437,7 +437,15 @@ function AdminDashboard() {
             <h1 className="text-lg md:text-xl font-semibold text-gray-800">{NAV.find(n => n.key === active)?.label || 'Dashboard'}</h1>
           </div>
           <div className="flex gap-2 md:gap-4 items-center">
-            <i className="fas fa-bell text-gray-500 hover:text-emerald-600 cursor-pointer p-2"></i>
+            <button
+              type="button"
+              onClick={() => navigateToTab('notifications')}
+              className="relative text-gray-500 hover:text-emerald-600 p-2 transition-colors"
+              aria-label="View notifications"
+              title="View notifications"
+            >
+              <i className="fas fa-bell text-lg"></i>
+            </button>
             <div className="relative hidden sm:block">
               <input type="text" placeholder="Search..." className="pl-9 pr-4 py-2 rounded-full border border-gray-200 bg-gray-50 text-sm w-36 md:w-48 focus:outline-none focus:ring-1 focus:ring-emerald-400" />
               <i className="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>

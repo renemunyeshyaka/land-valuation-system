@@ -95,13 +95,13 @@ const Payments: React.FC = () => {
         <button onClick={() => window.print()} style={{ background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.75rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Export Report</button>
       </div>
       {/* Search bar with Search and Clear buttons */}
-      <div style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center' }}>
+      <div style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           type="text"
           placeholder="Search transactions by user, amount, or status..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ width: 320, padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
+          style={{ width: 'min(320px, 100%)', padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
         />
         <button
           onClick={() => fetchTransactions(1)}
@@ -122,7 +122,8 @@ const Payments: React.FC = () => {
           <p style={{ color: '#666' }}>Loading transactions...</p>
         ) : (
           <>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
+            <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, minWidth: 500 }}>
               <thead>
                 <tr style={{ background: '#f3f4f6' }}>
                   <th style={{ padding: 8, border: '1px solid #eee' }}>ID</th>
@@ -149,6 +150,7 @@ const Payments: React.FC = () => {
                 )}
               </tbody>
             </table>
+            </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
               <span style={{ fontSize: 14, color: '#666' }}>Page {currentPage} of {totalPages}</span>
               <div style={{ display: 'flex', gap: 8 }}>

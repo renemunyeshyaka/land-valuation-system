@@ -74,13 +74,13 @@ const AnalyticsRevenue: React.FC = () => {
     <div style={{ width: '100%', maxWidth: '100%', margin: 0, background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px #0001', padding: '1.25rem' }}>
       <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1.5rem', color: '#2d6a4f' }}>Analytics & Revenue</h2>
       {/* Search bar with Search and Clear buttons */}
-      <div style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center' }}>
+      <div style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           type="text"
           placeholder="Search analytics by keyword..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ width: 320, padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
+          style={{ width: 'min(320px, 100%)', padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
         />
         <button
           onClick={() => fetchData()}

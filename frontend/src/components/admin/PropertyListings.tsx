@@ -286,13 +286,13 @@ const PropertyListings: React.FC = () => {
         <button disabled style={{ background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.75rem 1.5rem', fontWeight: 600, cursor: 'not-allowed', opacity: 0.7 }}>Remove Property (select row)</button>
       </div>
       {/* Search bar with Search and Clear buttons */}
-      <div style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center' }}>
+      <div style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           type="text"
-          placeholder="Search by location, type, or status..."
+          placeholder="Search by title, location, or status..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ width: 320, padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
+          style={{ width: 'min(320px, 100%)', padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
         />
         <button
           onClick={() => fetchListings()}
@@ -312,8 +312,8 @@ const PropertyListings: React.FC = () => {
         {loading ? (
           <p>Loading properties...</p>
         ) : (
-          <div style={{ width: '100%', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16, minWidth: 1050 }}>
+        <div style={{ width: '100%', overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16, minWidth: 650 }}>
             <thead>
               <tr style={{ background: '#f3f4f6' }}>
                 <th style={{ padding: 8, border: '1px solid #eee' }}>Image</th>

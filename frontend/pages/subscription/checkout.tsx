@@ -379,7 +379,7 @@ const SubscriptionCheckout: React.FC = () => {
             </div>
 
             {/* Payment Form */}
-            <div className="bg-white rounded-2xl shadow-lg p-8">
+<div className="bg-white rounded-2xl shadow-lg p-4 md:p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Payment Details</h2>
 
               <form onSubmit={(e) => { e.preventDefault(); handleCheckout(); }} className="space-y-6">
@@ -388,7 +388,7 @@ const SubscriptionCheckout: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-3">
                     Select Payment Provider
                   </label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <button
                       type="button"
                       onClick={() => setProvider('mtn')}

@@ -96,7 +96,7 @@ const DataImportExport: React.FC = () => {
         <button onClick={() => window.open(`${API_BASE_URL}/api/v1/admin/users/export`, '_blank')} style={{ background: '#f0ad4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.75rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Export Users</button>
       </div>
       {/* Search bar with Search and Clear buttons */}
-      <div style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center' }}>
+      <div style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           type="text"
           placeholder="Search data sets or logs..."
