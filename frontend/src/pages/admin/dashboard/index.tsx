@@ -347,6 +347,7 @@ function AdminDashboard() {
 
       {/* Mobile/Tablet Sidebar Drawer */}
       <aside className={`fixed top-0 left-0 h-full w-72 bg-white border-r border-gray-200 shadow-xl z-50 flex-shrink-0 overflow-y-auto transform transition-transform duration-200 lg:hidden ${mobileNavOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex flex-col h-full">
         <div className="px-6 py-6 flex items-center justify-between border-b border-gray-100">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 bg-emerald-700 rounded-xl flex items-center justify-center shadow-sm">
@@ -396,7 +397,7 @@ function AdminDashboard() {
           </button>
         </div>
 
-        <div className="border-t border-gray-100 p-5 mt-auto">
+        <div className="border-t border-gray-100 p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 font-bold">
               {firstName[0]}
@@ -414,34 +415,35 @@ function AdminDashboard() {
             Logout
           </button>
         </div>
+      </div>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-screen">
         {/* Top header */}
-        <header className="bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-200 px-4 md:px-5 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
+        <header className="bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-200 px-3 md:px-5 py-3 md:py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2 md:gap-4">
             <button
               type="button"
-              className="lg:hidden text-gray-600 text-xl"
+              className="lg:hidden text-gray-600 text-xl p-2 -ml-2"
               onClick={() => setMobileNavOpen(true)}
               aria-label="Open admin menu"
             >
               <i className="fas fa-bars"></i>
             </button>
-            <h1 className="text-xl font-semibold text-gray-800">{NAV.find(n => n.key === active)?.label || 'Dashboard'}</h1>
+            <h1 className="text-lg md:text-xl font-semibold text-gray-800">{NAV.find(n => n.key === active)?.label || 'Dashboard'}</h1>
           </div>
-          <div className="flex gap-4 items-center">
-            <i className="fas fa-bell text-gray-500 hover:text-emerald-600 cursor-pointer"></i>
-            <div className="relative">
-              <input type="text" placeholder="Search..." className="pl-9 pr-4 py-2 rounded-full border border-gray-200 bg-gray-50 text-sm w-48 focus:outline-none focus:ring-1 focus:ring-emerald-400" />
+          <div className="flex gap-2 md:gap-4 items-center">
+            <i className="fas fa-bell text-gray-500 hover:text-emerald-600 cursor-pointer p-2"></i>
+            <div className="relative hidden sm:block">
+              <input type="text" placeholder="Search..." className="pl-9 pr-4 py-2 rounded-full border border-gray-200 bg-gray-50 text-sm w-36 md:w-48 focus:outline-none focus:ring-1 focus:ring-emerald-400" />
               <i className="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
             </div>
           </div>
         </header>
 
         {/* Section Content */}
-        <div className="flex-1 p-3 md:p-4 lg:p-5">
+        <div className="flex-1 p-3 md:p-4 lg:p-6">
           {renderSection()}
         </div>
         <Footer />

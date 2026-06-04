@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>LVS Admin · Land Valuation Dashboard</title>
     <!-- Tailwind + FontAwesome + Google Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,6 +20,16 @@
         .card-hover { transition: transform 0.1s ease, box-shadow 0.2s; }
         .card-hover:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -12px rgba(0,0,0,0.1); }
         .scrollable-table { max-height: 420px; overflow-y: auto; }
+        .mobile-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .refund-actions { display: flex; flex-wrap: wrap; gap: 0.25rem; justify-content: center; }
+        @media (max-width: 640px) {
+            .stat-card-icon { display: none !important; }
+            .stat-card-text { font-size: 0.75rem !important; }
+            .stat-card-value { font-size: 1.25rem !important; }
+            .admin-section table { font-size: 0.75rem !important; }
+            .admin-section th, .admin-section td { padding: 0.5rem 0.4rem !important; }
+            .scrollable-table { max-height: 300px; }
+        }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 8px; }
         ::-webkit-scrollbar-thumb { background: #2c7a4d; border-radius: 8px; }
@@ -94,48 +104,51 @@
         </div>
     </aside>
 
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black/40 z-[15] hidden md:hidden" onclick="closeMobileSidebar()"></div>
+
     <!-- MAIN CONTENT AREA -->
     <main class="flex-1 overflow-y-auto bg-gray-50/40">
         <!-- Top header -->
-        <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <button id="mobileMenuBtn" class="md:hidden text-gray-600 text-xl"><i class="fas fa-bars"></i></button>
-                <h1 class="text-xl font-semibold text-gray-800" id="pageTitle">Dashboard Overview</h1>
+        <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-200 px-3 md:px-6 py-3 md:py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="mobileMenuBtn" class="md:hidden text-gray-600 text-xl p-2 -ml-2" onclick="toggleMobileSidebar()"><i class="fas fa-bars"></i></button>
+                <h1 class="text-lg md:text-xl font-semibold text-gray-800" id="pageTitle">Dashboard Overview</h1>
             </div>
-            <div class="flex gap-4 items-center">
-                <i class="fas fa-bell text-gray-500 hover:text-emerald-600 cursor-pointer"></i>
-                <div class="relative">
-                    <input type="text" placeholder="Search parcels, users..." class="pl-9 pr-4 py-2 rounded-full border border-gray-200 bg-gray-50 text-sm w-48 focus:outline-none focus:ring-1 focus:ring-emerald-400">
+            <div class="flex gap-2 md:gap-4 items-center">
+                <i class="fas fa-bell text-gray-500 hover:text-emerald-600 cursor-pointer p-2"></i>
+                <div class="relative hidden sm:block">
+                    <input type="text" placeholder="Search parcels, users..." class="pl-9 pr-4 py-2 rounded-full border border-gray-200 bg-gray-50 text-sm w-36 md:w-48 focus:outline-none focus:ring-1 focus:ring-emerald-400">
                     <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
                 </div>
             </div>
         </header>
 
         <!-- DYNAMIC DASHBOARD SECTIONS -->
-        <div id="dashboardContent" class="p-6 md:p-8">
+        <div id="dashboardContent" class="p-3 md:p-6 lg:p-8">
             <!-- OVERVIEW SECTION (default) -->
             <div id="section-overview" class="admin-section">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-emerald-600 card-hover"><div class="flex justify-between"><div><p class="text-gray-500 text-sm">Total Properties</p><p class="text-3xl font-bold text-gray-800">2,847</p><span class="text-xs text-green-600 mt-1">+12% this month</span></div><i class="fas fa-building text-4xl text-emerald-200"></i></div></div>
-                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-amber-500 card-hover"><div class="flex justify-between"><div><p class="text-gray-500 text-sm">Active Users</p><p class="text-3xl font-bold text-gray-800">1,923</p><span class="text-xs text-green-600">+34 diaspora</span></div><i class="fas fa-user-friends text-4xl text-amber-200"></i></div></div>
-                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-blue-500 card-hover"><div class="flex justify-between"><div><p class="text-gray-500 text-sm">Total Valuations</p><p class="text-3xl font-bold text-gray-800">5.2B</p><span class="text-xs text-green-600">RWF volume</span></div><i class="fas fa-chart-simple text-4xl text-blue-200"></i></div></div>
-                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-purple-500 card-hover"><div class="flex justify-between"><div><p class="text-gray-500 text-sm">Diaspora leads</p><p class="text-3xl font-bold text-gray-800">208</p><span class="text-xs text-emerald-600">+18 new</span></div><i class="fas fa-globe-africa text-4xl text-purple-200"></i></div></div>
+                    <div class="bg-white rounded-2xl shadow-sm p-3 md:p-5 border-l-4 md:border-l-8 border-emerald-600 card-hover"><div class="flex justify-between"><div><p class="stat-card-text text-gray-500 text-xs md:text-sm">Total Properties</p><p class="stat-card-value text-xl md:text-3xl font-bold text-gray-800">2,847</p><span class="text-[10px] md:text-xs text-green-600 mt-1">+12% this month</span></div><i class="stat-card-icon fas fa-building text-2xl md:text-4xl text-emerald-200"></i></div></div>
+                    <div class="bg-white rounded-2xl shadow-sm p-3 md:p-5 border-l-4 md:border-l-8 border-amber-500 card-hover"><div class="flex justify-between"><div><p class="stat-card-text text-gray-500 text-xs md:text-sm">Active Users</p><p class="stat-card-value text-xl md:text-3xl font-bold text-gray-800">1,923</p><span class="text-[10px] md:text-xs text-green-600">+34 diaspora</span></div><i class="stat-card-icon fas fa-user-friends text-2xl md:text-4xl text-amber-200"></i></div></div>
+                    <div class="bg-white rounded-2xl shadow-sm p-3 md:p-5 border-l-4 md:border-l-8 border-blue-500 card-hover"><div class="flex justify-between"><div><p class="stat-card-text text-gray-500 text-xs md:text-sm">Total Valuations</p><p class="stat-card-value text-xl md:text-3xl font-bold text-gray-800">5.2B</p><span class="text-[10px] md:text-xs text-green-600">RWF volume</span></div><i class="stat-card-icon fas fa-chart-simple text-2xl md:text-4xl text-blue-200"></i></div></div>
+                    <div class="bg-white rounded-2xl shadow-sm p-3 md:p-5 border-l-4 md:border-l-8 border-purple-500 card-hover"><div class="flex justify-between"><div><p class="stat-card-text text-gray-500 text-xs md:text-sm">Diaspora leads</p><p class="stat-card-value text-xl md:text-3xl font-bold text-gray-800">208</p><span class="text-[10px] md:text-xs text-emerald-600">+18 new</span></div><i class="stat-card-icon fas fa-globe-africa text-2xl md:text-4xl text-purple-200"></i></div></div>
                 </div>
                 <!-- charts row -->
-                <div class="grid lg:grid-cols-2 gap-6 mb-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-8">
                     <div class="bg-white rounded-2xl shadow-sm p-5"><h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-chart-line text-emerald-600 mr-2"></i> Valuation trends (2025)</h3><canvas id="trendChart" height="200"></canvas></div>
                     <div class="bg-white rounded-2xl shadow-sm p-5"><h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-chart-pie text-emerald-600 mr-2"></i> Property types distribution</h3><canvas id="pieChart" height="200"></canvas></div>
                 </div>
                 <!-- recent activities & map -->
-                <div class="grid lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm p-5"><h3 class="font-semibold text-gray-800 flex items-center gap-2"><i class="fas fa-clock text-emerald-600"></i> Recent Transactions</h3><div class="overflow-x-auto mt-3"><table class="min-w-full text-sm"><thead class="border-b"><tr><th class="text-left py-2">Parcel ID</th><th>Owner</th><th>Value (RWF)</th><th>Status</th></tr></thead><tbody id="recentTxTable"><tr><td class="py-2">KGL-2456</td><td>Mukamana A.</td><td>82M</td><td><span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full">completed</span></td></tr><tr><td>RUH-1023</td><td>Habimana J.</td><td>145M</td><td><span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">pending</span></td></tr><tr><td>MUS-879</td><td>Uwase L.</td><td>210M</td><td><span class="bg-blue-100 text-blue-700">escrow</span></td></tr><tr><td>KGL-4390</td><td>Diaspora Inv.</td><td>620M</td><td><span class="bg-purple-100">due diligence</span></td></tr></tbody></table></div><div class="mt-4 text-right"><a href="#" class="text-emerald-700 text-sm font-medium" data-section-link="transactions">View all →</a></div></div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                    <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm p-4 md:p-5"><h3 class="font-semibold text-gray-800 flex items-center gap-2"><i class="fas fa-clock text-emerald-600"></i> Recent Transactions</h3><div class="mobile-table-wrap mt-3"><table class="min-w-full text-xs md:text-sm"><thead class="border-b"><tr><th class="text-left py-2">Parcel ID</th><th>Owner</th><th>Value (RWF)</th><th>Status</th></tr></thead><tbody id="recentTxTable"><tr><td class="py-2">KGL-2456</td><td>Mukamana A.</td><td>82M</td><td><span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full">completed</span></td></tr><tr><td>RUH-1023</td><td>Habimana J.</td><td>145M</td><td><span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">pending</span></td></tr><tr><td>MUS-879</td><td>Uwase L.</td><td>210M</td><td><span class="bg-blue-100 text-blue-700">escrow</span></td></tr><tr><td>KGL-4390</td><td>Diaspora Inv.</td><td>620M</td><td><span class="bg-purple-100">due diligence</span></td></tr></tbody></table></div><div class="mt-4 text-right"><a href="#" class="text-emerald-700 text-sm font-medium" data-section-link="transactions">View all →</a></div></div>
                     <div class="bg-white rounded-2xl shadow-sm p-4"><h3 class="font-semibold text-gray-800 mb-2"><i class="fas fa-map-marker-alt text-emerald-600"></i> High-value zones (hotspots)</h3><div id="adminMiniMap" style="height: 180px; border-radius: 16px;" class="mb-3"></div><ul class="text-xs space-y-2 mt-3"><li><i class="fas fa-circle text-emerald-500 text-[8px] mr-2"></i> Gasabo (Kigali) - coeff 2.4</li><li><i class="fas fa-circle text-amber-500 text-[8px] mr-2"></i> Rubavu lakefront - coeff 1.9</li><li><i class="fas fa-circle text-blue-500 text-[8px] mr-2"></i> Musanze tourism - coeff 1.7</li></ul></div>
                 </div>
             </div>
 
             <!-- PROPERTIES SECTION (data grid) -->
             <div id="section-properties" class="admin-section hidden">
-                <div class="bg-white rounded-2xl shadow-sm p-6"><div class="flex justify-between flex-wrap"><h2 class="text-xl font-bold">All Registered Properties</h2><button class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm"><i class="fas fa-plus mr-1"></i> Add Property</button></div><div class="mt-6 overflow-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left">Parcel ID</th><th>Location</th><th>Zone</th><th>Area (sqm)</th><th>Current Value</th><th>Status</th><th>Action</th></tr></thead><tbody id="propertyTableBody"><tr><td class="p-3">RDB-1001</td><td>Kacyiru, Kigali</td><td>Urban A</td><td>850</td><td>Rwf 98M</td><td class="text-green-600">Active</td><td><i class="fas fa-edit text-gray-500 cursor-pointer hover:text-emerald-600"></i></td></tr><tr><td class="p-3">RDB-2089</td><td>Nyagatare</td><td>Agricultural</td><td>12,000</td><td>Rwf 34M</td><td>Listed</td><td><i class="fas fa-edit"></i></td></tr><tr><td class="p-3">RDB-3772</td><td>Rubavu</td><td>Tourism</td><td>2,300</td><td>Rwf 217M</td><td>Under review</td><td><i class="fas fa-edit"></i></td></tr><tr><td class="p-3">DIA-001</td><td>Gasabo</td><td>Commercial</td><td>1,500</td><td>Rwf 430M</td><td class="text-amber-600">Diaspora</td><td><i class="fas fa-edit"></i></td></tr></tbody></table></div><div class="mt-5 flex justify-between items-center"><p class="text-gray-500 text-sm">Showing 4 of 2,847 entries</p><div class="flex gap-2"><button class="border rounded px-3 py-1">Prev</button><button class="bg-emerald-600 text-white rounded px-3 py-1">1</button><button class="border rounded px-3 py-1">Next</button></div></div></div>
+                <div class="bg-white rounded-2xl shadow-sm p-4 md:p-6"><div class="flex justify-between flex-wrap gap-2"><h2 class="text-lg md:text-xl font-bold">All Registered Properties</h2><button class="bg-emerald-600 text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm"><i class="fas fa-plus mr-1"></i> Add Property</button></div><div class="mt-6 mobile-table-wrap"><table class="w-full text-xs md:text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left">Parcel ID</th><th>Location</th><th>Zone</th><th>Area (sqm)</th><th>Current Value</th><th>Status</th><th>Action</th></tr></thead><tbody id="propertyTableBody"><tr><td class="p-3">RDB-1001</td><td>Kacyiru, Kigali</td><td>Urban A</td><td>850</td><td>Rwf 98M</td><td class="text-green-600">Active</td><td><i class="fas fa-edit text-gray-500 cursor-pointer hover:text-emerald-600"></i></td></tr><tr><td class="p-3">RDB-2089</td><td>Nyagatare</td><td>Agricultural</td><td>12,000</td><td>Rwf 34M</td><td>Listed</td><td><i class="fas fa-edit"></i></td></tr><tr><td class="p-3">RDB-3772</td><td>Rubavu</td><td>Tourism</td><td>2,300</td><td>Rwf 217M</td><td>Under review</td><td><i class="fas fa-edit"></i></td></tr><tr><td class="p-3">DIA-001</td><td>Gasabo</td><td>Commercial</td><td>1,500</td><td>Rwf 430M</td><td class="text-amber-600">Diaspora</td><td><i class="fas fa-edit"></i></td></tr></tbody></table></div><div class="mt-5 flex justify-between items-center"><p class="text-gray-500 text-sm">Showing 4 of 2,847 entries</p><div class="flex gap-2"><button class="border rounded px-3 py-1">Prev</button><button class="bg-emerald-600 text-white rounded px-3 py-1">1</button><button class="border rounded px-3 py-1">Next</button></div></div></div>
             </div>
 
             <!-- USERS & DIASPORA -->
@@ -150,62 +163,62 @@
 
             <!-- TRANSACTIONS & ESCROW -->
             <div id="section-transactions" class="admin-section hidden">
-                <div class="bg-white rounded-2xl shadow-sm p-6"><h2 class="text-xl font-bold">Escrow & Transactions Overview</h2><div class="grid grid-cols-3 gap-4 mt-4"><div class="bg-emerald-50 p-4 rounded-2xl"><p class="text-sm">Total escrow volume</p><p class="text-2xl font-bold">Rwf 1.2B</p></div><div class="bg-amber-50 p-4 rounded-2xl"><p>Pending settlements</p><p class="text-2xl font-bold">18</p></div><div class="bg-blue-50 p-4 rounded-2xl"><p>Avg completion time</p><p class="text-2xl font-bold">8 days</p></div></div><div class="mt-6 overflow-auto scrollable-table"><table class="w-full text-sm"><thead><tr><th>Tx ID</th><th>Parcel</th><th>Buyer</th><th>Seller</th><th>Amount</th><th>Stage</th></tr></thead><tbody><tr><td>TRX782</td><td>KGL-990</td><td>Diaspora (USA)</td><td>Muhire E.</td><td>Rwf 220M</td><td>Title transfer</td></tr><tr><td>TRX981</td><td>RUH-443</td><td>Local investor</td><td>Niyomugabo</td><td>Rwf 55M</td><td>Completed</td></tr><tr><td>TRX673</td><td>MUS-12A</td><td>Foreign entity</td><td>RDB seller</td><td>Rwf 375M</td><td>Due diligence</td></tr></tbody></table></div></div>
+                <div class="bg-white rounded-2xl shadow-sm p-4 md:p-6"><h2 class="text-lg md:text-xl font-bold">Escrow & Transactions Overview</h2><div class="grid grid-cols-3 gap-2 md:gap-4 mt-4"><div class="bg-emerald-50 p-3 md:p-4 rounded-2xl"><p class="text-xs md:text-sm">Total escrow volume</p><p class="text-base md:text-2xl font-bold">Rwf 1.2B</p></div><div class="bg-amber-50 p-3 md:p-4 rounded-2xl"><p class="text-xs md:text-sm">Pending settlements</p><p class="text-base md:text-2xl font-bold">18</p></div><div class="bg-blue-50 p-3 md:p-4 rounded-2xl"><p class="text-xs md:text-sm">Avg completion time</p><p class="text-base md:text-2xl font-bold">8 days</p></div></div><div class="mt-6 mobile-table-wrap scrollable-table"><table class="w-full text-xs md:text-sm"><thead><tr><th>Tx ID</th><th>Parcel</th><th>Buyer</th><th>Seller</th><th>Amount</th><th>Stage</th></tr></thead><tbody><tr><td>TRX782</td><td>KGL-990</td><td>Diaspora (USA)</td><td>Muhire E.</td><td>Rwf 220M</td><td>Title transfer</td></tr><tr><td>TRX981</td><td>RUH-443</td><td>Local investor</td><td>Niyomugabo</td><td>Rwf 55M</td><td>Completed</td></tr><tr><td>TRX673</td><td>MUS-12A</td><td>Foreign entity</td><td>RDB seller</td><td>Rwf 375M</td><td>Due diligence</td></tr></tbody></table></div></div>
             </div>
 
             <!-- GAZETTE MANAGER -->
             <div id="section-gazette" class="admin-section hidden">
-                <div class="bg-white rounded-2xl p-6 shadow-sm"><h2 class="text-xl font-bold">Official Gazette Zones 2025</h2><div class="mt-4 grid gap-3"><div class="flex justify-between border-b pb-2"><span>Kigali Urban Core</span><span>Coeff: 2.8</span><button class="text-emerald-600 text-xs">edit</button></div><div class="flex justify-between border-b pb-2"><span>Eastern Province (Irrigation)</span><span>Coeff: 1.2</span><button class="text-emerald-600">edit</button></div><div class="flex justify-between border-b pb-2"><span>Northern Highlands</span><span>Coeff: 1.35</span><button class="text-emerald-600">edit</button></div><div class="flex justify-between border-b pb-2"><span>Lake Kivu Belt</span><span>Coeff: 1.85</span><button class="text-emerald-600">edit</button></div></div><button class="mt-5 bg-gray-100 px-6 py-2 rounded-xl">Import Gazette XML</button></div>
+                <div class="bg-white rounded-2xl p-4 md:p-6 shadow-sm"><h2 class="text-lg md:text-xl font-bold">Official Gazette Zones 2025</h2><div class="mt-4 grid gap-3"><div class="flex justify-between items-center border-b pb-2 gap-2"><span class="text-sm md:text-base">Kigali Urban Core</span><span class="text-xs md:text-sm">Coeff: 2.8</span><button class="text-emerald-600 text-xs md:text-sm shrink-0">edit</button></div><div class="flex justify-between items-center border-b pb-2 gap-2"><span class="text-sm md:text-base">Eastern Province (Irrigation)</span><span class="text-xs md:text-sm">Coeff: 1.2</span><button class="text-emerald-600 text-xs md:text-sm shrink-0">edit</button></div><div class="flex justify-between items-center border-b pb-2 gap-2"><span class="text-sm md:text-base">Northern Highlands</span><span class="text-xs md:text-sm">Coeff: 1.35</span><button class="text-emerald-600 text-xs md:text-sm shrink-0">edit</button></div><div class="flex justify-between items-center border-b pb-2 gap-2"><span class="text-sm md:text-base">Lake Kivu Belt</span><span class="text-xs md:text-sm">Coeff: 1.85</span><button class="text-emerald-600 text-xs md:text-sm shrink-0">edit</button></div></div><button class="mt-5 bg-gray-100 px-4 md:px-6 py-2 rounded-xl text-sm">Import Gazette XML</button></div>
             </div>
 
             <!-- REFUNDS -->
             <div id="section-refunds" class="admin-section hidden">
                 <!-- Stats row -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-rose-500 card-hover">
-                        <p class="text-gray-500 text-sm">Pending Requests</p>
-                        <p class="text-3xl font-bold text-gray-800" id="stat-pending">4</p>
-                        <span class="text-xs text-rose-600">Awaiting review</span>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-6">
+                    <div class="bg-white rounded-2xl shadow-sm p-3 md:p-5 border-l-4 md:border-l-8 border-rose-500 card-hover">
+                        <p class="stat-card-text text-gray-500 text-xs md:text-sm">Pending Requests</p>
+                        <p class="stat-card-value text-xl md:text-3xl font-bold text-gray-800" id="stat-pending">4</p>
+                        <span class="text-[10px] md:text-xs text-rose-600">Awaiting review</span>
                     </div>
-                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-emerald-500 card-hover">
-                        <p class="text-gray-500 text-sm">Approved This Month</p>
-                        <p class="text-3xl font-bold text-gray-800" id="stat-approved">7</p>
-                        <span class="text-xs text-emerald-600">Rwf 28.4M returned</span>
+                    <div class="bg-white rounded-2xl shadow-sm p-3 md:p-5 border-l-4 md:border-l-8 border-emerald-500 card-hover">
+                        <p class="stat-card-text text-gray-500 text-xs md:text-sm">Approved This Month</p>
+                        <p class="stat-card-value text-xl md:text-3xl font-bold text-gray-800" id="stat-approved">7</p>
+                        <span class="text-[10px] md:text-xs text-emerald-600">Rwf 28.4M returned</span>
                     </div>
-                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-gray-400 card-hover">
-                        <p class="text-gray-500 text-sm">Rejected This Month</p>
-                        <p class="text-3xl font-bold text-gray-800" id="stat-rejected">2</p>
-                        <span class="text-xs text-gray-500">Policy ineligible</span>
+                    <div class="bg-white rounded-2xl shadow-sm p-3 md:p-5 border-l-4 md:border-l-8 border-gray-400 card-hover">
+                        <p class="stat-card-text text-gray-500 text-xs md:text-sm">Rejected This Month</p>
+                        <p class="stat-card-value text-xl md:text-3xl font-bold text-gray-800" id="stat-rejected">2</p>
+                        <span class="text-[10px] md:text-xs text-gray-500">Policy ineligible</span>
                     </div>
-                    <div class="bg-white rounded-2xl shadow-sm p-5 border-l-8 border-amber-400 card-hover">
-                        <p class="text-gray-500 text-sm">Avg. Processing Time</p>
-                        <p class="text-3xl font-bold text-gray-800">3.2d</p>
-                        <span class="text-xs text-amber-600">SLA: 5 days</span>
+                    <div class="bg-white rounded-2xl shadow-sm p-3 md:p-5 border-l-4 md:border-l-8 border-amber-400 card-hover">
+                        <p class="stat-card-text text-gray-500 text-xs md:text-sm">Avg. Processing Time</p>
+                        <p class="stat-card-value text-xl md:text-3xl font-bold text-gray-800">3.2d</p>
+                        <span class="text-[10px] md:text-xs text-amber-600">SLA: 5 days</span>
                     </div>
                 </div>
 
                 <!-- Filter tabs + search -->
-                <div class="bg-white rounded-2xl shadow-sm p-5 mb-6">
+                <div class="bg-white rounded-2xl shadow-sm p-3 md:p-5 mb-6">
                     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-                        <div class="flex gap-2 flex-wrap" id="refundTabBtns">
-                            <button class="refund-tab-btn px-4 py-1.5 rounded-full text-sm font-medium bg-rose-600 text-white" data-tab="all">All</button>
-                            <button class="refund-tab-btn px-4 py-1.5 rounded-full text-sm font-medium border text-gray-600 hover:bg-rose-50" data-tab="pending">Pending</button>
-                            <button class="refund-tab-btn px-4 py-1.5 rounded-full text-sm font-medium border text-gray-600 hover:bg-emerald-50" data-tab="approved">Approved</button>
-                            <button class="refund-tab-btn px-4 py-1.5 rounded-full text-sm font-medium border text-gray-600 hover:bg-gray-50" data-tab="rejected">Rejected</button>
-                            <button class="refund-tab-btn px-4 py-1.5 rounded-full text-sm font-medium border text-gray-600 hover:bg-gray-50" data-tab="escalated">Escalated</button>
+                        <div class="flex gap-1.5 md:gap-2 flex-wrap" id="refundTabBtns">
+                            <button class="refund-tab-btn px-3 md:px-4 py-1.5 rounded-full text-xs md:text-sm font-medium bg-rose-600 text-white" data-tab="all">All</button>
+                            <button class="refund-tab-btn px-3 md:px-4 py-1.5 rounded-full text-xs md:text-sm font-medium border text-gray-600 hover:bg-rose-50" data-tab="pending">Pending</button>
+                            <button class="refund-tab-btn px-3 md:px-4 py-1.5 rounded-full text-xs md:text-sm font-medium border text-gray-600 hover:bg-emerald-50" data-tab="approved">Approved</button>
+                            <button class="refund-tab-btn px-3 md:px-4 py-1.5 rounded-full text-xs md:text-sm font-medium border text-gray-600 hover:bg-gray-50" data-tab="rejected">Rejected</button>
+                            <button class="refund-tab-btn px-3 md:px-4 py-1.5 rounded-full text-xs md:text-sm font-medium border text-gray-600 hover:bg-gray-50" data-tab="escalated">Escalated</button>
                         </div>
-                        <div class="flex gap-2">
-                            <div class="relative">
-                                <input id="refundSearch" type="text" placeholder="Search by Ref, User, Parcel…" class="pl-8 pr-3 py-1.5 border rounded-lg text-sm w-52 focus:outline-none focus:ring-1 focus:ring-rose-400">
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <div class="relative flex-1 sm:flex-none">
+                                <input id="refundSearch" type="text" placeholder="Search by Ref, User, Parcel…" class="pl-8 pr-3 py-1.5 border rounded-lg text-xs md:text-sm w-full sm:w-52 focus:outline-none focus:ring-1 focus:ring-rose-400">
                                 <i class="fas fa-search absolute left-2.5 top-2.5 text-gray-400 text-xs"></i>
                             </div>
-                            <button class="border px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><i class="fas fa-download mr-1"></i>Export</button>
+                            <button class="border px-2 md:px-3 py-1.5 rounded-lg text-xs md:text-sm text-gray-600 hover:bg-gray-50"><i class="fas fa-download mr-1"></i>Export</button>
                         </div>
                     </div>
 
                     <!-- Table -->
-                    <div class="overflow-auto scrollable-table">
-                        <table class="w-full text-sm" id="refundTable">
+                    <div class="mobile-table-wrap scrollable-table">
+                        <table class="w-full text-xs md:text-sm" id="refundTable">
                             <thead class="bg-gray-50 text-gray-600">
                                 <tr>
                                     <th class="p-3 text-left">Ref ID</th>
@@ -320,27 +333,27 @@
                 </div>
 
                 <!-- Bulk actions bar -->
-                <div class="bg-white rounded-2xl shadow-sm p-5">
-                    <h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-bolt text-amber-500 mr-2"></i>Bulk Actions</h3>
-                    <div class="flex flex-wrap gap-3">
-                        <button class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-emerald-700"><i class="fas fa-check mr-1"></i>Approve Selected</button>
-                        <button class="bg-rose-500 text-white px-4 py-2 rounded-xl text-sm hover:bg-rose-600"><i class="fas fa-times mr-1"></i>Reject Selected</button>
-                        <button class="bg-amber-400 text-white px-4 py-2 rounded-xl text-sm hover:bg-amber-500"><i class="fas fa-exclamation-triangle mr-1"></i>Escalate to Finance</button>
-                        <button class="border text-gray-600 px-4 py-2 rounded-xl text-sm hover:bg-gray-50"><i class="fas fa-envelope mr-1"></i>Request More Info</button>
-                        <button class="border text-gray-600 px-4 py-2 rounded-xl text-sm hover:bg-gray-50"><i class="fas fa-file-pdf mr-1"></i>Generate Report</button>
+                <div class="bg-white rounded-2xl shadow-sm p-4 md:p-5">
+                    <h3 class="font-semibold text-gray-700 mb-3 text-sm md:text-base"><i class="fas fa-bolt text-amber-500 mr-2"></i>Bulk Actions</h3>
+                    <div class="flex flex-wrap gap-2 md:gap-3">
+                        <button class="bg-emerald-600 text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm hover:bg-emerald-700"><i class="fas fa-check mr-1"></i>Approve Selected</button>
+                        <button class="bg-rose-500 text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm hover:bg-rose-600"><i class="fas fa-times mr-1"></i>Reject Selected</button>
+                        <button class="bg-amber-400 text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm hover:bg-amber-500"><i class="fas fa-exclamation-triangle mr-1"></i>Escalate</button>
+                        <button class="border text-gray-600 px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm hover:bg-gray-50"><i class="fas fa-envelope mr-1"></i>More Info</button>
+                        <button class="border text-gray-600 px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm hover:bg-gray-50"><i class="fas fa-file-pdf mr-1"></i>Report</button>
                     </div>
                 </div>
             </div>
 
             <!-- REFUND POLICY -->
             <div id="section-refund-policy" class="admin-section hidden">
-                <div class="bg-white rounded-2xl shadow-sm p-6 max-w-3xl">
-                    <h2 class="text-xl font-bold mb-1">Refund Policy Configuration</h2>
-                    <p class="text-gray-500 text-sm mb-5">Define eligibility rules, windows, and processing limits for all refund categories.</p>
+                <div class="bg-white rounded-2xl shadow-sm p-4 md:p-6 max-w-3xl">
+                    <h2 class="text-lg md:text-xl font-bold mb-1">Refund Policy Configuration</h2>
+                    <p class="text-gray-500 text-xs md:text-sm mb-5">Define eligibility rules, windows, and processing limits for all refund categories.</p>
                     <div class="space-y-5">
-                        <div class="border rounded-xl p-4">
-                            <h4 class="font-semibold text-gray-700 mb-3">Eligibility Windows</h4>
-                            <div class="grid sm:grid-cols-2 gap-4 text-sm">
+                        <div class="border rounded-xl p-3 md:p-4">
+                            <h4 class="font-semibold text-gray-700 mb-3 text-sm md:text-base">Eligibility Windows</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 text-xs md:text-sm">
                                 <label class="block">Duplicate payment window (days)
                                     <input type="number" value="30" class="mt-1 border rounded-lg w-full p-2 focus:outline-none focus:ring-1 focus:ring-rose-400">
                                 </label>
@@ -355,30 +368,30 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="border rounded-xl p-4">
-                            <h4 class="font-semibold text-gray-700 mb-3">Auto-Approval Rules</h4>
-                            <div class="space-y-3 text-sm">
-                                <label class="flex items-center justify-between">
+                        <div class="border rounded-xl p-3 md:p-4">
+                            <h4 class="font-semibold text-gray-700 mb-3 text-sm md:text-base">Auto-Approval Rules</h4>
+                            <div class="space-y-3 text-xs md:text-sm">
+                                <label class="flex items-center justify-between gap-2">
                                     <span>Auto-approve duplicate payments ≤ Rwf 5M</span>
-                                    <input type="checkbox" checked class="w-4 h-4 accent-emerald-600">
+                                    <input type="checkbox" checked class="w-4 h-4 accent-emerald-600 shrink-0">
                                 </label>
-                                <label class="flex items-center justify-between">
+                                <label class="flex items-center justify-between gap-2">
                                     <span>Auto-approve cancelled deals within 48 h</span>
-                                    <input type="checkbox" checked class="w-4 h-4 accent-emerald-600">
+                                    <input type="checkbox" checked class="w-4 h-4 accent-emerald-600 shrink-0">
                                 </label>
-                                <label class="flex items-center justify-between">
+                                <label class="flex items-center justify-between gap-2">
                                     <span>Require Finance Director approval for refunds &gt; Rwf 100M</span>
-                                    <input type="checkbox" checked class="w-4 h-4 accent-emerald-600">
+                                    <input type="checkbox" checked class="w-4 h-4 accent-emerald-600 shrink-0">
                                 </label>
-                                <label class="flex items-center justify-between">
+                                <label class="flex items-center justify-between gap-2">
                                     <span>Notify user via SMS on status change</span>
-                                    <input type="checkbox" checked class="w-4 h-4 accent-emerald-600">
+                                    <input type="checkbox" checked class="w-4 h-4 accent-emerald-600 shrink-0">
                                 </label>
                             </div>
                         </div>
-                        <div class="border rounded-xl p-4">
-                            <h4 class="font-semibold text-gray-700 mb-3">Processing Limits</h4>
-                            <div class="grid sm:grid-cols-2 gap-4 text-sm">
+                        <div class="border rounded-xl p-3 md:p-4">
+                            <h4 class="font-semibold text-gray-700 mb-3 text-sm md:text-base">Processing Limits</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 text-xs md:text-sm">
                                 <label class="block">SLA target (days)
                                     <input type="number" value="5" class="mt-1 border rounded-lg w-full p-2 focus:outline-none focus:ring-1 focus:ring-rose-400">
                                 </label>
@@ -387,9 +400,9 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="flex gap-3">
-                            <button class="bg-rose-600 text-white px-6 py-2 rounded-xl hover:bg-rose-700">Save Policy</button>
-                            <button class="border px-6 py-2 rounded-xl text-gray-600 hover:bg-gray-50">Reset to Defaults</button>
+                        <div class="flex flex-wrap gap-3">
+                            <button class="bg-rose-600 text-white px-4 md:px-6 py-2 rounded-xl hover:bg-rose-700 text-sm">Save Policy</button>
+                            <button class="border px-4 md:px-6 py-2 rounded-xl text-gray-600 hover:bg-gray-50 text-sm">Reset to Defaults</button>
                         </div>
                     </div>
                 </div>
@@ -397,7 +410,7 @@
 
             <!-- SETTINGS -->
             <div id="section-settings" class="admin-section hidden">
-                <div class="bg-white rounded-2xl p-6"><h2 class="text-xl font-bold">System Preferences</h2><div class="space-y-4 mt-4"><label class="flex justify-between"><span>Enable diaspora matching AI</span><input type="checkbox" checked class="toggle"></label><label class="flex justify-between"><span>Require 2FA for admin</span><input type="checkbox"></label><label class="flex justify-between"><span>Auto-publish gazette updates</span><input type="checkbox" checked></label><hr><button class="bg-emerald-700 text-white px-6 py-2 rounded-xl">Save Settings</button><button class="ml-3 border px-6 py-2 rounded-xl">Regenerate API Keys</button></div></div>
+                <div class="bg-white rounded-2xl p-4 md:p-6"><h2 class="text-lg md:text-xl font-bold">System Preferences</h2><div class="space-y-4 mt-4"><label class="flex justify-between gap-2 text-sm md:text-base"><span>Enable diaspora matching AI</span><input type="checkbox" checked class="toggle shrink-0"></label><label class="flex justify-between gap-2 text-sm md:text-base"><span>Require 2FA for admin</span><input type="checkbox" class="shrink-0"></label><label class="flex justify-between gap-2 text-sm md:text-base"><span>Auto-publish gazette updates</span><input type="checkbox" checked class="shrink-0"></label><hr><div class="flex flex-wrap gap-2"><button class="bg-emerald-700 text-white px-4 md:px-6 py-2 rounded-xl text-sm">Save Settings</button><button class="border px-4 md:px-6 py-2 rounded-xl text-sm">Regenerate API Keys</button></div></div></div>
             </div>
         </div>
     </main>
@@ -535,14 +548,29 @@
         });
     });
 
-    // mobile sidebar toggle
-    const mobileBtn = document.getElementById('mobileMenuBtn');
+    // mobile sidebar toggle with overlay
     const sidebar = document.querySelector('.admin-sidebar');
-    if (mobileBtn) {
-        mobileBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('hidden');
-        });
+    const overlay = document.getElementById('mobileOverlay');
+
+    function toggleMobileSidebar() {
+        const isHidden = sidebar.classList.contains('hidden');
+        if (isHidden) {
+            sidebar.classList.remove('hidden');
+            sidebar.classList.add('fixed', 'inset-y-0', 'left-0', 'z-20');
+            overlay.classList.remove('hidden');
+        } else {
+            closeMobileSidebar();
+        }
     }
+
+    function closeMobileSidebar() {
+        sidebar.classList.add('hidden');
+        sidebar.classList.remove('fixed', 'inset-y-0', 'left-0', 'z-20');
+        overlay.classList.add('hidden');
+    }
+
+    window.toggleMobileSidebar = toggleMobileSidebar;
+    window.closeMobileSidebar = closeMobileSidebar;
 
     // ---------- CHARTS ----------
     const trendCtx = document.getElementById('trendChart')?.getContext('2d');

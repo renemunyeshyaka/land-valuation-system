@@ -125,6 +125,10 @@ func (s *EmailService) SendPasswordResetEmail(toEmail, firstName, code string) e
 func (s *EmailService) sendEmail(to, subject, body string) error {
 	auth := smtp.PlainAuth("", s.emailUser, s.password, s.smtpHost)
 
+	// Use system name in the From header so recipients see "Land Valuation System" instead of raw email
+	systemName := "LandVal System"
+	fromHeader := fmt.Sprintf("%s <%s>", systemName, s.from)
+
 	msg := []byte(fmt.Sprintf(
 		"From: %s\r\n"+
 			"To: %s\r\n"+
@@ -133,10 +137,11 @@ func (s *EmailService) sendEmail(to, subject, body string) error {
 			"Content-Type: text/html; charset=UTF-8\r\n"+
 			"\r\n"+
 			"%s",
-		s.from, to, subject, body,
+		fromHeader, to, subject, body,
 	))
 
 	addr := fmt.Sprintf("%s:%s", s.smtpHost, s.smtpPort)
+	// Keep raw email as the SMTP envelope sender (MAIL FROM)
 	return smtp.SendMail(addr, auth, s.from, []string{to}, msg)
 }
 

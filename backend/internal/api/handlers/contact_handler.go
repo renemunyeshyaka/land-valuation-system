@@ -31,6 +31,13 @@ func ContactFormHandler() gin.HandlerFunc {
 		smtpUser := os.Getenv("EMAIL_USER")
 		smtpPass := os.Getenv("EMAIL_PASS")
 		smtpFrom := os.Getenv("SMTP_FROM")
+		// Extract raw email from "Name <email>" format for SMTP envelope
+		smtpFromEmail := smtpFrom
+		if start := strings.Index(smtpFrom, "<"); start != -1 {
+			if end := strings.Index(smtpFrom, ">"); end > start {
+				smtpFromEmail = smtpFrom[start+1 : end]
+			}
+		}
 		to := "jeanrenemunyeshyaka@gmail.com"
 
 		subject := "New Contact Form Submission"
@@ -47,7 +54,7 @@ func ContactFormHandler() gin.HandlerFunc {
 
 		addr := fmt.Sprintf("%s:%s", smtpHost, smtpPort)
 		auth := smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
-		if err := smtp.SendMail(addr, auth, smtpFrom, []string{to}, []byte(msg)); err != nil {
+		if err := smtp.SendMail(addr, auth, smtpFromEmail, []string{to}, []byte(msg)); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send email. Please try again later."})
 			return
 		}

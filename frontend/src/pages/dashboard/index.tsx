@@ -1401,11 +1401,11 @@ function Dashboard() {
 
         {/* MAIN CONTENT */}
         <main className="flex-grow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-            <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
-              <aside className="bg-white border border-gray-100 rounded-lg shadow-sm p-3 h-fit lg:sticky lg:top-24">
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide px-3 py-2">Dashboard Menu</h2>
-                <nav className="space-y-1">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 md:py-16">
+            <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 md:gap-6">
+              <aside className="bg-white border border-gray-100 rounded-lg shadow-sm p-2 md:p-3 h-fit lg:sticky lg:top-24">
+                <h2 className="text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wide px-2 md:px-3 py-2">Dashboard Menu</h2>
+                <nav className="space-y-0.5 md:space-y-1">
                   {DASHBOARD_TABS.map((tab) => (
                     <button
                       key={tab.key}
@@ -1413,13 +1413,13 @@ function Dashboard() {
                       data-testid={`user-dashboard-tab-${tab.key}`}
                       aria-current={activeDashboardTab === tab.key ? 'page' : undefined}
                       onClick={() => activateDashboardTab(tab.key)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`w-full text-left px-3 md:px-3 py-2.5 md:py-2 rounded-lg text-sm font-medium transition-colors ${
                         activeDashboardTab === tab.key
                           ? 'bg-emerald-100 text-emerald-800'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <i className={`${tab.icon} mr-2`}></i>
+                      <i className={`${tab.icon} mr-2 w-4 text-center`}></i>
                       {tab.label}
                     </button>
                   ))}
@@ -1443,65 +1443,65 @@ function Dashboard() {
                 </button>
               </div>
             )}
-            {/* Quick Navigation - moved above FourStepProcess as requested */}
-            <div id="dashboard-overview" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+            {/* Quick Navigation */}
+            <div id="dashboard-overview" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-8">
               {canAddProperty && (
               <Link
                 href="/properties/add"
-                className="flex flex-col items-center gap-3 p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 border border-emerald-600 rounded-lg hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all group"
+                className="flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 border border-emerald-600 rounded-lg hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all group"
               >
-                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                <i className="fas fa-plus-circle text-emerald-700 text-xl"></i>
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i className="fas fa-plus-circle text-emerald-700 text-base md:text-xl"></i>
                 </div>
-                <span className="text-sm font-semibold text-white">Add Property</span>
+                <span className="text-[11px] md:text-sm font-semibold text-white text-center leading-tight">Add Property</span>
               </Link>
               )}
               <Link
                 href="/analytics"
-                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
+                className="flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
               >
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                  <i className="fas fa-chart-line text-blue-700 text-lg"></i>
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                  <i className="fas fa-chart-line text-blue-700 text-base md:text-lg"></i>
                 </div>
-                <span className="text-sm font-semibold text-gray-800">Analytics</span>
+                <span className="text-[11px] md:text-sm font-semibold text-gray-800 text-center leading-tight">Analytics</span>
               </Link>
               <Link
                 href="/dashboard/subscription"
-                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
+                className="flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
               >
-                <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors">
-                  <i className="fas fa-gem text-amber-700 text-lg"></i>
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-amber-100 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                  <i className="fas fa-gem text-amber-700 text-base md:text-lg"></i>
                 </div>
-                <span className="text-sm font-semibold text-gray-800">Upgrade Plan</span>
+                <span className="text-[11px] md:text-sm font-semibold text-gray-800 text-center leading-tight">Upgrade Plan</span>
               </Link>
-              {/* View Properties quick nav card (profile modal version) */}
+              {/* View Properties quick nav card */}
               <button
                 type="button"
                 onClick={() => activateDashboardTab('properties')}
-                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
+                className="flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-emerald-200 transition-all group"
               >
-                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-                  <i className="fas fa-eye text-emerald-700 text-lg"></i>
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                  <i className="fas fa-eye text-emerald-700 text-base md:text-lg"></i>
                 </div>
-                <span className="text-sm font-semibold text-gray-800">View Properties</span>
+                <span className="text-[11px] md:text-sm font-semibold text-gray-800 text-center leading-tight">View Properties</span>
               </button>
               {/* Payment History quick nav card */}
               <button
                 type="button"
                 onClick={() => activateDashboardTab('billing')}
-                className="flex flex-col items-center gap-3 p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-blue-200 transition-all group"
+                className="flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md hover:border-blue-200 transition-all group"
               >
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                  <i className="fas fa-wallet text-blue-700 text-lg"></i>
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                  <i className="fas fa-wallet text-blue-700 text-base md:text-lg"></i>
                 </div>
-                <span className="text-sm font-semibold text-gray-800">Payment History</span>
+                <span className="text-[11px] md:text-sm font-semibold text-gray-800 text-center leading-tight">Payment History</span>
               </button>
 
               {/* View Properties Modal (profile version) */}
 
               {showPropertiesModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                  <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 relative animate-fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 md:p-4">
+                  <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-4 md:p-6 relative animate-fade-in max-h-[95vh] overflow-y-auto">
                     <button
                       className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
                       onClick={handleClosePropertiesModal}
@@ -1514,33 +1514,33 @@ function Dashboard() {
                       My Properties
                     </h2>
                     {/* Selector Tabs */}
-                    <div className="flex gap-2 mb-4">
+                    <div className="flex gap-1.5 md:gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1">
                       <button
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${propertyTab === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
                         onClick={() => handleTabChange('all')}
                       >
                         All Visible
                       </button>
                       <button
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'owned' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${propertyTab === 'owned' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
                         onClick={() => handleTabChange('owned')}
                       >
                         Owned
                       </button>
                       <button
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'saved' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${propertyTab === 'saved' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
                         onClick={() => handleTabChange('saved')}
                       >
                         Saved
                       </button>
                       <button
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'recent' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${propertyTab === 'recent' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
                         onClick={() => handleTabChange('recent')}
                       >
                         Recently Viewed
                       </button>
                       <button
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${propertyTab === 'recommended' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
+                        className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${propertyTab === 'recommended' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
                         onClick={() => handleTabChange('recommended')}
                       >
                         Recommended
@@ -1816,8 +1816,8 @@ function Dashboard() {
 
             {/* Payment History Modal (always at root, not inside grid) */}
             {showPaymentHistoryModal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative animate-fade-in">
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 md:p-4">
+                <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-4 md:p-6 relative animate-fade-in max-h-[95vh] overflow-y-auto">
                   <button
                     className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
                     onClick={handleClosePaymentHistoryModal}
@@ -1892,8 +1892,8 @@ function Dashboard() {
             )}
 
             {showRefundsModal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                <div className="bg-white rounded-lg shadow-lg max-w-3xl w-full p-6 relative animate-fade-in max-h-[90vh] overflow-y-auto">
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 md:p-4">
+                <div className="bg-white rounded-lg shadow-lg max-w-3xl w-full p-4 md:p-6 relative animate-fade-in max-h-[95vh] overflow-y-auto">
                   <button
                     className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
                     onClick={handleCloseRefundsModal}
@@ -2076,8 +2076,8 @@ function Dashboard() {
             {/* Refined Estimate Search (matches home page) */}
             {/* Registration Prompt Modal */}
             {showRegisterPrompt && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+                <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 max-w-md w-full text-center">
                   <h2 className="text-2xl font-bold mb-2 text-emerald-800">Register to Continue</h2>
                   <p className="mb-4 text-gray-700">You need to create an account to use the Estimate feature.</p>
                   <Link href="/auth/register" className="inline-block bg-emerald-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-emerald-700 transition mb-2">Register Now</Link>
@@ -2087,10 +2087,10 @@ function Dashboard() {
               </div>
             )}
             {/* Two-column layout for Land Estimate Search and Result */}
-            <div id="dashboard-estimate" className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div id="dashboard-estimate" className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
               {/* Left: Land Estimate Search */}
-              <div className="bg-white border border-amber-200 rounded-2xl shadow-sm p-6">
-                <h2 className="text-xl font-bold text-emerald-800 mb-2 flex items-center gap-2">
+              <div className="bg-white border border-amber-200 rounded-2xl shadow-sm p-4 md:p-6">
+                <h2 className="text-lg md:text-xl font-bold text-emerald-800 mb-2 flex items-center gap-2">
                   <i className="fas fa-search-location text-amber-400"></i>
                   Land Estimate Search
                 </h2>
@@ -2106,7 +2106,7 @@ function Dashboard() {
                 {estimateResult ? (
                   <LandEstimateResultCard estimateResult={estimateResult} />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 italic p-8">
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 italic p-4 md:p-8">
                     <span>No estimate result yet.</span>
                   </div>
                 )}
@@ -2116,74 +2116,73 @@ function Dashboard() {
             {/* Quick Navigation moved above FourStepProcess */}
 
             {/* Two Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
               
               {/* Left Column: Profile & Stats */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-4 md:space-y-6">
 
                 {/* Profile Card */}
-                <div id="dashboard-profile" className="bg-white border border-gray-100 rounded-lg shadow-sm p-6">
+                <div id="dashboard-profile" className="bg-white border border-gray-100 rounded-lg shadow-sm p-4 md:p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-800">Profile Overview</h2>
+                    <h2 className="text-lg md:text-xl font-semibold text-gray-800">Profile Overview</h2>
                     <Link
                       href="/dashboard/profile"
-                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors"
+                      className="inline-flex items-center gap-2 px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors"
                     >
                       <i className="fas fa-edit"></i>
                       Edit Profile
                     </Link>
                   </div>
                   
-                  <div>
-                    <p className="text-3xl font-bold text-gray-800">{user.recentValuations.length}</p>
-                    <p className="text-xs text-gray-500 mt-2">Lifetime property assessments</p>
-                  </div>
-
-                  {/* This Month */}
-                  <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-medium text-gray-600">This Month</h3>
-                      <i className="fas fa-calendar-alt text-blue-600 text-lg"></i>
+                  {/* Stats grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4 md:p-6">
+                      <p className="text-2xl md:text-3xl font-bold text-gray-800">{user.recentValuations.length}</p>
+                      <p className="text-xs text-gray-500 mt-2">Lifetime property assessments</p>
                     </div>
-                    <p className="text-3xl font-bold text-gray-800">2</p>
-                    <p className="text-xs text-gray-500 mt-2">Properties valued this month</p>
-                  </div>
-
-                  {/* Average Value */}
-                  <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-medium text-gray-600">Avg Value</h3>
-                      <i className="fas fa-coins text-yellow-600 text-lg"></i>
+                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4 md:p-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-medium text-gray-600">This Month</h3>
+                        <i className="fas fa-calendar-alt text-blue-600 text-lg"></i>
+                      </div>
+                      <p className="text-2xl md:text-3xl font-bold text-gray-800">2</p>
+                      <p className="text-xs text-gray-500 mt-2">Properties valued this month</p>
                     </div>
-                    <p className="text-3xl font-bold text-gray-800">RWF 140M</p>
-                    <p className="text-xs text-gray-500 mt-2">Average valuation price</p>
+                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4 md:p-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-medium text-gray-600">Avg Value</h3>
+                        <i className="fas fa-coins text-yellow-600 text-lg"></i>
+                      </div>
+                      <p className="text-2xl md:text-3xl font-bold text-gray-800">RWF 140M</p>
+                      <p className="text-xs text-gray-500 mt-2">Average valuation price</p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Recent Valuations */}
-                <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4">Recent Valuations</h2>
+                <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4 md:p-6">
+                  <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">Recent Valuations</h2>
                   
                   {user.recentValuations.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
+                    <div className="-mx-4 md:mx-0 overflow-x-auto">
+                      <table className="w-full text-xs md:text-sm">
                         <thead className="border-b border-gray-200">
                           <tr>
-                            <th className="text-left py-3 px-2 font-medium text-gray-700">Location</th>
-                            <th className="text-left py-3 px-2 font-medium text-gray-700">Area (m²)</th>
-                            <th className="text-right py-3 px-2 font-medium text-gray-700">Valuation</th>
-                            <th className="text-left py-3 px-2 font-medium text-gray-700">Date</th>
+                            <th className="text-left py-3 px-3 md:px-2 font-medium text-gray-700 whitespace-nowrap">Location</th>
+                            <th className="text-left py-3 px-3 md:px-2 font-medium text-gray-700 whitespace-nowrap">Area (m²)</th>
+                            <th className="text-right py-3 px-3 md:px-2 font-medium text-gray-700 whitespace-nowrap">Valuation</th>
+                            <th className="text-left py-3 px-3 md:px-2 font-medium text-gray-700 whitespace-nowrap">Date</th>
                           </tr>
                         </thead>
                         <tbody>
                           {user.recentValuations.slice(0, 5).map(valuation => (
                             <tr key={valuation.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                              <td className="py-3 px-2 text-gray-800">{valuation.location}</td>
-                              <td className="py-3 px-2 text-gray-700">{valuation.area.toLocaleString('en-US')}</td>
-                              <td className="py-3 px-2 text-right font-medium text-emerald-700">
+                              <td className="py-3 px-3 md:px-2 text-gray-800 whitespace-nowrap">{valuation.location}</td>
+                              <td className="py-3 px-3 md:px-2 text-gray-700 whitespace-nowrap">{valuation.area.toLocaleString('en-US')}</td>
+                              <td className="py-3 px-3 md:px-2 text-right font-medium text-emerald-700 whitespace-nowrap">
                                 RWF {(valuation.valuationPrice / 1000000).toFixed(0)}M
                               </td>
-                              <td className="py-3 px-2 text-gray-600">
+                              <td className="py-3 px-3 md:px-2 text-gray-600 whitespace-nowrap">
                                 {new Date(valuation.createdAt).toLocaleDateString('en-US', { 
                                   month: 'short', 
                                   day: 'numeric',
@@ -2203,14 +2202,14 @@ function Dashboard() {
               </div>
 
               {/* Right Column: Subscription & Referral */}
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
 
                 {/* Subscription Card */}
-                <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6">
-                  <h2 className="text-lg font-semibold text-gray-800 mb-4">Subscription</h2>
+                <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4 md:p-6">
+                  <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4">Subscription</h2>
                   
                   {/* Tier Badge */}
-                  <div className="mb-4 p-4 bg-emerald-50 border border-emerald-100 rounded-lg">
+                  <div className="mb-4 p-3 md:p-4 bg-emerald-50 border border-emerald-100 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-600">Current Tier</span>
                       <span className="inline-block px-3 py-1 bg-emerald-700 text-white text-xs font-semibold rounded-full">
@@ -2262,9 +2261,9 @@ function Dashboard() {
                   </div>
                 </div>
 
-                <div id="dashboard-notifications" className="bg-white border border-gray-100 rounded-lg shadow-sm p-6">
+                <div id="dashboard-notifications" className="bg-white border border-gray-100 rounded-lg shadow-sm p-4 md:p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-800">Admin Notifications</h2>
+                    <h2 className="text-base md:text-lg font-semibold text-gray-800">Admin Notifications</h2>
                     {unreadNotifications > 0 && (
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
                         {unreadNotifications} new
@@ -2311,8 +2310,8 @@ function Dashboard() {
                 </div>
 
                 {/* Referral Card */}
-                <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6">
-                  <h2 className="text-lg font-semibold text-gray-800 mb-4">Referral Program</h2>
+                <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4 md:p-6">
+                  <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4">Referral Program</h2>
                   
                   <p className="text-sm text-gray-600 mb-4">
                     Share your referral code with friends and earn rewards!
@@ -2350,7 +2349,7 @@ function Dashboard() {
             </div>
 
             {/* Subscription Plans Selector */}
-            <div id="dashboard-subscription" className="mt-16 mb-12">
+            <div id="dashboard-subscription" className="mt-10 md:mt-16 mb-8 md:mb-12">
               <SubscriptionSelector currentPlan={user.subscriptionTier} />
             </div>
 
