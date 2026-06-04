@@ -39,6 +39,7 @@ type MobileMoneyRequest struct {
 	Amount      float64 `json:"amount" binding:"required,gt=0" example:"50000"`
 	PhoneNumber string  `json:"phone_number" binding:"required" example:"+250788123456"`
 	Provider    string  `json:"provider" binding:"required,oneof=mtn airtel" example:"mtn"`
+	Currency    string  `json:"currency" example:"EUR"`
 	Description string  `json:"description" example:"Property payment"`
 }
 
@@ -140,11 +141,17 @@ func (h *PaymentHandler) InitiateMobileMoneyPayment(c *gin.Context) {
 		return
 	}
 
+	// Determine currency: use from request or default to EUR
+	currency := req.Currency
+	if currency == "" {
+		currency = "EUR"
+	}
+
 	// Create payment request with normalized phone
 	paymentReq := &services.PaymentRequest{
 		UserID:          uint(userIDUint),
 		Amount:          req.Amount,
-		Currency:        "EUR",
+		Currency:        currency,
 		PhoneNumber:     normalizedPhone,
 		PaymentProvider: req.Provider,
 		Description:     req.Description,

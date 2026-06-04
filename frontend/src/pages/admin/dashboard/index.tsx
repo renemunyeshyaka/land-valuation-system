@@ -18,6 +18,7 @@ import SystemHealth from '@/components/admin/SystemHealth';
 import DataImportExport from '@/components/admin/DataImportExport';
 import NotificationManagement from '@/components/admin/NotificationManagement';
 import Refunds from '@/components/admin/Refunds';
+import CurrencyManagement from '@/components/admin/CurrencyManagement';
 
 const NAV = [
   { key: 'overview', label: 'Dashboard', icon: 'fas fa-tachometer-alt' },
@@ -31,6 +32,7 @@ const NAV = [
   { key: 'system', label: 'System', icon: 'fas fa-sliders-h' },
   { key: 'data',    label: 'System Data', icon: 'fas fa-database' },
   { key: 'refunds', label: 'Refunds',     icon: 'fas fa-undo-alt' },
+  { key: 'currency', label: 'Currencies',  icon: 'fas fa-coins' },
 ];
 
 type AdminTabKey = typeof NAV[number]['key'];
@@ -248,6 +250,7 @@ function AdminDashboard() {
       case 'system': return <SystemHealth />;
       case 'data':    return <DataImportExport />;
       case 'refunds':  return <Refunds />;
+      case 'currency':  return <CurrencyManagement />;
       case 'overview':
       default:
         return (

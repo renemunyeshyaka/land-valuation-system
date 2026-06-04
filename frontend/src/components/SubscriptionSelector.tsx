@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import CurrencySelector from './CurrencySelector';
+import { Currency, getCurrencies, getPreferredCurrency, findCurrency, convertFromRwf, formatCurrency } from '../utils/currency';
 
 interface SubscriptionPlan {
   id: string;
   name: string;
   description: string;
-  monthlyPrice: number;
-  yearlyPrice: number;
-  savings: number; // percentage savings for yearly
+  monthlyPrice: number;  // in RWF
+  yearlyPrice: number;   // in RWF
+  savings: number;
   icon: string;
   color: string;
   features: string[];
@@ -129,6 +131,49 @@ export default function SubscriptionSelector({
   const router = useRouter();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [preferredCurrency, setPreferredCurrencyState] = useState<string>('RWF');
+
+  // Load currencies and user preference on mount
+  useEffect(() => {
+    async function load() {
+      const data = await getCurrencies();
+      setCurrencies(data);
+      setPreferredCurrencyState(getPreferredCurrency());
+    }
+    load();
+  }, []);
+
+  const handleCurrencyChange = (code: string) => {
+    setPreferredCurrencyState(code);
+  };
+
+  /**
+   * Format a price in RWF to the user's preferred currency
+   */
+  const formatPrice = (priceRwf: number) => {
+    if (priceRwf === 0) {
+      const cur = findCurrency(currencies, preferredCurrency);
+      return `${cur?.symbol || 'Frw'} 0`;
+    }
+
+    const currency = findCurrency(currencies, preferredCurrency);
+    if (!currency || currency.is_base) {
+      // Show in RWF with formatting
+      return `RWF ${new Intl.NumberFormat('en-US').format(priceRwf)}`;
+    }
+
+    // Convert to preferred currency
+    const converted = convertFromRwf(priceRwf, currency);
+    return formatCurrency(converted, preferredCurrency);
+  };
+
+  /**
+   * Get the period label in the preferred currency
+   */
+  const getPeriodLabel = (monthlyLabel: string, yearlyLabel: string) => {
+    return billingPeriod === 'monthly' ? monthlyLabel : yearlyLabel;
+  };
 
   const handleSubscribe = async (planId: string) => {
     if (planId === currentPlan) {
@@ -141,8 +186,8 @@ export default function SubscriptionSelector({
       if (onSubscribe) {
         await onSubscribe(planId, billingPeriod);
       } else {
-        // Default: redirect to payment page
-        router.push(`/subscription/checkout?plan=${planId}&billing=${billingPeriod}`);
+        // Default: redirect to payment page with preferred currency
+        router.push(`/subscription/checkout?plan=${planId}&billing=${billingPeriod}&currency=${preferredCurrency}`);
       }
       toast.success(`Subscribed to ${planId} plan!`);
     } catch (error: any) {
@@ -150,13 +195,6 @@ export default function SubscriptionSelector({
     } finally {
       setLoadingPlan(null);
     }
-  };
-
-  const formatPrice = (price: number) => {
-    if (price === 0) {
-      return 'RWF 0';
-    }
-    return `RWF ${new Intl.NumberFormat('en-US').format(price)}`;
   };
 
   return (
@@ -170,28 +208,31 @@ export default function SubscriptionSelector({
           Start with free valuation, upgrade for advanced analytics & buyer matching
         </p>
 
-        {/* Billing Toggle */}
-        <div className="inline-flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-          <button
-            onClick={() => setBillingPeriod('monthly')}
-            className={`px-6 py-2.5 rounded-md font-semibold transition-all ${
-              billingPeriod === 'monthly'
-                ? 'bg-white text-blue-600 shadow-md'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setBillingPeriod('yearly')}
-            className={`px-6 py-2.5 rounded-md font-semibold transition-all ${
-              billingPeriod === 'yearly'
-                ? 'bg-white text-blue-600 shadow-md'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Yearly
-          </button>
+        {/* Billing Toggle + Currency Selector */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="inline-flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setBillingPeriod('monthly')}
+              className={`px-6 py-2.5 rounded-md font-semibold transition-all ${
+                billingPeriod === 'monthly'
+                  ? 'bg-white text-blue-600 shadow-md'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingPeriod('yearly')}
+              className={`px-6 py-2.5 rounded-md font-semibold transition-all ${
+                billingPeriod === 'yearly'
+                  ? 'bg-white text-blue-600 shadow-md'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Yearly
+            </button>
+          </div>
+          <CurrencySelector compact onCurrencyChange={handleCurrencyChange} />
         </div>
       </div>
 

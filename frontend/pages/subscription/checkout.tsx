@@ -5,6 +5,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 import { fetchWithTokenRefresh } from '@/utils/tokenRefresh';
+import { Currency, getCurrencies, getPreferredCurrency, findCurrency, convertFromRwf, formatCurrency, getCurrencySymbol } from '../../src/utils/currency';
 
 interface SubscriptionPlan {
   id: string;
@@ -22,8 +23,8 @@ const subscriptionPlans: SubscriptionPlan[] = [
     id: 'basic',
     name: 'Basic',
     description: 'Popular choice for growing users',
-    monthlyPrice: 29,
-    yearlyPrice: 348,
+    monthlyPrice: 29000,
+    yearlyPrice: 348000,
     savings: 0,
     icon: '📍',
     features: [
@@ -36,8 +37,8 @@ const subscriptionPlans: SubscriptionPlan[] = [
     id: 'professional',
     name: 'Professional',
     description: 'Advanced analytics and matching',
-    monthlyPrice: 79,
-    yearlyPrice: 948,
+    monthlyPrice: 79000,
+    yearlyPrice: 948000,
     savings: 0,
     icon: '⭐',
     features: [
@@ -50,8 +51,8 @@ const subscriptionPlans: SubscriptionPlan[] = [
     id: 'ultimate',
     name: 'Ultimate',
     description: 'Complete solution for professionals',
-    monthlyPrice: 199,
-    yearlyPrice: 2388,
+    monthlyPrice: 199000,
+    yearlyPrice: 2388000,
     savings: 0,
     icon: '👑',
     features: [
@@ -73,6 +74,9 @@ const SubscriptionCheckout: React.FC = () => {
   const [provider, setProvider] = useState<'mtn' | 'airtel' | 'bank'>('mtn');
   const [loading, setLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [preferredCurrency, setPreferredCurrencyState] = useState<string>('RWF');
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
 
   // Load plan from query parameters
   useEffect(() => {
@@ -89,6 +93,17 @@ const SubscriptionCheckout: React.FC = () => {
     if (billing === 'yearly' || billing === 'monthly') {
       setBillingPeriod(billing);
     }
+
+    // Load currencies and preferred currency
+    async function loadCurrencies() {
+      const data = await getCurrencies();
+      setCurrencies(data);
+      const preferred = getPreferredCurrency();
+      setPreferredCurrencyState(preferred);
+      const found = findCurrency(data, preferred);
+      setSelectedCurrency(found || null);
+    }
+    loadCurrencies();
   }, [plan, billing, router]);
 
   // Redirect if not authenticated
@@ -103,6 +118,14 @@ const SubscriptionCheckout: React.FC = () => {
   const calculateAmount = () => {
     if (!selectedPlan) return 0;
     return billingPeriod === 'yearly' ? selectedPlan.yearlyPrice : selectedPlan.monthlyPrice;
+  };
+
+  const formatCheckoutPrice = (priceRwf: number) => {
+    if (!selectedCurrency || selectedCurrency.is_base) {
+      return `RWF ${new Intl.NumberFormat('en-US').format(priceRwf)}`;
+    }
+    const converted = convertFromRwf(priceRwf, selectedCurrency);
+    return formatCurrency(converted, preferredCurrency);
   };
 
   const handleCheckout = async () => {
@@ -184,16 +207,14 @@ const SubscriptionCheckout: React.FC = () => {
       // Step 2: Initiate payment
       const amount = calculateAmount();
       let paymentBody: any = {
-        amount: amount,
+        amount: calculateAmount(),
+        currency: preferredCurrency,
         provider: provider,
         description: `${selectedPlan.name} Plan - ${billingPeriod === 'yearly' ? 'Yearly' : 'Monthly'} Subscription`,
       };
       let paymentEndpoint = '';
       if (provider === 'mtn' || provider === 'airtel') {
         paymentBody.phone_number = phoneNumber;
-        if (provider === 'mtn') {
-          paymentBody.currency = 'EUR'; // Always EUR for MTN sandbox
-        }
         paymentEndpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/payments/mobile-money`;
       } else if (provider === 'bank') {
         paymentBody.bank_name = 'Bank of Kigali / Equity';
@@ -255,7 +276,8 @@ const SubscriptionCheckout: React.FC = () => {
   }
 
   const amount = calculateAmount();
-  const formattedAmount = `EUR ${amount}`;
+  const formattedAmount = formatCheckoutPrice(amount);
+  const currencyLabel = selectedCurrency?.iso_code || 'RWF';
 
   return (
     <>
