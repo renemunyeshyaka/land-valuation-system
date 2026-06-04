@@ -42,6 +42,7 @@ type User struct {
 
 	// Preferences
 	PreferredLanguage string `gorm:"size:10;default:en" json:"preferred_language"`
+	PreferredCurrency string `gorm:"size:3;default:RWF" json:"preferred_currency"`
 	NotificationEmail bool   `gorm:"default:true" json:"notification_email"`
 	NotificationSMS   bool   `gorm:"default:false" json:"notification_sms"`
 

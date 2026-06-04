@@ -40,6 +40,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client, 
 	setupExchangeRateRoutes(router, redisClient)
 	setupReferralRoutes(router, db)
 	setupDashboardRoutes(router, db)
+	setupCurrencyRoutes(router, db)
 	setupHealthRoutes(router, db)
 
 	// Land Value Estimation endpoint
@@ -398,4 +399,25 @@ func setupFileRoutes(router *gin.Engine, cfg *config.Config) {
 
 	// Serve static files from property_images directory
 	router.Static("/property_images", cfg.UploadPath)
+}
+
+func setupCurrencyRoutes(router *gin.Engine, db *gorm.DB) {
+	currencyRepo := repository.NewCurrencyRepository(db)
+	currencyService := services.NewCurrencyService(currencyRepo)
+	currencyHandler := handlers.NewCurrencyHandler(currencyService)
+
+	// Public endpoints - anyone can view currencies and convert amounts
+	currencies := router.Group("/api/v1/currencies")
+	{
+		currencies.GET("", currencyHandler.GetCurrencies)
+		currencies.GET("/:code", currencyHandler.GetCurrency)
+		currencies.GET("/convert", currencyHandler.ConvertAmount)
+	}
+
+	// Admin endpoints - manage exchange rates
+	admin := router.Group("/api/v1/admin/currencies")
+	admin.Use(middleware.AuthRequired(), middleware.AdminRequired())
+	{
+		admin.POST("/sync", currencyHandler.SyncExchangeRates)
+	}
 }
