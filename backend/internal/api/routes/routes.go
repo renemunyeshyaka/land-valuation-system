@@ -38,7 +38,6 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client, 
 	setupAdminRoutes(router, db)
 	setupNotificationRoutes(router, db)
 	setupExchangeRateRoutes(router, redisClient)
-	setupReferralRoutes(router, db)
 	setupDashboardRoutes(router, db)
 	setupCurrencyRoutes(router, db)
 	setupHealthRoutes(router, db)
@@ -347,26 +346,6 @@ func setupExchangeRateRoutes(router *gin.Engine, redisClient *redis.Client) {
 		admin.Use(middleware.AuthRequired(), middleware.AdminRequired())
 		{
 			admin.POST("/refresh", exchangeRateHandler.RefreshRate)
-		}
-	}
-}
-
-func setupReferralRoutes(router *gin.Engine, db *gorm.DB) {
-	referralService := services.NewReferralService(db)
-	referralHandler := handlers.NewReferralHandler(referralService)
-
-	referrals := router.Group("/api/v1/referral")
-	{
-		// Public endpoints - anyone can validate a referral code
-		referrals.GET("/:code", referralHandler.ValidateReferralCode)
-		referrals.GET("/stats/public", referralHandler.GetReferralStats)
-
-		// Protected endpoints - authenticated users only
-		protected := referrals.Group("")
-		protected.Use(middleware.AuthRequired())
-		{
-			protected.GET("/me/info", referralHandler.GetMyReferralInfo)
-			protected.POST("/generate", referralHandler.GenerateReferralCode)
 		}
 	}
 }

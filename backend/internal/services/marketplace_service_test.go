@@ -23,7 +23,6 @@ func setupMarketplaceServiceTestDB(t *testing.T) *gorm.DB {
 		ID:           1,
 		Email:        "owner@example.com",
 		Password:     "owner-pass",
-		ReferralCode: "OWNER-REF-001",
 	}
 	require.NoError(t, db.Create(owner).Error)
 
@@ -31,7 +30,6 @@ func setupMarketplaceServiceTestDB(t *testing.T) *gorm.DB {
 		ID:           2,
 		Email:        "other@example.com",
 		Password:     "other-pass",
-		ReferralCode: "OTHER-REF-002",
 	}
 	require.NoError(t, db.Create(nonOwner).Error)
 

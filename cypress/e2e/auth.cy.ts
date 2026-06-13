@@ -65,38 +65,11 @@ describe('Land Valuation System - Authentication Flow', () => {
   });
           first_name: 'John',
           last_name: 'Doe',
-          referral_code: 'REF-12345',
           subscription_tier: 'free',
         }));
       });
       
       cy.visit(`${FRONTEND_URL}/dashboard`);
-      
-      // Check for referral code section
-      cy.contains(/referral/i).should('be.visible');
-      cy.contains('REF-12345').should('be.visible');
-    });
-
-    it('should allow copying referral code', () => {
-      cy.window().then((win) => {
-        win.localStorage.setItem('access_token', 'mock-token');
-        win.localStorage.setItem('user', JSON.stringify({
-          id: '1',
-          email: 'test@example.com',
-          first_name: 'John',
-          last_name: 'Doe',
-          referral_code: 'REF-12345',
-          subscription_tier: 'free',
-        }));
-      });
-      
-      cy.visit(`${FRONTEND_URL}/dashboard`);
-      
-      // Find and click copy button
-      cy.contains(/copy|share/i).click();
-      
-      // Check for success toast message
-      cy.contains(/copied|success/i).should('be.visible');
     });
   });
 

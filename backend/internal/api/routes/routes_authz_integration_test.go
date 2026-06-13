@@ -37,9 +37,9 @@ func setupAuthzIntegrationDB(t *testing.T) *gorm.DB {
 	require.NoError(t, err)
 
 	users := []models.User{
-		{ID: 1, Email: "owner@example.com", Password: "owner-pass", ReferralCode: "OWN-001"},
-		{ID: 2, Email: "other@example.com", Password: "other-pass", ReferralCode: "OTH-002"},
-		{ID: 3, Email: "admin@example.com", Password: "admin-pass", UserType: "admin", ReferralCode: "ADM-003"},
+		{ID: 1, Email: "owner@example.com", Password: "owner-pass"},
+		{ID: 2, Email: "other@example.com", Password: "other-pass"},
+		{ID: 3, Email: "admin@example.com", Password: "admin-pass", UserType: "admin"},
 	}
 	for _, u := range users {
 		require.NoError(t, db.Create(&u).Error)

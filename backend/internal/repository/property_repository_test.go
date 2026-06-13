@@ -19,7 +19,6 @@ func TestPropertyRepository_FindByUPIPaginated(t *testing.T) {
 		ID:           1,
 		Email:        "repo-owner@example.com",
 		Password:     "owner-pass",
-		ReferralCode: "REPO-OWNER-001",
 	}
 	require.NoError(t, db.Create(owner).Error)
 

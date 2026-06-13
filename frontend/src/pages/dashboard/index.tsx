@@ -44,7 +44,6 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
  * - Profile overview
  * - Subscription status & usage
  * - Recent valuations
- * - Referral code
  * 
  * Design System Compliance:
  * - Colors: Emerald primary, gray text/borders, white cards
@@ -62,7 +61,6 @@ interface UserData {
   phone?: string;
   subscriptionTier: string;
   subscriptionExpiresAt?: string | null;
-  referralCode: string;
   recentValuations: any[];
 }
 
@@ -118,7 +116,6 @@ const getCachedDashboardUser = (): UserData | null => {
       phone: userData?.phone,
       subscriptionTier: effectiveSubscriptionTier,
       subscriptionExpiresAt: userData?.subscription_expiry || userData?.subscriptionExpiresAt || null,
-      referralCode: String(userData?.referral_code || `LV-${String(userData?.email || 'USER').split('@')[0]?.toUpperCase()}-2026`),
       recentValuations: Array.isArray(userData?.recent_valuations) ? userData.recent_valuations : [],
     };
   } catch {
@@ -817,7 +814,6 @@ function Dashboard() {
   const [estimateLoading, setEstimateLoading] = useState(false);
   const [estimateError, setEstimateError] = useState<string | null>(null);
   const [estimateResult, setEstimateResult] = useState<any>(null);
-  const [copied, setCopied] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDashboardTab, setActiveDashboardTab] = useState<DashboardTab>('overview');
@@ -980,7 +976,6 @@ function Dashboard() {
         phone: userData.phone,
         subscriptionTier: effectiveSubscriptionTier,
         subscriptionExpiresAt: effectiveSubscriptionExpiry,
-        referralCode: `LV-${userData.email?.split('@')[0]?.toUpperCase()}-2026`,
         recentValuations: userData.recent_valuations || [],
       });
       setLoading(false);
@@ -1079,16 +1074,6 @@ function Dashboard() {
 
     return () => clearInterval(interval);
   }, [user?.userType, tokenExpired]);
-
-  // Copy referral code to clipboard
-  const copyReferralCode = () => {
-    if (user) {
-      navigator.clipboard.writeText(user.referralCode);
-      setCopied(true);
-      toast.success('Referral code copied!');
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
 
   const loadNotificationsForUser = async (targetUser: UserData) => {
     if (typeof window === 'undefined') {
@@ -2201,7 +2186,7 @@ function Dashboard() {
 
               </div>
 
-              {/* Right Column: Subscription & Referral */}
+              {/* Right Column: Subscription */}
               <div className="space-y-4 md:space-y-6">
 
                 {/* Subscription Card */}
@@ -2307,41 +2292,6 @@ function Dashboard() {
                   ) : (
                     <p className="text-sm text-gray-600">No notifications yet.</p>
                   )}
-                </div>
-
-                {/* Referral Card */}
-                <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4 md:p-6">
-                  <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4">Referral Program</h2>
-                  
-                  <p className="text-sm text-gray-600 mb-4">
-                    Share your referral code with friends and earn rewards!
-                  </p>
-
-                  {/* Referral Code */}
-                  <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                    <p className="text-xs text-gray-600 mb-2">Your Code</p>
-                    <div className="flex items-center gap-2">
-                      <code className="font-mono text-sm font-semibold text-gray-800 flex-1">{user.referralCode}</code>
-                      <button
-                        onClick={copyReferralCode}
-                        className="p-2 text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
-                      >
-                        <i className={`fas ${copied ? 'fa-check' : 'fa-copy'} text-base`}></i>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Referral Stats */}
-                  <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                    <div className="p-2.5 bg-gray-50 rounded">
-                      <p className="text-xl font-bold text-emerald-700">0</p>
-                      <p className="text-gray-600">Referrals</p>
-                    </div>
-                    <div className="p-2.5 bg-gray-50 rounded">
-                      <p className="text-xl font-bold text-emerald-700">RWF 0</p>
-                      <p className="text-gray-600">Earned</p>
-                    </div>
-                  </div>
                 </div>
 
               </div>

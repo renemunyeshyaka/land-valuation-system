@@ -4,8 +4,6 @@ import (
 	"backend/internal/config"
 	"backend/internal/database"
 	"backend/internal/models"
-	"crypto/rand"
-	"encoding/base64"
 	"flag"
 	"fmt"
 	"log"
@@ -175,16 +173,13 @@ func seedUsers(db *gorm.DB) ([]models.User, error) {
 		},
 	}
 
-	// Hash passwords and generate referral codes
+	// Hash passwords
 	for i := range users {
 		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("TestPassword123!"), bcrypt.DefaultCost)
 		users[i].PasswordHash = string(hashedPassword)
 		users[i].Password = string(hashedPassword)
 		users[i].CreatedAt = time.Now()
 		users[i].UpdatedAt = time.Now()
-
-		// Generate referral code
-		users[i].ReferralCode = generateReferralCode()
 
 		// Set subscription expiry
 		if users[i].SubscriptionTier != "free" {
@@ -329,10 +324,4 @@ func timePtr(t time.Time) *time.Time {
 	return &t
 }
 
-func generateReferralCode() string {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return fmt.Sprintf("REF%013d", time.Now().UnixNano()%1e13)
-	}
-	return base64.URLEncoding.EncodeToString(b)[:16]
-}
+

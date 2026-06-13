@@ -10,7 +10,6 @@ import (
 	"backend/internal/config"
 	"backend/internal/database"
 	"backend/internal/models"
-	"backend/internal/services"
 
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
@@ -87,11 +86,6 @@ func seedAdminUser(ctx context.Context) {
 	if result := db.WithContext(ctx).Create(&adminUser); result.Error != nil {
 		log.Printf("Warning: Could not create admin user: %v", result.Error)
 		return
-	}
-
-	referralService := services.NewReferralService(db)
-	if _, err := referralService.GenerateReferralCode(ctx, adminUser.ID); err != nil {
-		log.Printf("Warning: failed to generate admin referral code: %v", err)
 	}
 
 	fmt.Printf("✅ Admin user created: ID=%d, Email=%s\n", adminUser.ID, adminUser.Email)
@@ -180,8 +174,6 @@ func seedRegularUsers(ctx context.Context) {
 		},
 	}
 
-	referralService := services.NewReferralService(db)
-
 	for _, user := range users {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 		if err != nil {
@@ -196,12 +188,7 @@ func seedRegularUsers(ctx context.Context) {
 			continue
 		}
 
-		code, err := referralService.GenerateReferralCode(ctx, user.ID)
-		if err != nil {
-			log.Printf("Warning: failed to generate referral code for user %s: %v", user.Email, err)
-			code = ""
-		}
-		fmt.Printf("✅ User created: ID=%d, Email=%s, ReferralCode=%s\n", user.ID, user.Email, code)
+		fmt.Printf("✅ User created: ID=%d, Email=%s\n", user.ID, user.Email)
 
 		if user.SubscriptionTier != "free" && user.SubscriptionExpiry != nil {
 			subscription := models.Subscription{

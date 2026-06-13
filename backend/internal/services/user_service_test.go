@@ -29,8 +29,8 @@ func TestUserService_UpdateUserByAdmin_WritesRoleAndAccessAuditLogs(t *testing.T
 		)
 	`).Error)
 
-	admin := &models.User{Email: "admin@example.com", Password: "secret123", FirstName: "Admin", LastName: "User", UserType: "admin", ReferralCode: "ADMIN001"}
-	target := &models.User{Email: "target@example.com", Password: "secret123", FirstName: "Target", LastName: "User", UserType: "individual", SubscriptionTier: "free", SubscriptionStatus: "inactive", ReferralCode: "TARGET001"}
+	admin := &models.User{Email: "admin@example.com", Password: "secret123", FirstName: "Admin", LastName: "User", UserType: "admin"}
+	target := &models.User{Email: "target@example.com", Password: "secret123", FirstName: "Target", LastName: "User", UserType: "individual", SubscriptionTier: "free", SubscriptionStatus: "inactive"}
 	require.NoError(t, db.Create(admin).Error)
 	require.NoError(t, db.Create(target).Error)
 

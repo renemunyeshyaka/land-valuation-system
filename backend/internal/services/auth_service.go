@@ -55,10 +55,6 @@ func (s *AuthService) Register(ctx context.Context, user *models.User, password 
 	user.EmailVerified = false
 	user.KYCStatus = "pending"
 
-	// Generate unique referral code for user
-	referralCode := s.generateReferralCode(fmt.Sprintf("%d", time.Now().Unix()))
-	user.ReferralCode = referralCode
-
 	// Create user
 	createdUser, err := s.userRepo.Create(ctx, user)
 	if err != nil {
@@ -497,21 +493,4 @@ func (s *AuthService) generateRefreshToken(user *models.User) (string, error) {
 	return token.SignedString([]byte(s.jwtSecret))
 }
 
-// generateReferralCode creates a unique referral code for a user
-func (s *AuthService) generateReferralCode(seed string) string {
-	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	code := make([]byte, 8)
 
-	for i := 0; i < len(code); i++ {
-		max := big.NewInt(int64(len(charset)))
-		n, err := rand.Int(rand.Reader, max)
-		if err != nil {
-			// Fallback if random fails
-			code[i] = charset[(int(time.Now().UnixNano())+i)%len(charset)]
-		} else {
-			code[i] = charset[n.Int64()]
-		}
-	}
-
-	return string(code)
-}

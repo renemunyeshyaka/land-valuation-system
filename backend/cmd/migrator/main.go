@@ -69,7 +69,6 @@ func main() {
 		"003_add_mfa_fields.sql",
 		"004_setup_admin_users.sql",
 		"005_add_performance_indexes.sql",
-		"006_add_referral_fields.sql",
 		"007_add_upi_field.sql",
 		"008_seed_properties_with_upi.sql",
 		// "009_create_land_parcels_table.sql", // removed, table deprecated
