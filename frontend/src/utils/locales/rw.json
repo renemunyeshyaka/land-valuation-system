@@ -22,7 +22,7 @@
   "home": {
     "heroBadge": "Gazeti ya Leta y'u Rwanda 2025",
     "heroTitle": "Gupima agaciro k'ubutaka neza bishingiye ku makuru ya leta",
-    "heroSubtitle": "Shyikirana n'abaguzi bazewe — abakoresha diaspora n'abashoramari bo mu mahanga. Bona ibiciro byihuse bishingiye ku bipimo by'akarere, kugenzura inyandiko z'ubutaka, n'ibintu bibera ku isoko.",
+    "heroSubtitle": "Shyikirana n'abaguzi bizewe — abakoresha diaspora n'abashoramari bo mu mahanga. Bona ibiciro byihuse bishingiye ku bipimo by'akarere, kugenzura inyandiko z'ubutaka, n'ibintu bibera ku isoko.",
     "getStarted": "Tangira",
     "searchPlaceholder": "Shyiramo kode UPI (urug: 1/01/01/01/1234)",
     "estimateButton": "Gupima",
@@ -44,7 +44,7 @@
     },
     "features": {
       "title": "Kuki uhitamo LVS",
-      "heading": "Bubakiranye isoko ry'ubutaka mu Rwanda",
+      "heading": "Yubakiwe isoko ry'ubutaka mu Rwanda",
       "subtitle": "Guhuza gazeti, kumenya aho biherereye neza, no guhuza abaguzi mu buryo butaziguye.",
       "gazette": {
         "title": "Amakuru ya Gazeti ya Leta",
@@ -133,7 +133,7 @@
     "minChars": "Byibura inyuguti 8",
     "termsAgree": "Nzemera",
     "termsOfService": "Amategeko yo Gukoresha",
-    "privacyPolicy": "Ubuyobozi ku Ibanga",
+    "privacyPolicy": "Amabwiriza Yerekeye Amabanga",
     "and": "na",
     "creatingAccount": "Gufungura konti...",
     "createAccountBtn": "Fungura Konti",
@@ -289,7 +289,7 @@
     "paypalDesc": "Karita ya banki (MPuzamahanga)",
     "payNow": "Shyura",
     "processing": "Ishyurwa rirakorwa...",
-    "agreeTerms": "Nzemera Amategeko n'Ubuyobozi ku Ibanga",
+    "agreeTerms": "Nzemera Amategeko n'Amabwiriza Yerekeye Amabanga",
     "backToPlans": "Subira ku Gahunda"
   },
   "common": {
@@ -333,8 +333,8 @@
     "statDiasporaBuyers": "abaguzi ba diaspora",
     "statRating": "⭐ igipimo cy'abakoresha",
     "ctaTitle": "Witeguye gupima agaciro cyangwa kugurisha ubutaka bwawe?",
-    "ctaSubtitle": "Unyure mu bantu batubarwa ba Rwanda n'abashoramari bo mu isi babakoresha urubuga rwizewe.",
-    "ctaStartTrial": "Tangira ubuntu",
+    "ctaSubtitle": "Hura n'ibihumbi by'abanyarwanda n'abashoramari bo ku isi yose bakoresha urubuga rwizewe.",
+    "ctaStartTrial": "Tangira ni ubuntu",
     "ctaTalkExpert": "Vugana n'inzobere",
     "ctaSecure": "ibizewe kandi byanditswe"
   },
@@ -353,7 +353,7 @@
     "journey": "Urugendo Rwawe",
     "stepsTitle": "Intambwe 4 Zoroshye Ziganisha ku Ntsinzi",
     "stepsSubtitle": "Kurikiza ubu buryo bworoshye kugirango urangize ubucuruzi bwawe bw'ubutaka wizewe",
-    "step1Title": "Fungura Konti Ubuntu",
+    "step1Title": "Fungura Konti k'Ubuntu",
     "step1Desc": "Iyandikishe mu masegonda ngo uhabwe ibiranga byose utangire urugendo rwawe.",
     "step1Badge": "Nta karita ya banki ikenewe",
     "step2Title": "Pima Agaciro k'Ubutaka Bwawe",
@@ -382,8 +382,8 @@
     "feature6Desc": "Itsinda ry'inkunga riba ryiteguriye gufasha mu kiganiro, imeli, cyangwa terefone.",
     "ctaTitle": "Witeguye Gutangira?",
     "ctaSubtitle": "Unyure mu batubarwa bakoresheje LandVal kugirango borohereze ubucuruzi bw'ubutaka",
-    "ctaCreateAccount": "Fungura Konti Ubuntu",
-    "ctaScheduleConsultation": "Gahunda yo Kuganira Ubuntu",
+    "ctaCreateAccount": "Fungura Konti k'Ubuntu",
+    "ctaScheduleConsultation": "Kuvugana n'Ugufasha",
     "ctaDisclaimer": "Nta karita ya banki ikenewe · Gupima agaciro gatatu ku Ubuntu"
   },
   "benefits": {
@@ -465,8 +465,8 @@
     "testimonial3Title": "Ushoramari mu Butaka, Kigali",
     "ctaTitle": "Witeguye Kubona Inyungu?",
     "ctaSubtitle": "Tangira ugupima agaciro gatatu ku Ubuntu noneho urebe impamvu ibihumbi bizera LandVal",
-    "ctaStarted": "Tangira Ubuntu",
-    "ctaSchedule": "Gahunda yo Kureba Demo",
+    "ctaStarted": "Tangira ni Ubuntu",
+    "ctaSchedule": "Ukeneye Ukwerekera",
     "ctaDisclaimer": "Nta karita ya banki ikenewe · Hagarika igihe icyo ari cyo cyose"
   },
   "marketplacePage": {
@@ -507,7 +507,7 @@
     "company": "Isosiyete",
     "legal": "Iby'amategeko",
     "support": "Inkunga",
-    "privacyPolicy": "Ubuyobozi ku Ibanga",
+    "privacyPolicy": "Amabwiriza Yerekeye Amabanga",
     "termsOfService": "Amategeko yo Gukoresha",
     "faq": "IBibazo",
     "allRightsReserved": "Uburenganzira bwose bwitewe.",
