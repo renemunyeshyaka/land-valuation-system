@@ -15,7 +15,7 @@ const getUserLanguage = (): string => {
     const pathMatch = window.location.pathname.match(/^\/(en|fr|rw)(\/|$)/);
     if (pathMatch) return pathMatch[1];
   }
-  return 'en';
+  return 'rw';
 };
 
 i18n.use(initReactI18next).init({
@@ -25,7 +25,7 @@ i18n.use(initReactI18next).init({
     rw: { translation: rw },
   },
   lng: getUserLanguage(),
-  fallbackLng: 'en',
+  fallbackLng: 'rw',
   interpolation: {
     escapeValue: false, // React already escapes
   },
