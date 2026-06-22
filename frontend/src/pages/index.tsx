@@ -470,17 +470,17 @@ const Home: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap justify-between items-end">
               <div>
-                <span className="text-emerald-600 font-semibold text-sm">Featured on marketplace</span>
-                <h2 className="text-3xl font-bold text-gray-900 mt-1">Properties ready for investors</h2>
+                <span className="text-emerald-600 font-semibold text-sm">{t('homePage.featuredTitle')}</span>
+                <h2 className="text-3xl font-bold text-gray-900 mt-1">{t('homePage.propertiesHeading')}</h2>
               </div>
-              <Link href="/marketplace" className="text-emerald-700 font-medium hover:underline">View all <i className="fas fa-arrow-right ml-1 text-sm"></i></Link>
+              <Link href="/marketplace" className="text-emerald-700 font-medium hover:underline">{t('homePage.viewAll')} <i className="fas fa-arrow-right ml-1 text-sm"></i></Link>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
               {/* card 1 */}
               <div className="bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-lg transition">
                 <div className="h-44 bg-gray-200 rounded-t-3xl relative overflow-hidden" style={{ background: "url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80') center/cover" }}>
-                  <div className="absolute top-3 right-3 bg-amber-400 text-emerald-900 text-xs font-bold px-3 py-1 rounded-full">Diaspora verified</div>
+                  <div className="absolute top-3 right-3 bg-amber-400 text-emerald-900 text-xs font-bold px-3 py-1 rounded-full">{t('homePage.diasporaVerified')}</div>
                 </div>
                 <div className="p-5">
                   <div className="flex items-center gap-1 text-sm text-gray-500">
@@ -493,14 +493,14 @@ const Home: React.FC = () => {
                   </div>
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-emerald-600 text-sm font-medium">+ gazette zone A</span>
-                    <span className="bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full">active</span>
+                    <span className="bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full">{t('homePage.active')}</span>
                   </div>
                 </div>
               </div>
               {/* card 2 - agricultural */}
               <div className="bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-lg transition">
                 <div className="h-44 bg-gray-200 rounded-t-3xl relative overflow-hidden" style={{ background: "url('https://images.unsplash.com/photo-1589923188900-85dae523342b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80') center/cover" }}>
-                  <div className="absolute top-3 right-3 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full">foreigner friendly</div>
+                  <div className="absolute top-3 right-3 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full">{t('homePage.foreignerFriendly')}</div>
                 </div>
                 <div className="p-5">
                   <div className="flex items-center gap-1 text-sm text-gray-500">
@@ -513,14 +513,14 @@ const Home: React.FC = () => {
                   </div>
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-emerald-600 text-sm font-medium">+ coffee zone</span>
-                    <span className="bg-amber-100 text-amber-800 text-xs px-3 py-1 rounded-full">price trend +12%</span>
+                    <span className="bg-amber-100 text-amber-800 text-xs px-3 py-1 rounded-full">{t('homePage.priceTrend')} +12%</span>
                   </div>
                 </div>
               </div>
               {/* card 3 - diaspora focus */}
               <div className="bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-lg transition">
                 <div className="h-44 bg-gray-200 rounded-t-3xl relative overflow-hidden" style={{ background: "url('https://imgs.search.brave.com/nv0nT5CAQlecHbkSIapYwnTY8tRKrlERdHHBBLwFfP8/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvOTQ2/ODQ3MjM2L3Bob3Rv/L3RoZS1ydWJvbmEt/Y292ZS1vbi1sYWtl/LWtpdnUuanBnP3M9/NjEyeDYxMiZ3PTAm/az0yMCZjPWstblVN/cGI2ZVk4LTAwVi15/bVNBVTFHdEl0ZHNo/MFU5UHBGTUx0VS1l/aXM9') center/cover" }}>
-                  <div className="absolute top-3 right-3 bg-purple-200 text-purple-800 text-xs font-bold px-3 py-1 rounded-full">Diaspora preferred</div>
+                  <div className="absolute top-3 right-3 bg-purple-200 text-purple-800 text-xs font-bold px-3 py-1 rounded-full">{t('homePage.diasporaPreferred')}</div>
                 </div>
                 <div className="p-5">
                   <div className="flex items-center gap-1 text-sm text-gray-500">
@@ -547,18 +547,18 @@ const Home: React.FC = () => {
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
                 <i className="fas fa-quote-left text-4xl text-emerald-300"></i>
-                <p className="text-xl italic text-gray-700 mt-2">“As a diaspora investor, I needed reliable land values. LVS gave me gazette-backed confidence and connected me with a seller in Kigali within a week.”</p>
+                <p className="text-xl italic text-gray-700 mt-2">{t('homePage.testimonialQuote')}</p>
                 <div className="flex items-center gap-3 mt-6">
                   <div className="w-12 h-12 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-800 font-bold text-xl">JM</div>
-                  <div><span className="font-bold">Jean Marie V.</span> <span className="text-gray-500 text-sm"> · diaspora, Belgium</span></div>
+                  <div><span className="font-bold">{t('homePage.testimonialName')}</span> <span className="text-gray-500 text-sm">{t('homePage.testimonialLocation')}</span></div>
                 </div>
               </div>
               {/* stats */}
               <div className="grid grid-cols-2 gap-5 p-8 rounded-3xl border border-emerald-100" style={{ background: 'linear-gradient(145deg, #ffffff 0%, #f3f9f3 100%)' }}>
-                <div><span className="text-3xl font-black text-emerald-800">18.4B+</span><span className="block text-sm text-gray-600">Rwf transactions</span></div>
-                <div><span className="text-3xl font-black text-emerald-800">2.3k</span><span className="block text-sm text-gray-600">properties listed</span></div>
-                <div><span className="text-3xl font-black text-emerald-800">34%</span><span className="block text-sm text-gray-600">diaspora buyers</span></div>
-                <div><span className="text-3xl font-black text-emerald-800">4.8</span><span className="block text-sm text-gray-600">⭐ user rating</span></div>
+                <div><span className="text-3xl font-black text-emerald-800">18.4B+</span><span className="block text-sm text-gray-600">{t('homePage.statTransactions')}</span></div>
+                <div><span className="text-3xl font-black text-emerald-800">2.3k</span><span className="block text-sm text-gray-600">{t('homePage.statListed')}</span></div>
+                <div><span className="text-3xl font-black text-emerald-800">34%</span><span className="block text-sm text-gray-600">{t('homePage.statDiasporaBuyers')}</span></div>
+                <div><span className="text-3xl font-black text-emerald-800">4.8</span><span className="block text-sm text-gray-600">{t('homePage.statRating')}</span></div>
               </div>
             </div>
           </div>
@@ -567,24 +567,24 @@ const Home: React.FC = () => {
         {/* CTA final */}
         <section className="py-16 text-white" style={{ background: 'linear-gradient(112deg, #0b3b2c 0%, #1f6e4a 100%)' }}>
           <div className="max-w-5xl mx-auto text-center px-4">
-            <h2 className="text-3xl md:text-4xl font-bold">Ready to value or sell your land?</h2>
-            <p className="text-emerald-100 mt-3 text-lg">Join thousands of Rwandans and global investors using the most trusted platform.</p>
+            <h2 className="text-3xl md:text-4xl font-bold">{t('homePage.ctaTitle')}</h2>
+            <p className="text-emerald-100 mt-3 text-lg">{t('homePage.ctaSubtitle')}</p>
             <div className="flex flex-wrap justify-center gap-4 mt-8">
               <a
                 href="/auth/register"
                 className="bg-amber-400 text-emerald-900 hover:bg-white font-semibold px-8 py-4 rounded-2xl shadow-xl text-lg flex items-center gap-2 transition-colors duration-200"
               >
-                <i className="fas fa-crown"></i> Start free trial
+                <i className="fas fa-crown"></i> {t('homePage.ctaStartTrial')}
               </a>
               <a
                 href="/contact"
                 className="bg-sky-500 text-white hover:bg-sky-600 px-8 py-4 rounded-2xl font-semibold text-lg flex items-center gap-2 transition-colors duration-200"
               >
-                <i className="fas fa-phone-alt"></i> Talk to expert
+                <i className="fas fa-phone-alt"></i> {t('homePage.ctaTalkExpert')}
               </a>
             </div>
             <div className="mt-8 text-sm text-emerald-200 flex items-center justify-center gap-6">
-              <span><i className="fas fa-lock"></i> secure & verified</span>
+              <span><i className="fas fa-lock"></i> {t('homePage.ctaSecure')}</span>
             </div>
           </div>
         </section>

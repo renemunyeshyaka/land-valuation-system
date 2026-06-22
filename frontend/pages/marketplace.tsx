@@ -75,24 +75,24 @@ export default function Marketplace() {
   const cellNames = province && district && sector ? Object.keys(((adminHierarchy[province] || {})[district] || {})[sector] || {}) : [];
   const villageNames = province && district && sector && cell ? (((adminHierarchy[province] || {})[district] || {})[sector] || {})[cell] || [] : [];
 
-  // Property types (hardcoded for now)
+  // Property types
   const propertyTypes = [
-    { value: '', label: 'All Types' },
-    { value: 'residential', label: 'Residential Land' },
-    { value: 'commercial', label: 'Commercial Land' },
-    { value: 'agricultural', label: 'Agricultural Land' },
-    { value: 'industrial', label: 'Industrial Land' },
-    { value: 'mixed', label: 'Mixed Use' },
+    { value: '', labelKey: 'marketplacePage.allTypes' },
+    { value: 'residential', labelKey: 'marketplacePage.residential' },
+    { value: 'commercial', labelKey: 'marketplacePage.commercial' },
+    { value: 'agricultural', labelKey: 'marketplacePage.agricultural' },
+    { value: 'industrial', labelKey: 'marketplacePage.industrial' },
+    { value: 'mixed', labelKey: 'marketplacePage.mixed' },
   ];
 
-  // Price ranges (can be improved)
+  // Price ranges
   const priceRanges = [
-    { value: '', label: 'Any Price' },
-    { value: '0-1000000', label: 'Up to 1M RWF' },
-    { value: '1000000-5000000', label: '1M - 5M RWF' },
-    { value: '5000000-20000000', label: '5M - 20M RWF' },
-    { value: '20000000-100000000', label: '20M - 100M RWF' },
-    { value: '100000000-', label: '100M+ RWF' },
+    { value: '', labelKey: 'marketplacePage.anyPrice' },
+    { value: '0-1000000', labelKey: 'marketplacePage.priceUpTo1M' },
+    { value: '1000000-5000000', labelKey: 'marketplacePage.price1MTo5M' },
+    { value: '5000000-20000000', labelKey: 'marketplacePage.price5MTo20M' },
+    { value: '20000000-100000000', labelKey: 'marketplacePage.price20MTo100M' },
+    { value: '100000000-', labelKey: 'marketplacePage.price100MPlus' },
   ];
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -257,8 +257,8 @@ export default function Marketplace() {
         {/* Main Marketplace Content */}
         <main className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
 
-          <h1 className="text-3xl font-bold mb-2 text-center">Marketplace</h1>
-          <p className="text-gray-600 mb-8 text-center">Browse properties for sale. Use filters and search to find your ideal property.</p>
+          <h1 className="text-3xl font-bold mb-2 text-center">{t('marketplacePage.title')}</h1>
+          <p className="text-gray-600 mb-8 text-center">{t('marketplacePage.description')}</p>
 
           {/* Search & Filter Controls */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -268,7 +268,7 @@ export default function Marketplace() {
               onChange={e => { setProvince(e.target.value); setDistrict(''); setSector(''); setCell(''); setVillage(''); setCurrentPage(1); }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">All Provinces</option>
+              <option value="">{t('marketplacePage.allProvinces')}</option>
               {provinceNames.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
             {/* District */}
@@ -278,7 +278,7 @@ export default function Marketplace() {
               disabled={!province}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
             >
-              <option value="">All Districts</option>
+              <option value="">{t('marketplacePage.allDistricts')}</option>
               {districtNames.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
             {/* Sector */}
@@ -288,7 +288,7 @@ export default function Marketplace() {
               disabled={!district}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
             >
-              <option value="">All Sectors</option>
+              <option value="">{t('marketplacePage.allSectors')}</option>
               {sectorNames.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             {/* Cell */}
@@ -298,7 +298,7 @@ export default function Marketplace() {
               disabled={!sector}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
             >
-              <option value="">All Cells</option>
+              <option value="">{t('marketplacePage.allCells')}</option>
               {cellNames.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             {/* Village */}
@@ -308,7 +308,7 @@ export default function Marketplace() {
               disabled={!cell}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
             >
-              <option value="">All Villages</option>
+              <option value="">{t('marketplacePage.allVillages')}</option>
               {villageNames.map(v => <option key={v} value={v}>{v}</option>)}
             </select>
             {/* Property Type */}
@@ -317,7 +317,7 @@ export default function Marketplace() {
               onChange={e => { setType(e.target.value); setCurrentPage(1); }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              {propertyTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              {propertyTypes.map(pt => <option key={pt.value} value={pt.value}>{t(pt.labelKey)}</option>)}
             </select>
             {/* Price Range */}
             <select
@@ -332,7 +332,7 @@ export default function Marketplace() {
               }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              {priceRanges.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+              {priceRanges.map(pr => <option key={pr.value} value={pr.value}>{t(pr.labelKey)}</option>)}
             </select>
             {/* Search Button */}
             <button
@@ -343,7 +343,7 @@ export default function Marketplace() {
               }}
               type="button"
             >
-              <i className="fas fa-search mr-2"></i>Search
+              <i className="fas fa-search mr-2"></i>{t('marketplacePage.search')}
             </button>
             {/* Clear button */}
             <button
@@ -355,12 +355,12 @@ export default function Marketplace() {
               }}
               type="button"
             >
-              Clear All
+              {t('marketplacePage.clearAll')}
             </button>
           </div>
 
           {loading && (
-            <div className="text-center py-10 text-lg text-gray-500">Loading properties...</div>
+            <div className="text-center py-10 text-lg text-gray-500">{t('marketplacePage.loading')}</div>
           )}
           {/* {!loading && loadTime !== null && (
             <div className="text-center text-xs text-gray-400 mb-2">First load time: {formatSeconds(loadTime)} (max 10s target)</div>
@@ -369,7 +369,7 @@ export default function Marketplace() {
             <div className="text-center py-10 text-red-500">{error}</div>
           )}
           {!loading && !error && properties.length === 0 && (
-            <div className="text-center py-10 text-gray-400">No properties found.</div>
+            <div className="text-center py-10 text-gray-400">{t('marketplacePage.noProperties')}</div>
           )}
           {!loading && !error && properties.length > 0 && (
             <>
@@ -386,7 +386,7 @@ export default function Marketplace() {
                   onClick={() => goToPage(currentPage - 1)}
                   disabled={currentPage === 1}
                 >
-                  Back
+                  {t('marketplacePage.back')}
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                   <button
@@ -402,7 +402,7 @@ export default function Marketplace() {
                   onClick={() => goToPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
                 >
-                  Next
+                  {t('marketplacePage.next')}
                 </button>
               </div>
             </>

@@ -75,14 +75,13 @@ export default function HowItWorks() {
         <section className="hero-gradient text-white py-20 md:py-28">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium mb-6 border border-white/10">
-              <i className="fas fa-gem mr-2 text-xs"></i> How It Works
+              <i className="fas fa-gem mr-2 text-xs"></i> {t('howItWorks.heroBadge')}
             </div>
             <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">
-              4 Simple Steps<br />
-              <span className="text-amber-300">to Land Transaction Success</span>
+              {t('howItWorks.title')}
             </h1>
             <p className="text-xl text-emerald-100 max-w-3xl mx-auto">
-              Discover how LandVal streamlines property valuation and transactions in Rwanda with official data, advanced tech, and unmatched support.
+              {t('howItWorks.subtitle')}
             </p>
           </div>
         </section>
@@ -93,20 +92,20 @@ export default function HowItWorks() {
             <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-3xl p-8 md:p-12">
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-emerald-900 mb-3">Try a Demo Valuation</h2>
-                  <p className="text-gray-700 mb-6">Click a district to see a sample valuation result. Actual valuations use real gazette data and market analytics.</p>
+                  <h2 className="text-2xl md:text-3xl font-bold text-emerald-900 mb-3">{t('howItWorks.demoTitle')}</h2>
+                  <p className="text-gray-700 mb-6">{t('howItWorks.demoDesc')}</p>
                   <ul className="list-disc list-inside text-emerald-700 text-base space-y-2">
-                    <li>Kigali: Urban Zone A</li>
-                    <li>Musanze: Tourism Growth Zone</li>
-                    <li>Rubavu: Lakefront Premium</li>
-                    <li>Eastern: Agricultural Investment Zone</li>
+                    <li>{t('howItWorks.demoKigali')}</li>
+                    <li>{t('howItWorks.demoMusanze')}</li>
+                    <li>{t('howItWorks.demoRubavu')}</li>
+                    <li>{t('howItWorks.demoEastern')}</li>
                   </ul>
                 </div>
                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 shadow-xl border border-gray-100">
                   <div className="text-center mb-6">
                     <i className="fas fa-map-marked-alt text-4xl text-emerald-600"></i>
-                    <h3 className="text-2xl font-bold text-gray-900 mt-3">Try It Yourself</h3>
-                    <p className="text-gray-600 text-sm">Click any district to see sample valuation</p>
+                    <h3 className="text-2xl font-bold text-gray-900 mt-3">{t('howItWorks.tryYourself')}</h3>
+                    <p className="text-gray-600 text-sm">{t('howItWorks.clickDistrict')}</p>
                   </div>
                   <div className="space-y-3">
                     <div className="demo-step bg-gray-100 rounded-xl p-4 hover:bg-emerald-50 transition cursor-pointer" data-district="Kigali">
@@ -149,45 +148,45 @@ export default function HowItWorks() {
         <section className="py-20 bg-gray-50/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <span className="text-emerald-600 font-semibold text-sm tracking-wider uppercase">Your Journey</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">4 Simple Steps to Success</h2>
-              <p className="text-gray-600 mt-4 max-w-2xl mx-auto">Follow this streamlined process to complete your land transaction with confidence</p>
+              <span className="text-emerald-600 font-semibold text-sm tracking-wider uppercase">{t('howItWorks.journey')}</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">{t('howItWorks.stepsTitle')}</h2>
+              <p className="text-gray-600 mt-4 max-w-2xl mx-auto">{t('howItWorks.stepsSubtitle')}</p>
             </div>
             <div className="grid md:grid-cols-4 gap-8">
               {/* Step 1 */}
               <div className="step-card text-center hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200 border border-gray-100 bg-white rounded-2xl shadow-md">
                 <div className="step-number w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-600 text-white flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-lg">1</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Create Free Account</h3>
-                <p className="text-gray-600 mb-4">Sign up in seconds to access all features and start your journey.</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{t('howItWorks.step1Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('howItWorks.step1Desc')}</p>
                 <div className="inline-flex items-center gap-2 text-emerald-600 text-sm">
-                  <i className="fas fa-check-circle"></i> No credit card required
+                  <i className="fas fa-check-circle"></i> {t('howItWorks.step1Badge')}
                 </div>
               </div>
               {/* Step 2 */}
               <div className="step-card text-center hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200 border border-gray-100 bg-white rounded-2xl shadow-md">
                 <div className="step-number w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-600 text-white flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-lg">2</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Value Your Land</h3>
-                <p className="text-gray-600 mb-4">Enter your UPI or location to get an instant, official valuation.</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{t('howItWorks.step2Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('howItWorks.step2Desc')}</p>
                 <div className="inline-flex items-center gap-2 text-emerald-600 text-sm">
-                  <i className="fas fa-bolt"></i> Results in 30 seconds
+                  <i className="fas fa-bolt"></i> {t('howItWorks.step2Badge')}
                 </div>
               </div>
               {/* Step 3 */}
               <div className="step-card text-center hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200 border border-gray-100 bg-white rounded-2xl shadow-md">
                 <div className="step-number w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-600 text-white flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-lg">3</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Get Your Report</h3>
-                <p className="text-gray-600 mb-4">Get Price estimation with gazette references and analytics.</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{t('howItWorks.step3Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('howItWorks.step3Desc')}</p>
                 <div className="inline-flex items-center gap-2 text-emerald-600 text-sm">
-                  <i className="fas fa-file-pdf"></i> Accepted by banks
+                  <i className="fas fa-file-pdf"></i> {t('howItWorks.step3Badge')}
                 </div>
               </div>
               {/* Step 4 */}
               <div className="step-card text-center hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200 border border-gray-100 bg-white rounded-2xl shadow-md">
                 <div className="step-number w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-600 text-white flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-lg">4</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Transact with Confidence</h3>
-                <p className="text-gray-600 mb-4">List property, connect with buyers, or make an offer with secure escrow support.</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{t('howItWorks.step4Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('howItWorks.step4Desc')}</p>
                 <div className="inline-flex items-center gap-2 text-emerald-600 text-sm">
-                  <i className="fas fa-lock"></i> Secure escrow & support
+                  <i className="fas fa-lock"></i> {t('howItWorks.step4Badge')}
                 </div>
               </div>
             </div>
@@ -198,52 +197,52 @@ export default function HowItWorks() {
         <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <span className="text-emerald-600 font-semibold text-sm tracking-wider uppercase">Powerful Features</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">Everything You Need in One Platform</h2>
-              <p className="text-gray-600 mt-4 max-w-2xl mx-auto">No more switching between tools — LandVal brings it all together</p>
+              <span className="text-emerald-600 font-semibold text-sm tracking-wider uppercase">{t('howItWorks.featuresLabel')}</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">{t('howItWorks.featuresTitle')}</h2>
+              <p className="text-gray-600 mt-4 max-w-2xl mx-auto">{t('howItWorks.featuresSubtitle')}</p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="feature-box bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200">
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
                   <i className="fas fa-search text-emerald-600 text-xl"></i>
                 </div>
-                <h3 className="font-bold text-lg mb-2">Smart Property Search</h3>
-                <p className="text-gray-600 text-sm">Search by parcel number, owner name, address, or simply click on the interactive map.</p>
+                <h3 className="font-bold text-lg mb-2">{t('howItWorks.feature1Title')}</h3>
+                <p className="text-gray-600 text-sm">{t('howItWorks.feature1Desc')}</p>
               </div>
               <div className="feature-box bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200">
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
                   <i className="fas fa-chart-simple text-emerald-600 text-xl"></i>
                 </div>
-                <h3 className="font-bold text-lg mb-2">Real-Time Market Data</h3>
-                <p className="text-gray-600 text-sm">Live price updates, transaction volumes, and demand trends for informed decisions.</p>
+                <h3 className="font-bold text-lg mb-2">{t('howItWorks.feature2Title')}</h3>
+                <p className="text-gray-600 text-sm">{t('howItWorks.feature2Desc')}</p>
               </div>
               <div className="feature-box bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200">
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
                   <i className="fas fa-file-pdf text-emerald-600 text-xl"></i>
                 </div>
-                <h3 className="font-bold text-lg mb-2">Precise Reports</h3>
-                <p className="text-gray-600 text-sm">Land valuation precision with official gazette references.</p>
+                <h3 className="font-bold text-lg mb-2">{t('howItWorks.feature3Title')}</h3>
+                <p className="text-gray-600 text-sm">{t('howItWorks.feature3Desc')}</p>
               </div>
               <div className="feature-box bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200">
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
                   <i className="fas fa-bell text-emerald-600 text-xl"></i>
                 </div>
-                <h3 className="font-bold text-lg mb-2">Price Alerts</h3>
-                <p className="text-gray-600 text-sm">Get notified when properties in your target area meet your budget criteria.</p>
+                <h3 className="font-bold text-lg mb-2">{t('howItWorks.feature4Title')}</h3>
+                <p className="text-gray-600 text-sm">{t('howItWorks.feature4Desc')}</p>
               </div>
               <div className="feature-box bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200">
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
                   <i className="fas fa-chart-line text-emerald-600 text-xl"></i>
                 </div>
-                <h3 className="font-bold text-lg mb-2">Investment Analytics</h3>
-                <p className="text-gray-600 text-sm">ROI projections, rental yield calculations, and risk assessment scores.</p>
+                <h3 className="font-bold text-lg mb-2">{t('howItWorks.feature5Title')}</h3>
+                <p className="text-gray-600 text-sm">{t('howItWorks.feature5Desc')}</p>
               </div>
               <div className="feature-box bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200">
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
                   <i className="fas fa-headset text-emerald-600 text-xl"></i>
                 </div>
-                <h3 className="font-bold text-lg mb-2">24/7 Support</h3>
-                <p className="text-gray-600 text-sm">Dedicated support team via chat, email, or phone for all your questions.</p>
+                <h3 className="font-bold text-lg mb-2">{t('howItWorks.feature6Title')}</h3>
+                <p className="text-gray-600 text-sm">{t('howItWorks.feature6Desc')}</p>
               </div>
             </div>
           </div>
@@ -252,15 +251,15 @@ export default function HowItWorks() {
         {/* CTA Section */}
         <section className="hero-gradient py-16 text-white">
           <div className="max-w-5xl mx-auto text-center px-4">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
-            <p className="text-emerald-100 text-lg mb-8">Join thousands of satisfied users who've simplified their land transactions with LandVal</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('howItWorks.ctaTitle')}</h2>
+            <p className="text-emerald-100 text-lg mb-8">{t('howItWorks.ctaSubtitle')}</p>
             <div className="flex flex-wrap justify-center gap-4">
               <a
                 href="/auth/register"
                 className="bg-amber-400 text-emerald-900 hover:bg-white font-semibold px-8 py-4 rounded-2xl shadow-xl text-lg flex items-center gap-2 transition-colors duration-200"
                 style={{ boxShadow: '0 4px 24px 0 rgba(251, 191, 36, 0.10)' }}
               >
-                <i className="fas fa-user-plus"></i> Create Free Account
+                <i className="fas fa-user-plus"></i> {t('howItWorks.ctaCreateAccount')}
               </a>
               <a
                 href="/contact"
@@ -269,10 +268,10 @@ export default function HowItWorks() {
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#065f46'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = '#0056FF'}
               >
-                <i className="fas fa-calendar-alt"></i> Schedule Free Consultation
+                <i className="fas fa-calendar-alt"></i> {t('howItWorks.ctaScheduleConsultation')}
               </a>
             </div>
-            <p className="mt-6 text-sm text-emerald-200">No credit card required · 3 free valuations included</p>
+            <p className="mt-6 text-sm text-emerald-200">{t('howItWorks.ctaDisclaimer')}</p>
           </div>
         </section>
 

@@ -79,27 +79,27 @@ export default function Benefits() {
         <section className="hero-gradient text-white py-16 md:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium mb-6 border border-white/10">
-              <i className="fas fa-gem mr-2 text-xs"></i> Why Choose LandVal
+              <i className="fas fa-gem mr-2 text-xs"></i> {t('benefits.heroBadge')}
             </div>
             <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">
-              10 Powerful Benefits <br />
-              <span className="text-amber-300">That Transform Land Transactions</span>
+              {t('benefits.title')} <br />
+              <span className="text-amber-300">{t('benefits.titleHighlight')}</span>
             </h1>
             <p className="text-xl text-emerald-100 max-w-3xl mx-auto">
-              Discover how LandVal is revolutionizing Rwanda's land market with official data, advanced technology, and unmatched support
+              {t('benefits.subtitle')}
             </p>
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <a
                 href="#benefits"
                 className="bg-amber-400 text-emerald-900 hover:bg-white font-semibold px-8 py-4 rounded-2xl shadow-lg transition-colors duration-200 flex items-center gap-2"
               >
-                <i className="fas fa-arrow-down"></i> Explore Benefits
+                <i className="fas fa-arrow-down"></i> {t('benefits.exploreBtn')}
               </a>
               <a
                 href="#"
                 className="bg-sky-400 text-white hover:bg-[#0056FF] font-semibold px-8 py-4 rounded-2xl shadow-lg transition-colors duration-200 flex items-center gap-2"
               >
-                <i className="fas fa-play"></i> Watch Demo
+                <i className="fas fa-play"></i> {t('benefits.watchDemo')}
               </a>
             </div>
           </div>
@@ -111,19 +111,19 @@ export default function Benefits() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div>
                 <div className="stat-number text-4xl font-extrabold text-white transition-colors duration-200 hover:text-yellow-400 cursor-pointer">12k+</div>
-                <p className="text-white text-sm mt-1">Properties Valued</p>
+                <p className="text-white text-sm mt-1">{t('benefits.statProperties')}</p>
               </div>
               <div>
                 <div className="stat-number text-4xl font-extrabold text-white transition-colors duration-200 hover:text-yellow-400 cursor-pointer">30</div>
-                <p className="text-white text-sm mt-1">Districts Covered</p>
+                <p className="text-white text-sm mt-1">{t('benefits.statDistricts')}</p>
               </div>
               <div>
                 <div className="stat-number text-4xl font-extrabold text-white transition-colors duration-200 hover:text-yellow-400 cursor-pointer">34%</div>
-                <p className="text-white text-sm mt-1">Diaspora Buyers</p>
+                <p className="text-white text-sm mt-1">{t('benefits.statDiaspora')}</p>
               </div>
               <div>
                 <div className="stat-number text-4xl font-extrabold text-white transition-colors duration-200 hover:text-yellow-400 cursor-pointer">4.8</div>
-                <p className="text-white text-sm mt-1">User Rating ★</p>
+                <p className="text-white text-sm mt-1">{t('benefits.statRating')} ★</p>
               </div>
             </div>
           </div>
@@ -133,9 +133,9 @@ export default function Benefits() {
         <section id="benefits" className="py-20 bg-gray-50/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <span className="text-emerald-600 font-semibold text-sm tracking-wider uppercase">Why Users Love LandVal</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">10 Game-Changing Benefits</h2>
-              <p className="text-gray-600 mt-4 max-w-2xl mx-auto">Every feature designed to make land transactions faster, safer, and more profitable</p>
+              <span className="text-emerald-600 font-semibold text-sm tracking-wider uppercase">{t('benefits.sectionLabel')}</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">{t('benefits.sectionTitle')}</h2>
+              <p className="text-gray-600 mt-4 max-w-2xl mx-auto">{t('benefits.sectionSubtitle')}</p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {/* Benefit 1 */}
@@ -143,14 +143,14 @@ export default function Benefits() {
                 <div className="feature-icon w-16 h-16 rounded-2xl flex items-center justify-center mb-6 bg-gradient-to-br from-emerald-800 to-emerald-500">
                   <i className="fas fa-book-open text-white text-2xl"></i>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Official Gazette Data</h3>
-                <p className="text-gray-600 mb-4">Direct integration with Rwanda Land Authority's official gazette data, updated quarterly for maximum accuracy.</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('benefits.benefit1Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('benefits.benefit1Desc')}</p>
                 <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
                   <i className="fas fa-check-circle"></i>
-                  <span>Legally compliant valuations</span>
+                  <span>{t('benefits.benefit1Feature')}</span>
                 </div>
                 <div className="mt-3 text-xs text-gray-500">
-                  <i className="fas fa-chart-line"></i> 15-25% more accurate than informal estimates
+                  <i className="fas fa-chart-line"></i> {t('benefits.benefit1Metric')}
                 </div>
               </div>
               {/* Benefit 2 */}
@@ -158,14 +158,14 @@ export default function Benefits() {
                 <div className="feature-icon w-16 h-16 rounded-2xl flex items-center justify-center mb-6 bg-gradient-to-br from-emerald-800 to-emerald-500">
                   <i className="fas fa-bolt text-white text-2xl"></i>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Instant Valuations</h3>
-                <p className="text-gray-600 mb-4">Get accurate property prices in under 30 seconds using advanced algorithms and real-time market data.</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('benefits.benefit2Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('benefits.benefit2Desc')}</p>
                 <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
                   <i className="fas fa-check-circle"></i>
-                  <span>3-7 days → 30 seconds</span>
+                  <span>{t('benefits.benefit2Feature')}</span>
                 </div>
                 <div className="mt-3 text-xs text-gray-500">
-                  <i className="fas fa-chart-line"></i> Save up to 95% valuation time
+                  <i className="fas fa-chart-line"></i> {t('benefits.benefit2Metric')}
                 </div>
               </div>
               {/* Benefit 3 */}
@@ -173,14 +173,14 @@ export default function Benefits() {
                 <div className="feature-icon w-16 h-16 rounded-2xl flex items-center justify-center mb-6 bg-gradient-to-br from-emerald-800 to-emerald-500">
                   <i className="fas fa-globe-africa text-white text-2xl"></i>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Diaspora & Global Reach</h3>
-                <p className="text-gray-600 mb-4">Connect with 500,000+ Rwandans abroad and international investors seeking Rwandan real estate.</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('benefits.benefit3Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('benefits.benefit3Desc')}</p>
                 <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
                   <i className="fas fa-check-circle"></i>
-                  <span>10-20% premium pricing</span>
+                  <span>{t('benefits.benefit3Feature')}</span>
                 </div>
                 <div className="mt-3 text-xs text-gray-500">
-                  <i className="fas fa-chart-line"></i> 34% of transactions involve diaspora
+                  <i className="fas fa-chart-line"></i> {t('benefits.benefit3Metric')}
                 </div>
               </div>
               {/* Benefit 4 */}
@@ -188,14 +188,14 @@ export default function Benefits() {
                 <div className="feature-icon w-16 h-16 rounded-2xl flex items-center justify-center mb-6 bg-gradient-to-br from-emerald-800 to-emerald-500">
                   <i className="fas fa-draw-polygon text-white text-2xl"></i>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Interactive GIS Mapping</h3>
-                <p className="text-gray-600 mb-4">Professional mapping tools showing boundaries, zoning, flood risks, and nearby infrastructure.</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('benefits.benefit4Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('benefits.benefit4Desc')}</p>
                 <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
                   <i className="fas fa-check-circle"></i>
-                  <span>70% fewer boundary disputes</span>
+                  <span>{t('benefits.benefit4Feature')}</span>
                 </div>
                 <div className="mt-3 text-xs text-gray-500">
-                  <i className="fas fa-chart-line"></i> Visual confirmation + satellite imagery
+                  <i className="fas fa-chart-line"></i> {t('benefits.benefit4Metric')}
                 </div>
               </div>
               {/* Benefit 5 */}
@@ -203,14 +203,14 @@ export default function Benefits() {
                 <div className="feature-icon w-16 h-16 rounded-2xl flex items-center justify-center mb-6 bg-gradient-to-br from-emerald-800 to-emerald-500">
                   <i className="fas fa-chart-line text-white text-2xl"></i>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Price Trends & Analytics</h3>
-                <p className="text-gray-600 mb-4">Access 10+ years of historical data, predictive analytics, and investment risk scoring.</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('benefits.benefit5Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('benefits.benefit5Desc')}</p>
                 <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
                   <i className="fas fa-check-circle"></i>
-                  <span>Data-driven decisions</span>
+                  <span>{t('benefits.benefit5Feature')}</span>
                 </div>
                 <div className="mt-3 text-xs text-gray-500">
-                  <i className="fas fa-chart-line"></i> Identify undervalued properties
+                  <i className="fas fa-chart-line"></i> {t('benefits.benefit5Metric')}
                 </div>
               </div>
               {/* Benefit 6 */}
@@ -218,14 +218,14 @@ export default function Benefits() {
                 <div className="feature-icon w-16 h-16 rounded-2xl flex items-center justify-center mb-6 bg-gradient-to-br from-emerald-800 to-emerald-500">
                   <i className="fas fa-file-contract text-white text-2xl"></i>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Title Verification</h3>
-                <p className="text-gray-600 mb-4">Cross-reference records to verify ownership, check liens, and ensure clean title transfer.</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('benefits.benefit6Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('benefits.benefit6Desc')}</p>
                 <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
                   <i className="fas fa-check-circle"></i>
-                  <span>95% fraud reduction</span>
+                  <span>{t('benefits.benefit6Feature')}</span>
                 </div>
                 <div className="mt-3 text-xs text-gray-500">
-                  <i className="fas fa-chart-line"></i> Legal compliance guaranteed
+                  <i className="fas fa-chart-line"></i> {t('benefits.benefit6Metric')}
                 </div>
               </div>
               {/* Benefit 7 */}
@@ -233,14 +233,14 @@ export default function Benefits() {
                 <div className="feature-icon w-16 h-16 rounded-2xl flex items-center justify-center mb-6 bg-gradient-to-br from-emerald-800 to-emerald-500">
                   <i className="fas fa-lock text-white text-2xl"></i>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Secure Escrow Service</h3>
-                <p className="text-gray-600 mb-4">Integrated payment protection with regulated escrow accounts and legal transaction support.</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('benefits.benefit7Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('benefits.benefit7Desc')}</p>
                 <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
                   <i className="fas fa-check-circle"></i>
-                  <span>3 months → 4-6 weeks</span>
+                  <span>{t('benefits.benefit7Feature')}</span>
                 </div>
                 <div className="mt-3 text-xs text-gray-500">
-                  <i className="fas fa-chart-line"></i> 100% secure transactions
+                  <i className="fas fa-chart-line"></i> {t('benefits.benefit7Metric')}
                 </div>
               </div>
               {/* Benefit 8 */}
@@ -248,14 +248,14 @@ export default function Benefits() {
                 <div className="feature-icon w-16 h-16 rounded-2xl flex items-center justify-center mb-6 bg-gradient-to-br from-emerald-800 to-emerald-500">
                   <i className="fas fa-robot text-white text-2xl"></i>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Smart Matching Algorithm</h3>
-                <p className="text-gray-600 mb-4">AI-powered matching connecting properties with ideal buyers based on investment profile and preferences.</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('benefits.benefit8Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('benefits.benefit8Desc')}</p>
                 <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
                   <i className="fas fa-check-circle"></i>
-                  <span>68% match-to-transaction rate</span>
+                  <span>{t('benefits.benefit8Feature')}</span>
                 </div>
                 <div className="mt-3 text-xs text-gray-500">
-                  <i className="fas fa-chart-line"></i> Personalized recommendations
+                  <i className="fas fa-chart-line"></i> {t('benefits.benefit8Metric')}
                 </div>
               </div>
               {/* Benefit 9 */}
@@ -263,14 +263,14 @@ export default function Benefits() {
                 <div className="feature-icon w-16 h-16 rounded-2xl flex items-center justify-center mb-6 bg-gradient-to-br from-emerald-800 to-emerald-500">
                   <i className="fas fa-mobile-alt text-white text-2xl"></i>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Multi-Platform Access</h3>
-                <p className="text-gray-600 mb-4">Access LandVal on desktop, tablet, or mobile with synchronized data across all devices.</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('benefits.benefit9Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('benefits.benefit9Desc')}</p>
                 <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
                   <i className="fas fa-check-circle"></i>
-                  <span>24/7 mobile access</span>
+                  <span>{t('benefits.benefit9Feature')}</span>
                 </div>
                 <div className="mt-3 text-xs text-gray-500">
-                  <i className="fas fa-chart-line"></i> Offline mode + push notifications
+                  <i className="fas fa-chart-line"></i> {t('benefits.benefit9Metric')}
                 </div>
               </div>
               {/* Benefit 10 */}
@@ -278,14 +278,14 @@ export default function Benefits() {
                 <div className="feature-icon w-16 h-16 rounded-2xl flex items-center justify-center mb-6 bg-gradient-to-br from-emerald-800 to-emerald-500">
                   <i className="fas fa-gift text-white text-2xl"></i>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Free Tier Available</h3>
-                <p className="text-gray-600 mb-4">Start with 3 free valuations monthly. Upgrade only when you need advanced features.</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('benefits.benefit10Title')}</h3>
+                <p className="text-gray-600 mb-4">{t('benefits.benefit10Desc')}</p>
                 <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
                   <i className="fas fa-check-circle"></i>
-                  <span>Risk-free trial</span>
+                  <span>{t('benefits.benefit10Feature')}</span>
                 </div>
                 <div className="mt-3 text-xs text-gray-500">
-                  <i className="fas fa-chart-line"></i> No long-term contracts
+                  <i className="fas fa-chart-line"></i> {t('benefits.benefit10Metric')}
                 </div>
               </div>
             </div>
@@ -296,51 +296,51 @@ export default function Benefits() {
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">LandVal vs. Traditional Methods</h2>
-              <p className="text-gray-600 mt-4">See why thousands are switching to the smarter way</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">{t('benefits.comparisonTitle')}</h2>
+              <p className="text-gray-600 mt-4">{t('benefits.comparisonSubtitle')}</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full comparison-table rounded-2xl overflow-hidden shadow-lg">
                 <thead className="bg-emerald-700 text-white">
                   <tr>
-                    <th className="px-6 py-4 text-left">Feature</th>
-                    <th className="px-6 py-4 text-center">Traditional Method</th>
-                    <th className="px-6 py-4 text-center">LandVal System</th>
+                    <th className="px-6 py-4 text-left">{t('benefits.comparisonFeature')}</th>
+                    <th className="px-6 py-4 text-center">{t('benefits.comparisonTraditional')}</th>
+                    <th className="px-6 py-4 text-center">{t('benefits.comparisonLandVal')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   <tr className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-semibold">Valuation Time</td>
+                    <td className="px-6 py-4 font-semibold">{t('benefits.comparisonValuationTime')}</td>
                     <td className="px-6 py-4 text-center text-gray-600">3-7 days</td>
                     <td className="px-6 py-4 text-center text-emerald-600 font-bold">30 seconds</td>
                   </tr>
                   <tr className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-semibold">Data Source</td>
+                    <td className="px-6 py-4 font-semibold">{t('benefits.comparisonDataSource')}</td>
                     <td className="px-6 py-4 text-center text-gray-600">Informal, word-of-mouth</td>
                     <td className="px-6 py-4 text-center text-emerald-600 font-bold">Official Gazette + Market Data</td>
                   </tr>
                   <tr className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-semibold">Buyer Reach</td>
+                    <td className="px-6 py-4 font-semibold">{t('benefits.comparisonBuyerReach')}</td>
                     <td className="px-6 py-4 text-center text-gray-600">Local only</td>
                     <td className="px-6 py-4 text-center text-emerald-600 font-bold">Global (Diaspora + Foreign)</td>
                   </tr>
                   <tr className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-semibold">Risk of Fraud</td>
+                    <td className="px-6 py-4 font-semibold">{t('benefits.comparisonFraudRisk')}</td>
                     <td className="px-6 py-4 text-center text-gray-600">High (30% of transactions)</td>
                     <td className="px-6 py-4 text-center text-emerald-600 font-bold">Low (&lt;5%)</td>
                   </tr>
                   <tr className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-semibold">Price Accuracy</td>
+                    <td className="px-6 py-4 font-semibold">{t('benefits.comparisonPriceAccuracy')}</td>
                     <td className="px-6 py-4 text-center text-gray-600">±30% variance</td>
                     <td className="px-6 py-4 text-center text-emerald-600 font-bold">±5% variance</td>
                   </tr>
                   <tr className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-semibold">Transaction Speed</td>
+                    <td className="px-6 py-4 font-semibold">{t('benefits.comparisonTransactionSpeed')}</td>
                     <td className="px-6 py-4 text-center text-gray-600">3-6 months</td>
                     <td className="px-6 py-4 text-center text-emerald-600 font-bold">4-6 weeks</td>
                   </tr>
                   <tr className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-semibold">Cost</td>
+                    <td className="px-6 py-4 font-semibold">{t('benefits.comparisonCost')}</td>
                     <td className="px-6 py-4 text-center text-gray-600">3-5% of property value</td>
                     <td className="px-6 py-4 text-center text-emerald-600 font-bold">Subscription starting at $0</td>
                   </tr>
@@ -354,43 +354,43 @@ export default function Benefits() {
         <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Real Stories from Our Users</h2>
-              <p className="text-gray-600 mt-4">Join thousands of satisfied landowners and investors</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">{t('benefits.testimonialsTitle')}</h2>
+              <p className="text-gray-600 mt-4">{t('benefits.testimonialsSubtitle')}</p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {/* Testimonial 1 */}
               <div className="testimonial-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                 <i className="fas fa-quote-left text-3xl text-emerald-300 mb-4"></i>
-                <p className="text-gray-700 mb-4">"As a diaspora investor, LandVal gave me confidence to purchase land in Rwanda without being physically present. The title verification was a game-changer."</p>
+                <p className="text-gray-700 mb-4">{t('benefits.testimonial1Quote')}</p>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-emerald-200 flex items-center justify-center font-bold text-emerald-800">JM</div>
                   <div>
-                    <div className="font-bold">Jean Marie V.</div>
-                    <div className="text-sm text-gray-500">Diaspora Investor, Belgium</div>
+                    <div className="font-bold">{t('benefits.testimonial1Name')}</div>
+                    <div className="text-sm text-gray-500">{t('benefits.testimonial1Title')}</div>
                   </div>
                 </div>
               </div>
               {/* Testimonial 2 */}
               <div className="testimonial-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                 <i className="fas fa-quote-left text-3xl text-emerald-300 mb-4"></i>
-                <p className="text-gray-700 mb-4">"Sold my property for 18% above asking price within 2 weeks. The matching algorithm connected me with serious international investors instantly."</p>
+                <p className="text-gray-700 mb-4">{t('benefits.testimonial2Quote')}</p>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-amber-200 flex items-center justify-center font-bold text-amber-800">CM</div>
                   <div>
-                    <div className="font-bold">Claudine M.</div>
-                    <div className="text-sm text-gray-500">Landowner, Northern Province</div>
+                    <div className="font-bold">{t('benefits.testimonial2Name')}</div>
+                    <div className="text-sm text-gray-500">{t('benefits.testimonial2Title')}</div>
                   </div>
                 </div>
               </div>
               {/* Testimonial 3 */}
               <div className="testimonial-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                 <i className="fas fa-quote-left text-3xl text-emerald-300 mb-4"></i>
-                <p className="text-gray-700 mb-4">"The historical price data helped me identify undervalued agricultural land. My investment has already appreciated 12% in just 8 months!"</p>
+                <p className="text-gray-700 mb-4">{t('benefits.testimonial3Quote')}</p>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-emerald-200 flex items-center justify-center font-bold text-emerald-800">EK</div>
                   <div>
-                    <div className="font-bold">Emmanuel K.</div>
-                    <div className="text-sm text-gray-500">Real Estate Investor, Kigali</div>
+                    <div className="font-bold">{t('benefits.testimonial3Name')}</div>
+                    <div className="text-sm text-gray-500">{t('benefits.testimonial3Title')}</div>
                   </div>
                 </div>
               </div>
@@ -401,17 +401,17 @@ export default function Benefits() {
         {/* Pricing CTA */}
         <section className="hero-gradient py-16 text-white">
           <div className="max-w-5xl mx-auto text-center px-4">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Experience These Benefits?</h2>
-            <p className="text-emerald-100 text-lg mb-8">Start with 3 free valuations today and discover why thousands trust LandVal</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('benefits.ctaTitle')}</h2>
+            <p className="text-emerald-100 text-lg mb-8">{t('benefits.ctaSubtitle')}</p>
             <div className="flex flex-wrap justify-center gap-4">
               <a href="/auth/register" className="bg-amber-400 text-emerald-900 hover:bg-white font-semibold px-8 py-4 rounded-2xl shadow-xl text-lg flex items-center gap-2 transition-colors duration-200">
-                <i className="fas fa-rocket"></i> Get Started Free
+                <i className="fas fa-rocket"></i> {t('benefits.ctaStarted')}
               </a>
               <a href="/contact" className="bg-sky-400 text-white hover:bg-[#2481E3] font-semibold px-8 py-4 rounded-2xl shadow-xl text-lg flex items-center gap-2 transition-colors duration-200">
-                <i className="fas fa-calendar-alt"></i> Schedule Demo
+                <i className="fas fa-calendar-alt"></i> {t('benefits.ctaSchedule')}
               </a>
             </div>
-            <p className="mt-6 text-sm text-emerald-200">No credit card required · Cancel anytime</p>
+            <p className="mt-6 text-sm text-emerald-200">{t('benefits.ctaDisclaimer')}</p>
           </div>
         </section>
 
