@@ -70,8 +70,7 @@ const SubscriptionCheckout: React.FC = () => {
 
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [provider, setProvider] = useState<'mtn' | 'airtel' | 'bank'>('mtn');
+  const [paymentMethod, setPaymentMethod] = useState<'pesapal' | 'paypal'>('pesapal');
   const [loading, setLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -80,6 +79,8 @@ const SubscriptionCheckout: React.FC = () => {
 
   // Load plan from query parameters
   useEffect(() => {
+    if (!router.isReady) return;
+
     if (plan) {
       const foundPlan = subscriptionPlans.find(p => p.id === plan);
       if (foundPlan) {
@@ -104,7 +105,7 @@ const SubscriptionCheckout: React.FC = () => {
       setSelectedCurrency(found || null);
     }
     loadCurrencies();
-  }, [plan, billing, router]);
+  }, [router.isReady, plan, billing, router]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -134,37 +135,11 @@ const SubscriptionCheckout: React.FC = () => {
       return;
     }
 
-    if (!phoneNumber) {
-      toast.error('Please enter your phone number');
-      return;
-    }
-
-
     const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
     if (!accessToken) {
       toast.error('Please login to continue');
       router.push('/auth/login');
       return;
-    }
-
-    // Phone validation
-    const mtnSandboxNumbers = ['46733123450', '46733123451', '46733123452', '46733123453'];
-    const phoneNoPlus = phoneNumber.startsWith('+') ? phoneNumber.slice(1) : phoneNumber;
-    if (provider === 'mtn') {
-      if (!phoneNumber.match(/^[+][1-9]\d{7,14}$/) && !phoneNumber.match(/^([+]?250|0)?[7][2389]\d{7}$/)) {
-        // Allow sandbox test numbers (with or without '+')
-        if (!mtnSandboxNumbers.includes(phoneNoPlus)) {
-          toast.error('Please enter a valid international (E.164) or Rwandan phone number for MTN MoMo');
-          return;
-        }
-      }
-    } else if (provider === 'airtel') {
-      if (!phoneNumber.match(/^([+]?250|0)?7[34][0-9]{7}$/)) {
-        toast.error('Please enter a valid Rwandan phone number for Airtel Money (07XXXXXXXX, starts with 073 or 074)');
-        return;
-      }
-    } else if (provider === 'bank') {
-      // For bank, phone number is optional or can be skipped
     }
 
     if (!agreedToTerms) {
@@ -175,7 +150,6 @@ const SubscriptionCheckout: React.FC = () => {
     setLoading(true);
     try {
       // Step 1: Upgrade subscription
-
       const subscriptionResponse = await fetchWithTokenRefresh(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/subscriptions/upgrade`, {
         method: 'POST',
         headers: {
@@ -203,62 +177,55 @@ const SubscriptionCheckout: React.FC = () => {
       const subscriptionData = await subscriptionResponse.json();
       console.log('Subscription upgraded:', subscriptionData);
 
-
-      // Step 2: Initiate payment
+      // Step 2: Initiate payment with selected provider
       const amount = calculateAmount();
-      let paymentBody: any = {
-        amount: calculateAmount(),
-        currency: preferredCurrency,
-        provider: provider,
-        description: `${selectedPlan.name} Plan - ${billingPeriod === 'yearly' ? 'Yearly' : 'Monthly'} Subscription`,
-      };
-      let paymentEndpoint = '';
-      if (provider === 'mtn' || provider === 'airtel') {
-        paymentBody.phone_number = phoneNumber;
-        paymentEndpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/payments/mobile-money`;
-      } else if (provider === 'bank') {
-        paymentBody.bank_name = 'Bank of Kigali / Equity';
-        paymentEndpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/payments/bank/initiate`;
-      }
+      const frontendUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
+      const initiateEndpoint = paymentMethod === 'pesapal'
+        ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/payments/pesapal/initiate`
+        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/payments/paypal/initiate`;
 
-      const paymentResponse = await fetchWithTokenRefresh(paymentEndpoint, {
+      const paymentResponse = await fetchWithTokenRefresh(initiateEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`
         },
-        body: JSON.stringify(paymentBody)
+        body: JSON.stringify({
+          amount,
+          currency: preferredCurrency === 'RWF' ? 'USD' : preferredCurrency,
+          description: `${selectedPlan.name} Plan - ${billingPeriod === 'yearly' ? 'Yearly' : 'Monthly'} Subscription`,
+          return_url: `${frontendUrl}/dashboard/subscription?payment=success`,
+          cancel_url: `${frontendUrl}/subscribe?payment=cancelled`,
+          customer_email: '',
+          customer_name: '',
+        })
       });
 
       if (!paymentResponse.ok) {
-        let errorMsg = `Payment initiation failed (HTTP ${paymentResponse.status})`;
-        let backendDetails = '';
+        let errorMsg = `Payment initiation failed`;
         try {
           const errorData = await paymentResponse.json();
-          backendDetails = JSON.stringify(errorData, null, 2);
           errorMsg = errorData.message || (errorData.error && errorData.error.message) || errorMsg;
-        } catch (jsonErr) {
-          try {
-            const text = await paymentResponse.text();
-            backendDetails = text || '[No response body]';
-          } catch (textErr) {
-            backendDetails = '[No response body]';
-          }
+        } catch (e) {
+          // ignore
         }
-        toast.error(`${errorMsg}\n${backendDetails}`);
-        console.error('Payment API error:', errorMsg, backendDetails);
-        throw new Error(`${errorMsg}\n${backendDetails}`);
+        throw new Error(errorMsg);
       }
 
       const paymentData = await paymentResponse.json();
-      console.log('Payment initiated:', paymentData);
+      const checkoutURL = paymentData?.data?.redirect_url || paymentData?.data?.checkout_url;
 
-      toast.success('Payment initiated! Please check your phone to complete the transaction.');
+      toast.success('Redirecting to payment...');
 
-      // Redirect to payment status or dashboard after 2 seconds
-      setTimeout(() => {
-        router.push('/dashboard/subscription');
-      }, 2000);
+      if (checkoutURL) {
+        // Redirect to provider's checkout page
+        window.location.href = checkoutURL;
+      } else {
+        console.log('Payment initiated:', paymentData);
+        setTimeout(() => {
+          router.push('/dashboard/subscription');
+        }, 2000);
+      }
     } catch (error: any) {
       console.error('Checkout error:', error);
       toast.error(error.message || 'Checkout failed. Please try again.');
@@ -383,100 +350,53 @@ const SubscriptionCheckout: React.FC = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Payment Details</h2>
 
               <form onSubmit={(e) => { e.preventDefault(); handleCheckout(); }} className="space-y-6">
-                {/* Payment Provider */}
+                {/* Payment Provider Selection */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Select Payment Provider
+                    Select Payment Method
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setProvider('mtn')}
+                      onClick={() => setPaymentMethod('pesapal')}
                       className={`py-4 px-4 rounded-xl border-2 transition-all ${
-                        provider === 'mtn'
-                          ? 'border-yellow-500 bg-yellow-50'
+                        paymentMethod === 'pesapal'
+                          ? 'border-emerald-500 bg-emerald-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <div className="text-center">
-                        <div className="text-3xl mb-1">📱</div>
-                        <div className="font-semibold text-gray-900">MTN MoMo</div>
+                        <div className="text-3xl mb-1">🌍</div>
+                        <div className="font-semibold text-gray-900">PesaPal</div>
+                        <div className="text-xs text-gray-500">Mobile Money, Cards, Bank (East Africa)</div>
                       </div>
                     </button>
                     <button
                       type="button"
-                      onClick={() => setProvider('airtel')}
+                      onClick={() => setPaymentMethod('paypal')}
                       className={`py-4 px-4 rounded-xl border-2 transition-all ${
-                        provider === 'airtel'
-                          ? 'border-red-500 bg-red-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="text-center">
-                        <div className="text-3xl mb-1">📲</div>
-                        <div className="font-semibold text-gray-900">Airtel Money</div>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setProvider('bank')}
-                      className={`py-4 px-4 rounded-xl border-2 transition-all ${
-                        provider === 'bank'
+                        paymentMethod === 'paypal'
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <div className="text-center">
-                        <div className="text-3xl mb-1">🏦</div>
-                        <div className="font-semibold text-gray-900">Bank Transfer</div>
-                        <div className="text-xs text-gray-500">(Equity, Bank of Kigali)</div>
+                        <div className="text-3xl mb-1">💳</div>
+                        <div className="font-semibold text-gray-900">PayPal</div>
+                        <div className="text-xs text-gray-500">Credit/Debit Card (International)</div>
                       </div>
                     </button>
                   </div>
                 </div>
 
-                {/* Phone Number */}
-                {provider !== 'bank' && (
-                  <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder={provider === 'airtel' ? '073XXXXXXX or 074XXXXXXX' : '07XXXXXXXX'}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      required
-                    />
-                    <p className="mt-2 text-sm text-gray-500">
-                      {provider === 'mtn' ? (
-                        <>
-                          Enter your MTN mobile money number.<br />
-                          Example (Rwanda): <span className="font-mono">+250788123456</span> or <span className="font-mono">0788123456</span><br />
-                          Example (International): <span className="font-mono">+46701234567</span><br />
-                          <span className="text-emerald-700 font-semibold">For sandbox testing, use one of these numbers: 46733123450, 46733123451, 46733123452, 46733123453</span>
-                        </>
-                      ) : (
-                        <>
-                          Enter your Airtel Money number.<br />
-                          Example: <span className="font-mono">073XXXXXXX</span> or <span className="font-mono">074XXXXXXX</span>
-                        </>
-                      )}
-                    </p>
-                  </div>
-                )}
-                {provider === 'bank' && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium text-blue-900 mb-1">Bank Transfer Instructions</h4>
-                    <ul className="text-sm text-blue-800 space-y-1">
-                      <li>• You will receive bank account details for Equity or Bank of Kigali</li>
-                      <li>• Please transfer the exact amount and upload proof of payment</li>
-                      <li>• Your subscription will be activated after payment verification</li>
-                    </ul>
-                  </div>
-                )}
+                {/* Payment Info */}
+                <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
+                  {paymentMethod === 'pesapal' ? (
+                    <p>You will be redirected to PesaPal to complete payment using Mobile Money, Card, or Bank Transfer.</p>
+                  ) : (
+                    <p>You will be redirected to PayPal to pay securely with your PayPal account or Credit/Debit Card.</p>
+                  )}
+                </div>
 
                 {/* Payment Instructions */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -487,9 +407,9 @@ const SubscriptionCheckout: React.FC = () => {
                     <div>
                       <h4 className="font-medium text-blue-900 mb-1">Payment Instructions</h4>
                       <ul className="text-sm text-blue-800 space-y-1">
-                        <li>• You will receive a payment prompt on your phone</li>
-                        <li>• Enter your Mobile Money PIN to complete the payment</li>
-                        <li>• Your subscription will be activated upon successful payment</li>
+                        <li>• You will be redirected to the payment provider to complete your purchase</li>
+                        <li>• Your subscription will be activated upon successful payment confirmation</li>
+                        <li>• Return to your dashboard to view your updated subscription status</li>
                       </ul>
                     </div>
                   </div>
@@ -545,9 +465,8 @@ const SubscriptionCheckout: React.FC = () => {
                     <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                     </svg>
-                    {provider === 'mtn' && 'Secure payment powered by MTN MoMo'}
-                    {provider === 'airtel' && 'Secure payment powered by Airtel Money'}
-                    {provider === 'bank' && 'Secure payment via Bank Transfer (Equity, Bank of Kigali)'}
+                    {paymentMethod === 'pesapal' && 'Secure payment powered by PesaPal'}
+                    {paymentMethod === 'paypal' && 'Secure payment powered by PayPal'}
                   </p>
                 </div>
               </form>

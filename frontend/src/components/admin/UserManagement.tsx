@@ -513,7 +513,7 @@ const UserManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {Array.isArray(users) && users.map(user => (
+                {Array.isArray(users) && users.length > 0 ? users.map(user => (
                   <tr key={user.id}>
                     <td style={{ padding: '6px 4px', border: '1px solid #eee', fontFamily: 'monospace', fontSize: 11 }}>{String(user.id)}</td>
                     <td style={{ padding: '6px 4px', border: '1px solid #eee', fontSize: 12 }}>{user.first_name}</td>
@@ -531,7 +531,9 @@ const UserManagement: React.FC = () => {
                       </div>
                     </td>
                   </tr>
-                ))}
+                )) : (
+                  <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: '#666', fontSize: 13 }}>No users found.</td></tr>
+                )}
               </tbody>
             </table>
             </div>

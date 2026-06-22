@@ -76,7 +76,7 @@ describe('UserManagement sensitive account controls', () => {
 
     expect(await screen.findByText('Amina')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('View'));
+    fireEvent.click(screen.getByTitle('View'));
 
     expect(await screen.findByText('User Details')).toBeInTheDocument();
     expect(screen.getAllByText('admin')[0]).toBeInTheDocument();
@@ -110,7 +110,7 @@ describe('UserManagement sensitive account controls', () => {
 
     expect(await screen.findByText('Amina')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('View'));
+    fireEvent.click(screen.getByTitle('View'));
     fireEvent.click(await screen.findByText('Manage Role'));
 
     expect(await screen.findByText('Manage Role')).toBeInTheDocument();
@@ -138,7 +138,7 @@ describe('UserManagement sensitive account controls', () => {
 
     expect(await screen.findByText('Amina')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('View'));
+    fireEvent.click(screen.getByTitle('View'));
     fireEvent.click(await screen.findByText('Manage Access'));
 
     expect(await screen.findByText('Manage Access Overrides')).toBeInTheDocument();

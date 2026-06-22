@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 /**
  * EMAIL VERIFICATION PAGE · Land Valuation System
@@ -11,6 +12,7 @@ import toast from 'react-hot-toast';
 
 const VerifyEmail: React.FC = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -58,12 +60,12 @@ const VerifyEmail: React.FC = () => {
     const verificationCode = code.join('');
     
     if (!email) {
-      toast.error('Please enter your email address');
+      toast.error(t('auth.emailRequired'));
       return;
     }
 
     if (verificationCode.length !== 6) {
-      toast.error('Please enter the complete 6-digit code');
+      toast.error(t('auth.enterCompleteCode'));
       return;
     }
 
@@ -84,17 +86,17 @@ const VerifyEmail: React.FC = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Verification failed');
+        throw new Error(data.message || t('auth.verifyEmailFailed'));
       }
 
-      toast.success('Email verified successfully! Redirecting to login...');
+      toast.success(t('auth.verifyEmailSuccess'));
       
       setTimeout(() => {
         router.push('/auth/login');
       }, 1500);
 
     } catch (error: any) {
-      toast.error(error.message || 'Verification failed. Please try again.');
+      toast.error(error.message || t('auth.verifyEmailFailed'));
       console.error('Verification error:', error);
     } finally {
       setLoading(false);
@@ -104,7 +106,7 @@ const VerifyEmail: React.FC = () => {
   // Resend verification code
   const handleResend = async () => {
     if (!email) {
-      toast.error('Please enter your email address first');
+      toast.error(t('auth.enterEmailFirst'));
       return;
     }
 
@@ -122,15 +124,15 @@ const VerifyEmail: React.FC = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to resend code');
+        throw new Error(data.message || t('auth.codeResendFailed'));
       }
 
-      toast.success('Verification code sent! Check your email.');
+      toast.success(t('auth.codeResent'));
       setCode(['', '', '', '', '', '']); // Clear current code
       document.getElementById('code-0')?.focus();
 
     } catch (error: any) {
-      toast.error(error.message || 'Failed to resend code');
+      toast.error(error.message || t('auth.codeResendFailed'));
     } finally {
       setResending(false);
     }
@@ -139,7 +141,7 @@ const VerifyEmail: React.FC = () => {
   return (
     <>
       <Head>
-        <title>Verify Email · Land Valuation System</title>
+        <title>{t('auth.verifyEmailTitle')} · Land Valuation System</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
@@ -154,10 +156,10 @@ const VerifyEmail: React.FC = () => {
               </span>
             </Link>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Verify Your Email
+              {t('auth.verifyEmailTitle')}
             </h2>
             <p className="text-gray-600">
-              Enter the 6-digit code we sent to your email
+              {t('auth.verifyEmailSubtitle')}
             </p>
           </div>
 
@@ -168,14 +170,14 @@ const VerifyEmail: React.FC = () => {
               {/* Email Input */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
+                  {t('auth.emailLabel')}
                 </label>
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.email@example.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   required
                 />
@@ -184,7 +186,7 @@ const VerifyEmail: React.FC = () => {
               {/* Verification Code Inputs */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Verification Code
+                  {t('auth.verificationCode')}
                 </label>
                 <div className="flex gap-2 justify-center">
                   {code.map((digit, index) => (
@@ -217,17 +219,17 @@ const VerifyEmail: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Verifying...
+                    {t('auth.sending')}
                   </span>
                 ) : (
-                  'Verify Email'
+                  t('auth.verifyEmailBtn')
                 )}
               </button>
 
               {/* Resend Code */}
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-2">
-                  Didn't receive the code?
+                  {t('auth.didNotReceiveCode')}
                 </p>
                 <button
                   type="button"
@@ -235,7 +237,7 @@ const VerifyEmail: React.FC = () => {
                   disabled={resending || !email}
                   className="text-indigo-600 hover:text-indigo-700 font-medium text-sm underline disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {resending ? 'Sending...' : 'Resend Code'}
+                  {resending ? t('auth.sending') : t('auth.resendCodeBtn')}
                 </button>
               </div>
 
@@ -246,7 +248,7 @@ const VerifyEmail: React.FC = () => {
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
                   <span>
-                    Your verification code expires in 30 minutes. Check your spam folder if you don't see the email.
+                    {t('auth.codeExpires')}
                   </span>
                 </p>
               </div>
@@ -257,7 +259,7 @@ const VerifyEmail: React.FC = () => {
           <div className="text-center mt-6">
             <Link href="/auth/login">
               <span className="text-gray-600 hover:text-indigo-600 text-sm cursor-pointer">
-                ← Back to Login
+                ← {t('auth.backToLogin')}
               </span>
             </Link>
           </div>

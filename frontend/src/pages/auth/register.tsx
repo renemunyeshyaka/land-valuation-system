@@ -5,6 +5,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import MainNavbar from '../../components/MainNavbar';
 
 /**
@@ -14,6 +15,7 @@ import MainNavbar from '../../components/MainNavbar';
 
 const Register: React.FC = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -32,38 +34,38 @@ const Register: React.FC = () => {
 
     // Email validation
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('auth.emailRequired');
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = t('auth.emailInvalid');
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.passwordRequired');
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+      newErrors.password = t('auth.passwordMinChars');
     }
 
     // Confirm password validation
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = t('auth.confirmPasswordRequired');
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('auth.passwordsDoNotMatch');
     }
 
     // Name validation
     if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
+      newErrors.firstName = t('auth.firstNameRequired');
     }
     if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
+      newErrors.lastName = t('auth.lastNameRequired');
     }
 
     // Phone validation (E.164 international format)
     if (!formData.phone) {
-      newErrors.phone = 'Phone number is required';
+      newErrors.phone = t('auth.phoneRequired');
     } else if (!/^\+[1-9]\d{7,14}$/.test(formData.phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Enter a valid international phone number (e.g., +14155552671)';
+      newErrors.phone = t('auth.phoneInvalid');
     }
 
     setErrors(newErrors);
@@ -74,7 +76,7 @@ const Register: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) {
-      toast.error('Please fix the errors in the form');
+      toast.error(t('auth.fixErrors'));
       return;
     }
     setLoading(true);
@@ -102,12 +104,12 @@ const Register: React.FC = () => {
           'Registration failed';
         throw new Error(backendMessage);
       }
-      toast.success('Account created! Redirecting to email verification...');
+      toast.success(t('auth.accountCreated'));
       setTimeout(() => {
         router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`);
       }, 1500);
     } catch (error: any) {
-      toast.error(error.message || 'Registration failed. Please try again.');
+      toast.error(error.message || t('auth.registrationFailed'));
       console.error('Registration error:', error);
     } finally {
       setLoading(false);
@@ -132,11 +134,11 @@ const Register: React.FC = () => {
     <>
       {/* HEAD / SEO */}
       <Head>
-        <title>Create Account · Land Valuation System</title>
+        <title>{t('auth.registerTitle')} · Land Valuation System</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-        <meta name="description" content="Create your Land Valuation System account to access property valuations, marketplace, and more." />
-        <meta property="og:title" content="Create Account · LandVal" />
-        <meta property="og:description" content="Join thousands using Land Valuation System for accurate property valuations" />
+        <meta name="description" content={t('auth.registerSubtitle')} />
+        <meta property="og:title" content={`${t('auth.registerTitle')} · LandVal`} />
+        <meta property="og:description" content={t('auth.registerSubtitle')} />
       </Head>
 
       {/* MAIN LAYOUT */}
@@ -154,10 +156,10 @@ const Register: React.FC = () => {
               {/* Header */}
               <div className="text-center mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
-                  Create your account
+                  {t('auth.registerTitle')}
                 </h1>
                 <p className="text-gray-600">
-                  Join thousands using Land Valuation System
+                  {t('auth.registerSubtitle')}
                 </p>
               </div>
 
@@ -170,7 +172,7 @@ const Register: React.FC = () => {
                     {/* First Name */}
                     <div>
                       <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-                        First Name <span className="text-red-600">*</span>
+                        {t('auth.firstName')} <span className="text-red-600">*</span>
                       </label>
                       <input
                         type="text"
@@ -179,7 +181,7 @@ const Register: React.FC = () => {
                         value={formData.firstName}
                         onChange={handleChange}
                         className={`w-full px-4 py-2.5 border ${errors.firstName ? 'border-red-300' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-gray-800 placeholder:text-gray-400`}
-                        placeholder="Jean"
+                        placeholder={t('auth.firstNamePlaceholder')}
                         disabled={loading}
                       />
                       {errors.firstName && (
@@ -190,7 +192,7 @@ const Register: React.FC = () => {
                     {/* Last Name */}
                     <div>
                       <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-                        Last Name <span className="text-red-600">*</span>
+                        {t('auth.lastName')} <span className="text-red-600">*</span>
                       </label>
                       <input
                         type="text"
@@ -199,7 +201,7 @@ const Register: React.FC = () => {
                         value={formData.lastName}
                         onChange={handleChange}
                         className={`w-full px-4 py-2.5 border ${errors.lastName ? 'border-red-300' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-gray-800 placeholder:text-gray-400`}
-                        placeholder="Munyeshyaka"
+                        placeholder={t('auth.lastNamePlaceholder')}
                         disabled={loading}
                       />
                       {errors.lastName && (
@@ -211,7 +213,7 @@ const Register: React.FC = () => {
                   {/* Email */}
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address <span className="text-red-600">*</span>
+                      {t('auth.emailLabel')} <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="email"
@@ -220,7 +222,7 @@ const Register: React.FC = () => {
                       value={formData.email}
                       onChange={handleChange}
                       className={`w-full px-4 py-2.5 border ${errors.email ? 'border-red-300' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-gray-800 placeholder:text-gray-400`}
-                      placeholder="jean@example.com"
+                      placeholder={t('auth.emailPlaceholder')}
                       disabled={loading}
                     />
                     {errors.email && (
@@ -231,7 +233,7 @@ const Register: React.FC = () => {
                   {/* Phone */}
                   <div>
                     <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number <span className="text-red-600">*</span>
+                      {t('auth.phoneNumber')} <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="tel"
@@ -240,22 +242,21 @@ const Register: React.FC = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       className={`w-full px-4 py-2.5 border ${errors.phone ? 'border-red-300' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-gray-800 placeholder:text-gray-400`}
-                      placeholder="+14155552671 or +447911123456"
+                      placeholder={t('auth.phonePlaceholder')}
                       disabled={loading}
                     />
                     {errors.phone && (
                       <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
                     )}
                     <p className="mt-1 text-xs text-gray-500">
-                      Format: <span className="font-mono">+14155552671</span> (US), <span className="font-mono">+447911123456</span> (UK), <span className="font-mono">+250788620201</span> (Rwanda), etc.<br />
-                      Enter your full international phone number in E.164 format.
+                      {t('auth.phoneFormat')}
                     </p>
                   </div>
 
                   {/* User Type Selector */}
                   <div>
                     <label htmlFor="userType" className="block text-sm font-medium text-gray-700 mb-2">
-                      Account Type <span className="text-red-600">*</span>
+                      {t('auth.accountType')} <span className="text-red-600">*</span>
                     </label>
                     <select
                       id="userType"
@@ -265,17 +266,17 @@ const Register: React.FC = () => {
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-gray-800 bg-white"
                       disabled={loading}
                     >
-                      <option value="buyer">Buyer / Investor</option>
-                      <option value="seller">Seller / Property Owner</option>
-                      <option value="agent">Real Estate Agent</option>
+                      <option value="buyer">{t('auth.buyerOption')}</option>
+                      <option value="seller">{t('auth.sellerOption')}</option>
+                      <option value="agent">{t('auth.agentOption')}</option>
                     </select>
-                    <p className="mt-1 text-xs text-gray-500">Choose your account type to get relevant features</p>
+                    <p className="mt-1 text-xs text-gray-500">{t('auth.accountTypeHint')}</p>
                   </div>
 
                   {/* Password */}
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                      Password <span className="text-red-600">*</span>
+                      {t('auth.passwordLabel')} <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="password"
@@ -290,13 +291,13 @@ const Register: React.FC = () => {
                     {errors.password && (
                       <p className="mt-1 text-sm text-red-600">{errors.password}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
+                    <p className="mt-1 text-xs text-gray-500">{t('auth.minChars')}</p>
                   </div>
 
                   {/* Confirm Password */}
                   <div>
                     <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                      Confirm Password <span className="text-red-600">*</span>
+                      {t('auth.confirmPassword')} <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="password"
@@ -322,13 +323,13 @@ const Register: React.FC = () => {
                       required
                     />
                     <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
-                      I agree to the{' '}
+                      {t('auth.termsAgree')}{' '}
                       <a href="/terms" className="text-emerald-700 hover:text-emerald-800 font-medium">
-                        Terms of Service
+                        {t('auth.termsOfService')}
                       </a>{' '}
-                      and{' '}
+                      {t('auth.and')}{' '}
                       <a href="/privacy" className="text-emerald-700 hover:text-emerald-800 font-medium">
-                        Privacy Policy
+                        {t('auth.privacyPolicy')}
                       </a>
                     </label>
                   </div>
@@ -345,10 +346,10 @@ const Register: React.FC = () => {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Creating account...
+                        {t('auth.creatingAccount')}
                       </>
                     ) : (
-                      'Create Account'
+                      t('auth.createAccountBtn')
                     )}
                   </button>
                 </form>
@@ -356,9 +357,9 @@ const Register: React.FC = () => {
                 {/* Login Link */}
                 <div className="mt-6 text-center">
                   <p className="text-sm text-gray-600">
-                    Already have an account?{' '}
+                    {t('auth.alreadyHaveAccount')}{' '}
                     <a href="/auth/login" className="text-emerald-700 hover:text-emerald-800 font-medium">
-                      Log in
+                      {t('auth.logInLink')}
                     </a>
                   </p>
                 </div>
@@ -369,9 +370,9 @@ const Register: React.FC = () => {
                 <div className="flex items-start">
                   <i className="fas fa-info-circle text-emerald-700 mt-0.5 mr-3"></i>
                   <div className="text-sm text-emerald-900">
-                    <p className="font-medium mb-1">Email Verification Required</p>
+                    <p className="font-medium mb-1">{t('auth.emailVerifyRequired')}</p>
                     <p className="text-emerald-800">
-                      After registration, check your email to verify your account before logging in.
+                      {t('auth.emailVerifyDesc')}
                     </p>
                   </div>
                 </div>

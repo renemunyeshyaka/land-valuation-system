@@ -147,7 +147,7 @@ export default function CurrencyManagement() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {currencies.map(currency => (
+                {currencies.length > 0 ? currencies.map(currency => (
                   <tr key={currency.id} className="hover:bg-gray-50 transition-colors">
                     <td className="p-3 font-medium text-gray-800">{currency.name}</td>
                     <td className="p-3 font-mono text-gray-700">{currency.iso_code}</td>
@@ -200,7 +200,9 @@ export default function CurrencyManagement() {
                       )}
                     </td>
                   </tr>
-                ))}
+                )) : (
+                  <tr><td colSpan={7} className="p-6 text-center text-gray-500">No currencies configured.</td></tr>
+                )}
               </tbody>
             </table>
           </div>

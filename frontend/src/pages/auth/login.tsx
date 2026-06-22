@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import MainNavbar from '../../components/MainNavbar';
 import Footer from '../../components/Footer';
@@ -20,6 +21,7 @@ import Footer from '../../components/Footer';
  */
 
 const Login: React.FC = () => {
+    const { t } = useTranslation();
     const [formData, setFormData] = useState({
       email: '',
       password: '',
@@ -35,13 +37,13 @@ const Login: React.FC = () => {
       const newErrors: { [key: string]: string } = {};
       // Email validation
       if (!formData.email.trim()) {
-        newErrors.email = 'Email is required';
+        newErrors.email = t('auth.emailRequired');
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-        newErrors.email = 'Please enter a valid email address';
+        newErrors.email = t('auth.validEmail');
       }
       // Password validation
       if (!formData.password) {
-        newErrors.password = 'Password is required';
+        newErrors.password = t('auth.passwordRequired');
       }
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
@@ -64,7 +66,7 @@ const Login: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!validateForm()) {
-        toast.error('Please fix the errors in the form');
+        toast.error(t('auth.fixErrors'));
         return;
       }
       setLoading(true);
@@ -80,7 +82,7 @@ const Login: React.FC = () => {
         });
         const data = await response.json();
         if (!response.ok) {
-          throw new Error(data.message || 'Login failed. Please check your credentials.');
+          throw new Error(data.message || t('auth.loginFailed'));
         }
         // Always redirect to OTP verification page after login
         toast.success('OTP sent! Please verify.');
@@ -89,7 +91,7 @@ const Login: React.FC = () => {
           query: { email: formData.email },
         });
       } catch (error: any) {
-        toast.error(error.message || 'Login failed. Please check your credentials.');
+        toast.error(error.message || t('auth.loginFailed'));
       } finally {
         setLoading(false);
       }
@@ -108,10 +110,10 @@ const Login: React.FC = () => {
                 {/* Header */}
                 <div className="text-center mb-8">
                   <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
-                    Welcome Back
+                    {t('auth.welcomeBack')}
                   </h1>
                   <p className="text-base text-gray-600">
-                    Log in to access your land valuation dashboard
+                    {t('auth.loginSubtitle')}
                   </p>
                 </div>
                 {/* Login Card */}
@@ -120,7 +122,7 @@ const Login: React.FC = () => {
                     {/* Email Field */}
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Email Address
+                        {t('auth.emailLabel')}
                       </label>
                       <input
                         type="email"
@@ -129,7 +131,7 @@ const Login: React.FC = () => {
                         value={formData.email}
                         onChange={handleChange}
                         disabled={loading}
-                        placeholder="jean@example.com"
+                        placeholder={t('auth.emailPlaceholder')}
                         className={`w-full px-4 py-2.5 border rounded-lg text-base transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed ${
                           errors.email ? 'border-red-500' : 'border-gray-200'
                         }`}
@@ -143,7 +145,7 @@ const Login: React.FC = () => {
                     {/* Password Field */}
                     <div>
                       <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Password
+                        {t('auth.passwordLabel')}
                       </label>
                       <input
                         type="password"
@@ -152,7 +154,7 @@ const Login: React.FC = () => {
                         value={formData.password}
                         onChange={handleChange}
                         disabled={loading}
-                        placeholder="Enter your password"
+                        placeholder={t('auth.passwordPlaceholder')}
                         className={`w-full px-4 py-2.5 border rounded-lg text-base transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed ${
                           errors.password ? 'border-red-500' : 'border-gray-200'
                         }`}
@@ -176,14 +178,14 @@ const Login: React.FC = () => {
                           className="w-4 h-4 text-emerald-700 border-gray-300 rounded focus:ring-emerald-500 disabled:cursor-not-allowed"
                         />
                         <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-700">
-                          Remember me
+                          {t('auth.rememberMe')}
                         </label>
                       </div>
                       <Link 
                         href="/auth/forgot-password" 
                         className="text-sm text-emerald-700 hover:text-emerald-800 font-medium transition-colors"
                       >
-                        Forgot password?
+                        {t('auth.forgotPassword')}
                       </Link>
                     </div>
                     {/* Submit Button */}
@@ -195,12 +197,12 @@ const Login: React.FC = () => {
                       {loading ? (
                         <>
                           <i className="fas fa-spinner fa-spin"></i>
-                          Logging in...
+                          {t('auth.loggingIn')}
                         </>
                       ) : (
                         <>
                           <i className="fas fa-sign-in-alt"></i>
-                          Log In
+                          {t('auth.logIn')}
                         </>
                       )}
                     </button>
@@ -211,7 +213,7 @@ const Login: React.FC = () => {
                       <div className="w-full border-t border-gray-200"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-3 bg-white text-gray-500">New to LandVal?</span>
+                      <span className="px-3 bg-white text-gray-500">{t('auth.newToPlatform')}</span>
                     </div>
                   </div>
                   {/* Register Link */}
@@ -220,7 +222,7 @@ const Login: React.FC = () => {
                       href="/auth/register"
                       className="text-sm text-gray-700 hover:text-emerald-700 font-medium transition-colors inline-flex items-center gap-1.5"
                     >
-                      Create an account
+                      {t('auth.createAccount')}
                       <i className="fas fa-arrow-right text-xs"></i>
                     </Link>
                   </div>
@@ -230,9 +232,9 @@ const Login: React.FC = () => {
                   <div className="flex gap-3">
                     <i className="fas fa-info-circle text-emerald-700 text-lg mt-0.5"></i>
                     <div className="flex-1 text-sm text-gray-700">
-                      <p className="font-medium text-gray-800 mb-1">Secure Authentication</p>
+                      <p className="font-medium text-gray-800 mb-1">{t('auth.secureAuth')}</p>
                       <p className="text-gray-600">
-                        Your data is protected with industry-standard encryption. Check "Remember me" to stay logged in on this device.
+                        {t('auth.secureAuthDesc')}
                       </p>
                     </div>
                   </div>

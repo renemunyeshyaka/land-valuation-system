@@ -3,8 +3,10 @@ import Head from 'next/head';
 import Link from 'next/link';
 import MainNavbar from '../components/MainNavbar';
 import Footer from "../components/Footer";
+import { useTranslation } from 'react-i18next';
 
 export default function Contact() {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -15,7 +17,7 @@ export default function Contact() {
     e.preventDefault();
     setError('');
     if (!name.trim() || !email.trim() || !message.trim()) {
-      setError('Please fill in all fields.');
+      setError(t('contact.fillAllFields'));
       return;
     }
     try {
@@ -26,7 +28,7 @@ export default function Contact() {
       });
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || 'Failed to send message.');
+        setError(data.error || t('contact.failedToSend'));
         return;
       }
       setSubmitted(true);
@@ -34,16 +36,16 @@ export default function Contact() {
       setEmail('');
       setMessage('');
     } catch (err) {
-      setError('Failed to send message. Please try again later.');
+      setError(t('contact.failedToSend'));
     }
   };
 
   return (
     <>
       <Head>
-        <title>Contact Us | Land Valuation System</title>
+        <title>{t('contact.title')} | Land Valuation System</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-        <meta name="description" content="Contact Land Valuation System Rwanda for support, inquiries, or feedback." />
+        <meta name="description" content={t('contact.description')} />
       </Head>
       <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
         {/* NAVIGATION */}
@@ -53,26 +55,26 @@ export default function Contact() {
         <main className="flex-grow">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
             <div className="max-w-xl mx-auto">
-              <h1 className="text-3xl font-bold mb-6 text-center">Contact Us</h1>
-              <p className="mb-6 text-gray-700 text-center">For any inquiries, suggestions, or support, please fill out the form below. Our team will respond as soon as possible. You can also email us directly at <a href="mailto:support@kcoders.org" className="text-blue-600 underline">support@kcoders.org</a>.</p>
+              <h1 className="text-3xl font-bold mb-6 text-center">{t('contact.title')}</h1>
+              <p className="mb-6 text-gray-700 text-center">{t('contact.subtitle')} {t('contact.emailUs')} <a href="mailto:support@kcoders.org" className="text-blue-600 underline">support@kcoders.org</a>.</p>
               {submitted ? (
-                <div className="bg-green-100 text-green-800 p-4 rounded mb-6 text-center">Thank you for contacting us! We will get back to you soon.</div>
+                <div className="bg-green-100 text-green-800 p-4 rounded mb-6 text-center">{t('contact.successMessage')}</div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5 bg-white p-6 rounded shadow">
                   <div>
-                    <label className="block mb-1 font-medium">Name</label>
+                    <label className="block mb-1 font-medium">{t('contact.name')}</label>
                     <input type="text" className="w-full border rounded px-3 py-2" value={name} onChange={e => setName(e.target.value)} required />
                   </div>
                   <div>
-                    <label className="block mb-1 font-medium">Email</label>
+                    <label className="block mb-1 font-medium">{t('contact.email')}</label>
                     <input type="email" className="w-full border rounded px-3 py-2" value={email} onChange={e => setEmail(e.target.value)} required />
                   </div>
                   <div>
-                    <label className="block mb-1 font-medium">Message</label>
+                    <label className="block mb-1 font-medium">{t('contact.message')}</label>
                     <textarea className="w-full border rounded px-3 py-2" rows={5} value={message} onChange={e => setMessage(e.target.value)} required />
                   </div>
                   {error && <div className="text-red-600 text-sm">{error}</div>}
-                  <button type="submit" className="bg-emerald-600 text-white px-6 py-2 rounded font-bold hover:bg-emerald-700">Send Message</button>
+                  <button type="submit" className="bg-emerald-600 text-white px-6 py-2 rounded font-bold hover:bg-emerald-700">{t('contact.sendMessage')}</button>
                 </form>
               )}
             </div>

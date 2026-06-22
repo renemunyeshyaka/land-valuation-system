@@ -3,6 +3,8 @@ import FourStepProcess from '../../components/FourStepProcess';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import Footer from "../../components/Footer";
+import LanguageSwitcher from '../../components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 // Notification type for dashboard notifications
 interface DashboardNotification {
   id: string;
@@ -77,20 +79,22 @@ type RefundFilterStatus = 'all' | 'pending' | 'approved' | 'rejected' | 'escalat
 
 type DashboardTab = 'overview' | 'profile' | 'estimate' | 'properties' | 'billing' | 'refunds' | 'subscription' | 'notifications';
 
-const DASHBOARD_TABS: Array<{ key: DashboardTab; label: string; icon: string }> = [
-  { key: 'overview', label: 'Overview', icon: 'fas fa-home' },
-  { key: 'profile', label: 'Profile', icon: 'fas fa-user-circle' },
-  { key: 'estimate', label: 'Estimate Search', icon: 'fas fa-search-location' },
-  { key: 'properties', label: 'Properties', icon: 'fas fa-building' },
-  { key: 'billing', label: 'Billing', icon: 'fas fa-wallet' },
-  { key: 'refunds', label: 'Refunds', icon: 'fas fa-undo-alt' },
-  { key: 'subscription', label: 'Subscription', icon: 'fas fa-gem' },
-  { key: 'notifications', label: 'Notifications', icon: 'fas fa-bell' },
-];
+const DASHBOARD_TAB_KEYS: DashboardTab[] = ['overview', 'profile', 'estimate', 'properties', 'billing', 'refunds', 'subscription', 'notifications'];
+
+const DASHBOARD_TAB_ICONS: Record<DashboardTab, string> = {
+  overview: 'fas fa-home',
+  profile: 'fas fa-user-circle',
+  estimate: 'fas fa-search-location',
+  properties: 'fas fa-building',
+  billing: 'fas fa-wallet',
+  refunds: 'fas fa-undo-alt',
+  subscription: 'fas fa-gem',
+  notifications: 'fas fa-bell',
+};
 
 const getValidDashboardTab = (rawTab: unknown): DashboardTab => {
   const tab = typeof rawTab === 'string' ? rawTab : 'overview';
-  return DASHBOARD_TABS.some((item) => item.key === tab) ? (tab as DashboardTab) : 'overview';
+  return DASHBOARD_TAB_KEYS.includes(tab as DashboardTab) ? (tab as DashboardTab) : 'overview';
 };
 
 const getCachedDashboardUser = (): UserData | null => {
@@ -125,6 +129,13 @@ const getCachedDashboardUser = (): UserData | null => {
 
 
 function Dashboard() {
+  const { t } = useTranslation();
+
+  const DASHBOARD_TABS: Array<{ key: DashboardTab; icon: string }> = DASHBOARD_TAB_KEYS.map((key) => ({
+    key,
+    icon: DASHBOARD_TAB_ICONS[key],
+  }));
+
         // Handle property edit (PUT request)
         const handleEditProperty = async (updatedProperty: any) => {
           try {
@@ -1262,7 +1273,7 @@ function Dashboard() {
     <>
       {/* HEAD / SEO */}
       <Head>
-        <title>User Dashboard · Land Valuation System</title>
+        <title>{t('dashboard.title')} · Land Valuation System</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
         <meta name="description" content="User dashboard for Land Valuation System - manage your profile, subscription, and valuations" />
         <meta property="og:title" content="User Dashboard · LandVal" />
@@ -1286,6 +1297,7 @@ function Dashboard() {
               </Link>
               {/* Navigation Menu - Right Side */}
               <div className="hidden lg:flex items-center gap-2 sm:gap-4">
+                <LanguageSwitcher />
                 <Link href="/dashboard/profile" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 transition-colors">
                   <i className="fas fa-user-circle mr-1"></i>
                   View Profile
@@ -1314,7 +1326,7 @@ function Dashboard() {
               <div className="lg:hidden fixed left-0 right-0 top-16 bg-white border-b border-gray-200 shadow-lg z-[80] pointer-events-auto">
                 <div className="flex flex-col gap-2 pt-4">
                   <div className="px-3 pb-2">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Dashboard Tabs</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('dashboard.title')}</p>
                   </div>
                   {DASHBOARD_TABS.map((tab) => (
                     <button
@@ -1331,7 +1343,7 @@ function Dashboard() {
                       }`}
                     >
                       <i className={`${tab.icon} mr-2`}></i>
-                      {tab.label}
+                      {t('dashboard.' + tab.key)}
                     </button>
                   ))}
                   <Link
@@ -1340,7 +1352,7 @@ function Dashboard() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <i className="fas fa-user-circle mr-2"></i>
-                    View Profile
+                    {t('dashboard.profile')}
                   </Link>
                   {canAddProperty && (
                   <Link
@@ -1349,7 +1361,7 @@ function Dashboard() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <i className="fas fa-plus-circle mr-2"></i>
-                    Add Property
+                    {t('dashboard.addProperty')}
                   </Link>
                   )}
                   <Link
@@ -1358,7 +1370,7 @@ function Dashboard() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <i className="fas fa-gem mr-2"></i>
-                    Upgrade Plan
+                    {t('subscription.upgrade')}
                   </Link>
                   <Link
                     href="/analytics"
@@ -1366,7 +1378,7 @@ function Dashboard() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <i className="fas fa-chart-line mr-2"></i>
-                    Analytics
+                    {t('admin.analytics')}
                   </Link>
                   <button
                     onClick={async () => {
@@ -1376,7 +1388,7 @@ function Dashboard() {
                     className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
                   >
                     <i className="fas fa-sign-out-alt mr-2"></i>
-                    Logout
+                    {t('auth.logout')}
                   </button>
                 </div>
               </div>
@@ -1389,7 +1401,7 @@ function Dashboard() {
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 md:py-16">
             <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 md:gap-6">
               <aside className="bg-white border border-gray-100 rounded-lg shadow-sm p-2 md:p-3 h-fit lg:sticky lg:top-24">
-                <h2 className="text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wide px-2 md:px-3 py-2">Dashboard Menu</h2>
+                <h2 className="text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wide px-2 md:px-3 py-2">{t('dashboard.title')}</h2>
                 <nav className="space-y-0.5 md:space-y-1">
                   {DASHBOARD_TABS.map((tab) => (
                     <button
@@ -1405,7 +1417,7 @@ function Dashboard() {
                       }`}
                     >
                       <i className={`${tab.icon} mr-2 w-4 text-center`}></i>
-                      {tab.label}
+                      {t('dashboard.' + tab.key)}
                     </button>
                   ))}
                 </nav>
@@ -1438,7 +1450,7 @@ function Dashboard() {
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                 <i className="fas fa-plus-circle text-emerald-700 text-base md:text-xl"></i>
                 </div>
-                <span className="text-[11px] md:text-sm font-semibold text-white text-center leading-tight">Add Property</span>
+                <span className="text-[11px] md:text-sm font-semibold text-white text-center leading-tight">{t('dashboard.addProperty')}</span>
               </Link>
               )}
               <Link

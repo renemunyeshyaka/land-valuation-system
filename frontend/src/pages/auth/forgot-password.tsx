@@ -5,6 +5,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 /**
  * FORGOT PASSWORD PAGE · Land Valuation System
@@ -20,6 +21,7 @@ import toast from 'react-hot-toast';
 
 const ForgotPassword: React.FC = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [email, setEmail] = useState('');
@@ -28,10 +30,10 @@ const ForgotPassword: React.FC = () => {
   // Validate email
   const validateEmail = (): boolean => {
     if (!email.trim()) {
-      setError('Email is required');
+      setError(t('auth.emailRequired'));
       return false;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      setError('Please enter a valid email address');
+      setError(t('auth.validEmail'));
       return false;
     }
     setError('');
@@ -54,12 +56,12 @@ const ForgotPassword: React.FC = () => {
         throw new Error(data.message || 'Failed to send reset email');
       }
       setSubmitted(true);
-      toast.success('Password reset email sent! Please check your inbox.');
+      toast.success(t('auth.resetEmailSuccess'));
       setTimeout(() => {
         router.push('/auth/reset-password');
       }, 1500);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to send reset email. Please try again.');
+      toast.error(error.message || t('auth.resetEmailFailed'));
     } finally {
       setLoading(false);
     }
@@ -77,11 +79,11 @@ const ForgotPassword: React.FC = () => {
     <>
       {/* HEAD / SEO */}
       <Head>
-        <title>Forgot Password · Land Valuation System</title>
+        <title>{t('auth.forgotPassword')} · Land Valuation System</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-        <meta name="description" content="Reset your Land Valuation System account password" />
-        <meta property="og:title" content="Forgot Password · LandVal" />
-        <meta property="og:description" content="Reset your password securely" />
+        <meta name="description" content={t('auth.forgotPasswordMeta')} />
+        <meta property="og:title" content={`${t('auth.forgotPassword')} · LandVal`} />
+        <meta property="og:description" content={t('auth.forgotPasswordMeta')} />
       </Head>
       <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
         {/* NAVIGATION */}
@@ -102,16 +104,16 @@ const ForgotPassword: React.FC = () => {
               <div className="flex items-center gap-2 sm:gap-4">
                 {/* Main Navigation Menu */}
                 <div className="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
-                  <Link href="/" className="hover:text-emerald-700 transition">Home</Link>
-                  <Link href="/how-it-works" className="hover:text-emerald-700 transition">How it works</Link>
-                  <Link href="/benefits" className="hover:text-emerald-700 transition">Benefits</Link>
-                  <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
-                  <Link href="/contact" className="hover:text-emerald-700 transition">Contact</Link>
+                  <Link href="/" className="hover:text-emerald-700 transition">{t('nav.home')}</Link>
+                  <Link href="/how-it-works" className="hover:text-emerald-700 transition">{t('nav.howItWorks')}</Link>
+                  <Link href="/benefits" className="hover:text-emerald-700 transition">{t('nav.benefits')}</Link>
+                  <Link href="/marketplace" className="hover:text-emerald-700 transition">{t('nav.marketplace')}</Link>
+                  <Link href="/contact" className="hover:text-emerald-700 transition">{t('nav.contact')}</Link>
                 </div>
                 {/* Language Selector */}
                 <div className="hidden sm:flex items-center border border-gray-200 rounded-full px-3 py-1.5 text-sm bg-white/80">
                   <i className="fas fa-globe text-emerald-600 mr-1 text-xs"></i>
-                  <span className="font-medium">RW</span>
+                  <span className="font-medium">{t('nav.switchLanguage')}</span>
                   <i className="fas fa-chevron-down ml-1 text-gray-400 text-xs"></i>
                 </div>
                 {/* Register Link */}
@@ -119,14 +121,14 @@ const ForgotPassword: React.FC = () => {
                   href="/auth/register"
                   className="px-4 py-2 text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors"
                 >
-                  Create Account
+                  {t('auth.signup')}
                 </Link>
                 {/* Login Link */}
                 <Link 
                   href="/auth/login"
                   className="px-4 py-2 text-sm font-medium text-emerald-700 border border-emerald-700 bg-white hover:bg-emerald-50 rounded-lg transition-colors"
                 >
-                  Log In
+                  {t('auth.login')}
                 </Link>
               </div>
             </div>
@@ -140,10 +142,10 @@ const ForgotPassword: React.FC = () => {
               {/* Header */}
               <div className="text-center mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
-                  Forgot your password?
+                  {t('auth.forgotPasswordTitle')}
                 </h1>
                 <p className="text-base text-gray-600">
-                  Enter your email address and we’ll send you a link to reset your password.
+                  {t('auth.forgotPasswordSubtitle')}
                 </p>
               </div>
               {/* Forgot Password Card */}
@@ -152,7 +154,7 @@ const ForgotPassword: React.FC = () => {
                   <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Email Address
+                        {t('auth.emailLabel')}
                       </label>
                       <input
                         type="email"
@@ -161,7 +163,7 @@ const ForgotPassword: React.FC = () => {
                         value={email}
                         onChange={handleChange}
                         disabled={loading}
-                        placeholder="jean@example.com"
+                        placeholder={t('auth.emailPlaceholder')}
                         className={`w-full px-4 py-2.5 border rounded-lg text-base transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed ${
                           error ? 'border-red-500' : 'border-gray-200'
                         }`}
@@ -180,12 +182,12 @@ const ForgotPassword: React.FC = () => {
                       {loading ? (
                         <>
                           <i className="fas fa-spinner fa-spin"></i>
-                          Sending...
+                          {t('auth.sending')}
                         </>
                       ) : (
                         <>
                           <i className="fas fa-paper-plane"></i>
-                          Send Reset Link
+                          {t('auth.sendResetLink')}
                         </>
                       )}
                     </button>
@@ -193,8 +195,8 @@ const ForgotPassword: React.FC = () => {
                 ) : (
                   <div className="text-center">
                     <i className="fas fa-envelope-open-text text-emerald-600 text-4xl mb-4"></i>
-                    <h2 className="text-xl font-semibold mb-2">Check your email</h2>
-                    <p className="text-gray-700 mb-4">We’ve sent a password reset link to <span className="font-medium">{email}</span>. Please check your inbox and follow the instructions.</p>
+                    <h2 className="text-xl font-semibold mb-2">{t('auth.checkYourEmail')}</h2>
+                    <p className="text-gray-700 mb-4">{t('auth.resetEmailSent')} <span className="font-medium">{email}</span>. {t('auth.resetEmailInstructions')}</p>
                     <button
                       onClick={() => setSubmitted(false)}
                       className="text-emerald-700 hover:underline font-medium"

@@ -386,7 +386,7 @@ const PropertyListings: React.FC = () => {
                         </td>
                       </tr>
                     ))
-                : null}
+                : <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#666', fontSize: 13 }}>No properties found.</td></tr>}
             </tbody>
           </table>
           </div>

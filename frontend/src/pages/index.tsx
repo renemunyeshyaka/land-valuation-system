@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Footer from '@/components/Footer';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 // ...existing code...
 
 declare global {
@@ -29,6 +31,7 @@ interface ValuationResult {
 
 const Home: React.FC = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const [upi, setUpi] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -182,11 +185,11 @@ const Home: React.FC = () => {
 
               {/* main menu (desktop) */}
               <div className="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
-                <Link href="/" className="hover:text-emerald-700 transition">Home</Link>
-                <Link href="/how-it-works" className="hover:text-emerald-700 transition">How it works</Link>
-                <Link href="/benefits" className="hover:text-emerald-700 transition">Benefits</Link>
-                <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
-                <Link href="/contact" className="hover:text-emerald-700 transition">Contact</Link>
+                <Link href="/" className="hover:text-emerald-700 transition">{t('nav.home')}</Link>
+                <Link href="/how-it-works" className="hover:text-emerald-700 transition">{t('nav.howItWorks')}</Link>
+                <Link href="/benefits" className="hover:text-emerald-700 transition">{t('nav.benefits')}</Link>
+                <Link href="/marketplace" className="hover:text-emerald-700 transition">{t('nav.marketplace')}</Link>
+                <Link href="/contact" className="hover:text-emerald-700 transition">{t('nav.contact')}</Link>
               </div>
 
               {/* Hamburger menu button (mobile/tablet) */}
@@ -206,13 +209,9 @@ const Home: React.FC = () => {
 
               {/* language & auth */}
               <div className="hidden sm:flex items-center gap-3">
-                <div className="hidden sm:flex items-center border border-gray-200 rounded-full px-3 py-1.5 text-sm bg-white/80">
-                  <i className="fas fa-globe text-emerald-600 mr-1 text-xs"></i>
-                  <span className="font-medium">RW</span>
-                  <i className="fas fa-chevron-down ml-1 text-gray-400 text-xs"></i>
-                </div>
-                <Link href="/auth/login" className="text-sm font-medium text-emerald-800 hover:text-emerald-900 px-3 py-2">Log in</Link>
-                <Link href="/auth/register" className="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-sm transition">Sign up</Link>
+                <LanguageSwitcher />
+                <Link href="/auth/login" className="text-sm font-medium text-emerald-800 hover:text-emerald-900 px-3 py-2">{t('auth.login')}</Link>
+                <Link href="/auth/register" className="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-sm transition">{t('auth.signup')}</Link>
               </div>
             </div>
           </div>
@@ -220,14 +219,14 @@ const Home: React.FC = () => {
           {mobileMenuOpen && (
             <div className="md:hidden bg-white/95 border-b border-gray-200/70 shadow-lg absolute left-0 right-0 top-full z-40 animate-fade-in-down">
               <div className="flex flex-col px-6 py-4 space-y-2 text-base font-medium text-gray-800">
-                <Link href="/" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-                <Link href="/how-it-works" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>How it works</Link>
-                <Link href="/benefits" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Benefits</Link>
-                <Link href="/marketplace" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Marketplace</Link>
-                <Link href="/contact" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
+                <Link href="/" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>{t('nav.home')}</Link>
+                <Link href="/how-it-works" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>{t('nav.howItWorks')}</Link>
+                <Link href="/benefits" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>{t('nav.benefits')}</Link>
+                <Link href="/marketplace" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>{t('nav.marketplace')}</Link>
+                <Link href="/contact" className="hover:text-emerald-700 transition" onClick={() => setMobileMenuOpen(false)}>{t('nav.contact')}</Link>
                 <div className="flex flex-col gap-2 mt-2">
-                  <Link href="/auth/login" className="text-emerald-800 hover:text-emerald-900 px-3 py-2 rounded-md transition text-sm font-medium bg-emerald-50" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
-                  <Link href="/auth/register" className="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-3 py-2 rounded-md shadow-sm transition" onClick={() => setMobileMenuOpen(false)}>Sign up</Link>
+                  <Link href="/auth/login" className="text-emerald-800 hover:text-emerald-900 px-3 py-2 rounded-md transition text-sm font-medium bg-emerald-50" onClick={() => setMobileMenuOpen(false)}>{t('auth.login')}</Link>
+                  <Link href="/auth/register" className="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-3 py-2 rounded-md shadow-sm transition" onClick={() => setMobileMenuOpen(false)}>{t('auth.signup')}</Link>
                 </div>
               </div>
             </div>
@@ -241,13 +240,13 @@ const Home: React.FC = () => {
               {/* left text */}
               <div>
                 <div className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium mb-6 border border-white/10">
-                  <i className="fas fa-gavel mr-2 text-xs"></i> Official Rwanda Gazette 2025
+                  <i className="fas fa-gavel mr-2 text-xs"></i> {t('home.heroBadge')}
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold leading-tight tracking-tight">
-                  Accurate land valuation <br />powered by <span className="text-amber-300">official data</span>
+                  {t('home.heroTitle')}
                 </h1>
                 <p className="text-lg text-emerald-50 mt-5 max-w-lg">
-                  Connect with verified buyers — diaspora & foreign investors. Get instant pricing based on zone coefficients, title verification, and market trends.
+                  {t('home.heroSubtitle')}
                 </p>
                 {/* UPI-only estimate search form */}
                 <form
@@ -257,7 +256,7 @@ const Home: React.FC = () => {
                   <input
                     type="text"
                     name="upi"
-                    placeholder="Enter UPI code (e.g., 1/01/01/01/1234)"
+                    placeholder={t('home.searchPlaceholder')}
                     value={upi}
                     onChange={handleInputChange}
                     className="w-full pl-4 pr-4 py-3.5 rounded-2xl text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-emerald-400 outline-none disabled:opacity-50"
@@ -272,11 +271,11 @@ const Home: React.FC = () => {
                     >
                       {loading ? (
                         <>
-                          <i className="fas fa-spinner fa-spin"></i> Loading...
+                          <i className="fas fa-spinner fa-spin"></i> {t('home.loading')}
                         </>
                       ) : (
                         <>
-                          <i className="fas fa-calculator"></i> Estimate
+                          <i className="fas fa-calculator"></i> {t('home.estimateButton')}
                         </>
                       )}
                     </button>
@@ -284,7 +283,7 @@ const Home: React.FC = () => {
                       href="/auth/register"
                       className="flex-1 bg-sky-400 hover:bg-emerald-600 text-white font-semibold px-6 py-3.5 rounded-2xl shadow-md transition flex items-center justify-center gap-2"
                     >
-                      <i className="fas fa-play-circle"></i> Get Started
+                      <i className="fas fa-play-circle"></i> {t('home.getStarted')}
                     </Link>
                   </div>
                 </form>
@@ -302,7 +301,7 @@ const Home: React.FC = () => {
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-bold text-lg text-emerald-900">
                         <i className="fas fa-check-circle text-emerald-600 mr-2"></i>
-                        Estimate Complete
+                        {t('home.estimateComplete')}
                       </h3>
                       <span className="bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full font-semibold">
                         UPI: {estimateResult.parcel?.upi}
@@ -310,37 +309,37 @@ const Home: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-600">Location</p>
+                        <p className="text-gray-600">{t('home.location')}</p>
                         <p className="font-semibold">{estimateResult.parcel?.district}, {estimateResult.parcel?.sector}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600">Area</p>
+                        <p className="text-gray-600">{t('home.area')}</p>
                         <p className="font-semibold">{estimateResult.parcel?.land_size_sqm?.toLocaleString()} m²</p>
                       </div>
                       <div>
-                        <p className="text-gray-600">Zone Coefficient</p>
+                        <p className="text-gray-600">{t('home.zoneCoefficient')}</p>
                         <p className="font-semibold">{estimateResult.parcel?.zone_coefficient}x</p>
                       </div>
                       <div>
-                        <p className="text-gray-600">Base Price/sqm</p>
+                        <p className="text-gray-600">{t('home.basePriceSqm')}</p>
                         <p className="font-semibold">RWF {estimateResult.parcel?.base_price_per_sqm?.toLocaleString()}</p>
                       </div>
                     </div>
                     <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-gray-600 text-sm">Official Gazette Price Options</p>
+                      <p className="text-gray-600 text-sm">{t('home.officialGazettePrices')}</p>
                       <ul className="mt-2 space-y-1">
                         {estimateResult.prices?.map((price: number, idx: number) => (
                           <li key={idx} className="text-lg font-bold text-emerald-700">
-                            Option {idx + 1}: RWF {price.toLocaleString()}
+                            {t('home.option')} {idx + 1}: RWF {price.toLocaleString()}
                           </li>
                         ))}
                       </ul>
                       <div className="mt-3">
-                        <p className="text-gray-600 text-xs mb-1">Gazette Considerations:</p>
+                        <p className="text-gray-600 text-xs mb-1">{t('home.gazetteConsiderations')}:</p>
                         <ul className="flex flex-wrap gap-2 text-xs">
                           {Object.entries(estimateResult.considerations || {}).map(([key, val]: [string, unknown]) => (
                             <li key={key} className={Boolean(val) ? 'bg-emerald-100 text-emerald-800 px-2 py-1 rounded' : 'bg-gray-100 text-gray-500 px-2 py-1 rounded'}>
-                              {key.replace('_', ' ')}: {Boolean(val) ? 'Yes' : 'No'}
+                              {key.replace('_', ' ')}: {Boolean(val) ? t('home.yes') : t('home.no')}
                             </li>
                           ))}
                         </ul>
@@ -351,9 +350,9 @@ const Home: React.FC = () => {
 
                 {/* quick stats */}
                 <div className="flex gap-6 mt-6 text-sm text-emerald-100">
-                  <div><i className="fas fa-check-circle text-amber-300 mr-1"></i> 12k+ properties</div>
-                  <div><i className="fas fa-map-pin text-amber-300 mr-1"></i> All 30 districts</div>
-                  <div><i className="fas fa-globe text-amber-300 mr-1"></i> diaspora ready</div>
+                  <div><i className="fas fa-check-circle text-amber-300 mr-1"></i> {t('home.quickStats.properties')}</div>
+                  <div><i className="fas fa-map-pin text-amber-300 mr-1"></i> {t('home.quickStats.districts')}</div>
+                  <div><i className="fas fa-globe text-amber-300 mr-1"></i> {t('home.quickStats.diasporaReady')}</div>
                 </div>
               </div>
               {/* right side: interactive map preview */}
@@ -370,9 +369,9 @@ const Home: React.FC = () => {
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-2xl mx-auto">
-              <span className="text-emerald-600 font-semibold text-sm tracking-wider uppercase">Why choose LVS</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">Built for Rwanda's land market</h2>
-              <p className="text-gray-600 mt-4">Gazette integration, geolocation precision, and direct buyer matching.</p>
+              <span className="text-emerald-600 font-semibold text-sm tracking-wider uppercase">{t('home.features.title')}</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">{t('home.features.heading')}</h2>
+              <p className="text-gray-600 mt-4">{t('home.features.subtitle')}</p>
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
@@ -381,32 +380,32 @@ const Home: React.FC = () => {
                 <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-700 text-xl mb-4">
                   <i className="fas fa-book-open"></i>
                 </div>
-                <h3 className="font-bold text-lg">Official Gazette data</h3>
-                <p className="text-gray-500 text-sm mt-2">Location coefficients directly from Rwanda Land Authority, updated quarterly.</p>
+                <h3 className="font-bold text-lg">{t('home.features.gazette.title')}</h3>
+                <p className="text-gray-500 text-sm mt-2">{t('home.features.gazette.desc')}</p>
               </div>
               {/* feature 2 */}
               <div className="feature-card bg-white p-6 rounded-3xl border border-gray-100 shadow-md">
                 <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-700 text-xl mb-4">
                   <i className="fas fa-draw-polygon"></i>
                 </div>
-                <h3 className="font-bold text-lg">Interactive parcel maps</h3>
-                <p className="text-gray-500 text-sm mt-2">Draw boundaries, measure distances, view zoning overlays.</p>
+                <h3 className="font-bold text-lg">{t('home.features.maps.title')}</h3>
+                <p className="text-gray-500 text-sm mt-2">{t('home.features.maps.desc')}</p>
               </div>
               {/* feature 3 */}
               <div className="feature-card bg-white p-6 rounded-3xl border border-gray-100 shadow-md">
                 <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-700 text-xl mb-4">
                   <i className="fas fa-chart-line"></i>
                 </div>
-                <h3 className="font-bold text-lg">Price evolution</h3>
-                <p className="text-gray-500 text-sm mt-2">Historical trends & 5-year projection for smart investment.</p>
+                <h3 className="font-bold text-lg">{t('home.features.evolution.title')}</h3>
+                <p className="text-gray-500 text-sm mt-2">{t('home.features.evolution.desc')}</p>
               </div>
               {/* feature 4 */}
               <div className="feature-card bg-white p-6 rounded-3xl border border-gray-100 shadow-md">
                 <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-700 text-xl mb-4">
                   <i className="fas fa-handshake"></i>
                 </div>
-                <h3 className="font-bold text-lg">Diaspora & foreign matching</h3>
-                <p className="text-gray-500 text-sm mt-2">Connect with high‑net‑worth buyers; dedicated concierge.</p>
+                <h3 className="font-bold text-lg">{t('home.features.matching.title')}</h3>
+                <p className="text-gray-500 text-sm mt-2">{t('home.features.matching.desc')}</p>
               </div>
             </div>
 
@@ -414,19 +413,19 @@ const Home: React.FC = () => {
             <div className="mt-16 bg-emerald-50/80 rounded-3xl p-8 border border-emerald-100 flex flex-col lg:flex-row gap-8 items-center">
               <div className="lg:w-2/3">
                 <div className="flex items-center gap-2 text-emerald-800 font-medium">
-                  <i className="fas fa-map-location-dot"></i> Real‑time zone lookup
+                  <i className="fas fa-map-location-dot"></i> {t('home.features.zoneLookup')}
                 </div>
-                <h3 className="text-2xl font-bold mt-2">Any location, instant classification</h3>
-                <p className="text-gray-700 mt-3">Click on the map or type your address. Our engine cross-references the Rwanda gazette zones (urban, rural, agricultural, marshland) and computes the base coefficient.</p>
+                <h3 className="text-2xl font-bold mt-2">{t('home.features.zoneHeading')}</h3>
+                <p className="text-gray-700 mt-3">{t('home.features.zoneDesc')}</p>
                 <div className="flex flex-wrap gap-4 mt-6">
                   <span className="px-4 py-2 rounded-full text-sm shadow-sm" style={{ backgroundColor: '#33A852', color: 'white' }}>
-                    <i className="fas fa-check-circle text-white mr-1"></i> Kigali urban
+                    <i className="fas fa-check-circle text-white mr-1"></i> {t('home.features.kigaliUrban')}
                   </span>
                   <span className="px-4 py-2 rounded-full text-sm shadow-sm" style={{ backgroundColor: '#FFD100', color: '#333' }}>
-                    <i className="fas fa-check-circle text-emerald-700 mr-1"></i> Eastern Province
+                    <i className="fas fa-check-circle text-emerald-700 mr-1"></i> {t('home.features.easternProvince')}
                   </span>
                   <span className="px-4 py-2 rounded-full text-sm shadow-sm" style={{ backgroundColor: '#00AEEF', color: 'white' }}>
-                    <i className="fas fa-check-circle text-white mr-1"></i> Agricultural zones
+                    <i className="fas fa-check-circle text-white mr-1"></i> {t('home.features.agriculturalZones')}
                   </span>
                 </div>
               </div>
@@ -440,27 +439,27 @@ const Home: React.FC = () => {
         {/* HOW IT WORKS steps */}
         <section className="py-16 bg-gray-50/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-center text-gray-800">Four steps to your land transaction</h2>
+            <h2 className="text-3xl font-bold text-center text-gray-800">{t('home.steps.title')}</h2>
             <div className="grid md:grid-cols-4 gap-5 mt-14">
               <div className="text-center">
                 <div className="w-14 h-14 bg-emerald-700 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto shadow-md">1</div>
-                <h3 className="font-semibold mt-4">Search / upload</h3>
-                <p className="text-gray-500 text-sm mt-1">Enter parcel ID or drop title documents</p>
+                <h3 className="font-semibold mt-4">{t('home.steps.step1')}</h3>
+                <p className="text-gray-500 text-sm mt-1">{t('home.steps.step1Desc')}</p>
               </div>
               <div className="text-center">
                 <div className="w-14 h-14 bg-emerald-700 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto shadow-md">2</div>
-                <h3 className="font-semibold mt-4">Instant valuation</h3>
-                <p className="text-gray-500 text-sm mt-1">Gazette formula + market adj. + history</p>
+                <h3 className="font-semibold mt-4">{t('home.steps.step2')}</h3>
+                <p className="text-gray-500 text-sm mt-1">{t('home.steps.step2Desc')}</p>
               </div>
               <div className="text-center">
                 <div className="w-14 h-14 bg-emerald-700 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto shadow-md">3</div>
-                <h3 className="font-semibold mt-4">Connect & match</h3>
-                <p className="text-gray-500 text-sm mt-1">Get introduced to serious buyers (diaspora, local)</p>
+                <h3 className="font-semibold mt-4">{t('home.steps.step3')}</h3>
+                <p className="text-gray-500 text-sm mt-1">{t('home.steps.step3Desc')}</p>
               </div>
               <div className="text-center">
                 <div className="w-14 h-14 bg-emerald-700 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto shadow-md">4</div>
-                <h3 className="font-semibold mt-4">Secure exchange</h3>
-                <p className="text-gray-500 text-sm mt-1">Title transfer support & payment escrow</p>
+                <h3 className="font-semibold mt-4">{t('home.steps.step4')}</h3>
+                <p className="text-gray-500 text-sm mt-1">{t('home.steps.step4Desc')}</p>
               </div>
             </div>
           </div>

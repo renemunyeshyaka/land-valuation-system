@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 /**
  * OTP VERIFICATION PAGE · Land Valuation System
@@ -11,6 +12,7 @@ import toast from 'react-hot-toast';
 
 const VerifyOTP: React.FC = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -79,13 +81,13 @@ const VerifyOTP: React.FC = () => {
     const otpCode = code.join('');
     
     if (!email) {
-      toast.error('Email is missing. Please log in again.');
+      toast.error(t('auth.emailMissing'));
       router.push('/auth/login');
       return;
     }
 
     if (otpCode.length !== 6) {
-      toast.error('Please enter the complete 6-digit OTP');
+      toast.error(t('auth.enterCompleteCode'));
       return;
     }
 
@@ -106,7 +108,7 @@ const VerifyOTP: React.FC = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'OTP verification failed');
+        throw new Error(data.message || t('auth.otpVerificationFailed'));
       }
 
       // Store tokens
@@ -116,14 +118,14 @@ const VerifyOTP: React.FC = () => {
         localStorage.setItem('user', JSON.stringify(data.data.user));
       }
 
-      toast.success('Login successful! Redirecting...');
+      toast.success(t('auth.loginSuccessful'));
       
       setTimeout(() => {
         router.push('/dashboard');
       }, 1000);
 
     } catch (error: any) {
-      toast.error(error.message || 'OTP verification failed. Please try again.');
+      toast.error(error.message || t('auth.otpVerificationFailed'));
       console.error('OTP verification error:', error);
     } finally {
       setLoading(false);
@@ -133,7 +135,7 @@ const VerifyOTP: React.FC = () => {
   // Resend OTP
   const handleResend = async () => {
     if (!email) {
-      toast.error('Email is missing. Please log in again.');
+      toast.error(t('auth.emailMissing'));
       router.push('/auth/login');
       return;
     }
@@ -152,16 +154,16 @@ const VerifyOTP: React.FC = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to resend OTP');
+        throw new Error(data.message || t('auth.otpResendFailed'));
       }
 
-      toast.success('New OTP sent! Check your email.');
+      toast.success(t('auth.newOtpSent'));
       setCode(['', '', '', '', '', '']);
       setCountdown(300); // Reset timer
       document.getElementById('otp-0')?.focus();
 
     } catch (error: any) {
-      toast.error(error.message || 'Failed to resend OTP');
+      toast.error(error.message || t('auth.otpResendFailed'));
     } finally {
       setResending(false);
     }
@@ -170,7 +172,7 @@ const VerifyOTP: React.FC = () => {
   return (
     <>
       <Head>
-        <title>Verify OTP · Land Valuation System</title>
+        <title>{t('auth.verifyOTPTitle')} · Land Valuation System</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
@@ -185,13 +187,13 @@ const VerifyOTP: React.FC = () => {
               </span>
             </Link>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Enter Verification Code
+              {t('auth.verifyOTPTitle')}
             </h2>
             <p className="text-gray-600">
-              We sent a 6-digit code to
+              {t('auth.verifyOTPSubtitle')}
             </p>
             <p className="font-medium text-gray-900 mt-1">
-              {email || 'your email'}
+              {email || t('auth.email')}
             </p>
           </div>
 
@@ -208,7 +210,7 @@ const VerifyOTP: React.FC = () => {
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                   </svg>
                   <span className="font-mono font-semibold">
-                    {countdown > 0 ? `Expires in ${formatTime(countdown)}` : 'Code Expired'}
+                    {countdown > 0 ? `${t('auth.otpExpiresIn')} ${formatTime(countdown)}` : t('auth.codeExpired')}
                   </span>
                 </div>
               </div>
@@ -216,7 +218,7 @@ const VerifyOTP: React.FC = () => {
               {/* OTP Code Inputs */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
-                  One-Time Password
+                  {t('auth.verificationCode')}
                 </label>
                 <div className="flex gap-2 justify-center">
                   {code.map((digit, index) => (
@@ -250,17 +252,17 @@ const VerifyOTP: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Verifying...
+                    {t('auth.sending')}
                   </span>
                 ) : (
-                  'Verify & Login'
+                  t('auth.verifyLoginBtn')
                 )}
               </button>
 
               {/* Resend OTP */}
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-2">
-                  Didn't receive the code?
+                  {t('auth.didNotReceiveCode')}
                 </p>
                 <button
                   type="button"
@@ -268,7 +270,7 @@ const VerifyOTP: React.FC = () => {
                   disabled={resending}
                   className="text-green-600 hover:text-green-700 font-medium text-sm underline disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {resending ? 'Sending...' : 'Resend OTP'}
+                  {resending ? t('auth.sending') : t('auth.resendCodeBtn')}
                 </button>
               </div>
 
@@ -279,7 +281,7 @@ const VerifyOTP: React.FC = () => {
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                   <span>
-                    <strong>Security Tip:</strong> Never share your OTP with anyone. Our team will never ask for your verification code.
+                    <strong>{t('auth.secureAuth')}:</strong> {t('auth.otpSecurityTip')}
                   </span>
                 </p>
               </div>
@@ -290,7 +292,7 @@ const VerifyOTP: React.FC = () => {
           <div className="text-center mt-6">
             <Link href="/auth/login">
               <span className="text-gray-600 hover:text-green-600 text-sm cursor-pointer">
-                ← Back to Login
+                ← {t('auth.backToLogin')}
               </span>
             </Link>
           </div>

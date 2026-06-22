@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useTranslation } from 'react-i18next';
 import { clearAuth, fetchWithTokenRefresh } from '../../utils/tokenRefresh';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 
 interface PartnerUser {
   firstName: string;
@@ -13,17 +15,11 @@ interface PartnerUser {
 
 type PartnerTab = 'overview' | 'access' | 'valuation' | 'analytics' | 'properties';
 
-const TABS: Array<{ key: PartnerTab; label: string; icon: string }> = [
-  { key: 'overview', label: 'Overview', icon: 'fas fa-home' },
-  { key: 'access', label: 'Access Policy', icon: 'fas fa-shield-alt' },
-  { key: 'valuation', label: 'Valuation', icon: 'fas fa-calculator' },
-  { key: 'analytics', label: 'Analytics', icon: 'fas fa-chart-line' },
-  { key: 'properties', label: 'Properties (Restricted)', icon: 'fas fa-ban' },
-];
+const PARTNER_TAB_KEYS: PartnerTab[] = ['overview', 'access', 'valuation', 'analytics', 'properties'];
 
 const getValidPartnerTab = (rawTab: unknown): PartnerTab => {
   const tab = typeof rawTab === 'string' ? rawTab : 'overview';
-  return TABS.some((item) => item.key === tab) ? (tab as PartnerTab) : 'overview';
+  return PARTNER_TAB_KEYS.includes(tab as PartnerTab) ? (tab as PartnerTab) : 'overview';
 };
 
 const getCachedPartnerUser = (): PartnerUser | null => {
@@ -50,6 +46,16 @@ const getCachedPartnerUser = (): PartnerUser | null => {
 };
 
 export default function PartnerDashboardPage() {
+  const { t } = useTranslation();
+
+  const TABS: Array<{ key: PartnerTab; label: string; icon: string }> = [
+    { key: 'overview', label: t('partner.overview'), icon: 'fas fa-home' },
+    { key: 'access', label: t('partner.accessPolicy'), icon: 'fas fa-shield-alt' },
+    { key: 'valuation', label: t('partner.valuation'), icon: 'fas fa-calculator' },
+    { key: 'analytics', label: t('partner.analytics'), icon: 'fas fa-chart-line' },
+    { key: 'properties', label: t('partner.properties'), icon: 'fas fa-ban' },
+  ];
+
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -211,6 +217,7 @@ export default function PartnerDashboardPage() {
               <p className="text-sm text-gray-500">Government / Partner Dashboard</p>
               <h1 className="text-lg font-semibold text-gray-900">{fullName}</h1>
             </div>
+            <LanguageSwitcher />
             <button
               className="md:hidden p-2 text-gray-700"
               onClick={() => setMobileMenuOpen((open) => !open)}

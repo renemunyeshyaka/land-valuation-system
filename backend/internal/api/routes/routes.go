@@ -219,10 +219,16 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 	paymentHistorySummaryHandler := handlers.NewPaymentHistorySummaryHandler(txnRepo)
 	refundHandler := handlers.NewRefundHandler(db)
 
+	// Provider payment handler (PesaPal + PayPal)
+	providerPaymentHandler := handlers.NewProviderPaymentHandler(services.NewProviderRegistry())
+
 	payments := router.Group("/api/v1/payments")
 	{
-		// Public endpoint - no auth
+		// Public endpoints - no auth
 		payments.GET("/methods", multiPaymentHandler.GetAvailablePaymentMethods)
+		payments.GET("/providers", providerPaymentHandler.GetPaymentMethods)
+		payments.GET("/pesapal/status/:transaction_id", providerPaymentHandler.VerifyPesapalPayment)
+		payments.GET("/paypal/status/:order_id", providerPaymentHandler.VerifyPayPalPayment)
 
 		// Protected routes
 		protected := payments.Group("")
@@ -238,6 +244,10 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 			protected.GET("/summary", paymentHistorySummaryHandler.GetPaymentSummary)
 			protected.POST("/refunds", refundHandler.CreateRefundRequest)
 			protected.GET("/refunds", refundHandler.GetUserRefundRequests)
+
+			// Provider payment initiation
+			protected.POST("/pesapal/initiate", providerPaymentHandler.InitiatePesapalPayment)
+			protected.POST("/paypal/initiate", providerPaymentHandler.InitiatePayPalPayment)
 		}
 	}
 
@@ -246,6 +256,12 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 	{
 		webhooks.POST("", paymentHandler.HandlePaymentCallback)
 	}
+
+	// PesaPal IPN callback (no auth, PesaPal calls this directly)
+	router.POST("/api/payments/pesapal/ipn", providerPaymentHandler.HandlePesapalIPN)
+
+	// PayPal webhook (no auth, PayPal calls this directly)
+	router.POST("/api/v1/payments/paypal/webhook", providerPaymentHandler.HandlePayPalWebhook)
 }
 
 func setupAnalyticsRoutes(router *gin.Engine, db *gorm.DB) {

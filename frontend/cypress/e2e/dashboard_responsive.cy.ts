@@ -11,10 +11,22 @@ function installAuthStubs(user: Record<string, any>) {
     statusCode: 200,
     body: { data: user },
   }).as('profile');
+  cy.intercept('GET', '**/api/v1/users/me', {
+    statusCode: 200,
+    body: { data: user },
+  }).as('userMe');
   cy.intercept('GET', '**/api/v1/users/notifications*', {
     statusCode: 200,
     body: { data: [] },
   }).as('notifications');
+  cy.intercept('GET', '**/api/v1/dashboard/*', {
+    statusCode: 200,
+    body: { data: { properties: [], total: 0 } },
+  }).as('dashboardApi');
+  cy.intercept('GET', '**/api/v1/properties*', {
+    statusCode: 200,
+    body: { data: { properties: [], total: 0 } },
+  }).as('propertiesApi');
   cy.intercept('GET', '**/api/v1/admin/users*', {
     statusCode: 200,
     body: { data: { total: 0, items: [] } },

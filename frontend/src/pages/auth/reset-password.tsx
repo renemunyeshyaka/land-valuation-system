@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Footer from "../../components/Footer";
 
 /**
@@ -20,6 +21,7 @@ import Footer from "../../components/Footer";
 
 const ResetPassword: React.FC = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     code: '',
@@ -60,21 +62,21 @@ const ResetPassword: React.FC = () => {
 
     // Code validation
     if (!formData.code) {
-      newErrors.code = 'Reset code is required';
+      newErrors.code = t('auth.resetCodeRequired');
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.passwordRequired');
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+      newErrors.password = t('auth.passwordMinChars');
     }
 
     // Confirm password validation
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = t('auth.confirmPasswordRequired');
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('auth.passwordsDoNotMatch');
     }
 
     setErrors(newErrors);
@@ -86,7 +88,7 @@ const ResetPassword: React.FC = () => {
     e.preventDefault();
     
     if (!validateForm()) {
-      toast.error('Please fix the errors in the form');
+      toast.error(t('auth.fixErrors'));
       return;
     }
     
@@ -105,14 +107,14 @@ const ResetPassword: React.FC = () => {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.message || 'Password reset failed');
+        throw new Error(data.message || t('auth.passwordResetFailed'));
       }
       
-      toast.success('Password reset successful! Redirecting to login...');
+      toast.success(t('auth.passwordResetSuccess'));
       setTimeout(() => router.push('/auth/login'), 2000);
       
     } catch (error: any) {
-      toast.error(error.message || 'Password reset failed. Please try again.');
+      toast.error(error.message || t('auth.passwordResetFailed'));
     } finally {
       setLoading(false);
     }
@@ -134,11 +136,11 @@ const ResetPassword: React.FC = () => {
     <>
       {/* HEAD / SEO */}
       <Head>
-        <title>Reset Password · Land Valuation System</title>
+        <title>{t('auth.resetPassword')} · Land Valuation System</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-        <meta name="description" content="Set a new password for your Land Valuation System account" />
-        <meta property="og:title" content="Reset Password · LandVal" />
-        <meta property="og:description" content="Create a new secure password" />
+        <meta name="description" content={t('auth.resetPasswordSubtitle')} />
+        <meta property="og:title" content={`${t('auth.resetPassword')} · LandVal`} />
+        <meta property="og:description" content={t('auth.resetPasswordSubtitle')} />
       </Head>
 
       {/* MAIN LAYOUT */}
@@ -160,11 +162,11 @@ const ResetPassword: React.FC = () => {
               </Link>
 
               <div className="hidden md:flex space-x-7 text-sm font-medium text-gray-700">
-                <Link href="/" className="hover:text-emerald-700 transition">Home</Link>
-                <Link href="/how-it-works" className="hover:text-emerald-700 transition">How it works</Link>
-                <Link href="/benefits" className="hover:text-emerald-700 transition">Benefits</Link>
-                <Link href="/marketplace" className="hover:text-emerald-700 transition">Marketplace</Link>
-                <Link href="/contact" className="hover:text-emerald-700 transition">Contact</Link>
+                <Link href="/" className="hover:text-emerald-700 transition">{t('nav.home')}</Link>
+                <Link href="/how-it-works" className="hover:text-emerald-700 transition">{t('nav.howItWorks')}</Link>
+                <Link href="/benefits" className="hover:text-emerald-700 transition">{t('nav.benefits')}</Link>
+                <Link href="/marketplace" className="hover:text-emerald-700 transition">{t('nav.marketplace')}</Link>
+                <Link href="/contact" className="hover:text-emerald-700 transition">{t('nav.contact')}</Link>
               </div>
             </div>
           </div>
@@ -183,10 +185,10 @@ const ResetPassword: React.FC = () => {
                   <i className="fas fa-lock text-emerald-700 text-2xl"></i>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
-                  Set New Password
+                  {t('auth.setNewPassword')}
                 </h1>
                 <p className="text-base text-gray-600">
-                  Create a strong password to secure your account
+                  {t('auth.resetPasswordSubtitle')}
                 </p>
               </div>
 
@@ -196,7 +198,7 @@ const ResetPassword: React.FC = () => {
                   {/* Reset Code Field */}
                   <div>
                     <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Reset Code
+                      {t('auth.resetCode')}
                     </label>
                     <input
                       type="text"
@@ -205,7 +207,7 @@ const ResetPassword: React.FC = () => {
                       value={formData.code}
                       onChange={handleChange}
                       disabled={loading}
-                      placeholder="Enter the code from your email"
+                      placeholder={t('auth.enterCode')}
                       className={`w-full px-4 py-2.5 border rounded-lg text-base transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed ${
                         errors.code ? 'border-red-500' : 'border-gray-200'
                       }`}
@@ -220,7 +222,7 @@ const ResetPassword: React.FC = () => {
                   {/* Password Field */}
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
-                      New Password
+                      {t('auth.newPassword')}
                     </label>
                     <input
                       type="password"
@@ -229,7 +231,7 @@ const ResetPassword: React.FC = () => {
                       value={formData.password}
                       onChange={handleChange}
                       disabled={loading}
-                      placeholder="Enter new password"
+                      placeholder={t('auth.newPassword')}
                       className={`w-full px-4 py-2.5 border rounded-lg text-base transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed ${
                         errors.password ? 'border-red-500' : 'border-gray-200'
                       }`}
@@ -257,13 +259,13 @@ const ResetPassword: React.FC = () => {
                             passwordStrength === 'medium' ? 'text-amber-600' :
                             'text-green-600'
                           }`}>
-                            {passwordStrength === 'weak' ? 'Weak' :
-                             passwordStrength === 'medium' ? 'Medium' :
-                             'Strong'}
+                            {passwordStrength === 'weak' ? t('auth.passwordWeak') :
+                             passwordStrength === 'medium' ? t('auth.passwordMedium') :
+                             t('auth.passwordStrong')}
                           </span>
                         </div>
                         <p className="text-xs text-gray-500">
-                          Use 12+ characters with mix of letters, numbers & symbols
+                          {t('auth.passwordMinChars')}
                         </p>
                       </div>
                     )}
@@ -272,7 +274,7 @@ const ResetPassword: React.FC = () => {
                   {/* Confirm Password Field */}
                   <div>
                     <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Confirm New Password
+                      {t('auth.confirmNewPassword')}
                     </label>
                     <input
                       type="password"
@@ -281,7 +283,7 @@ const ResetPassword: React.FC = () => {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       disabled={loading}
-                      placeholder="Confirm new password"
+                      placeholder={t('auth.confirmNewPassword')}
                       className={`w-full px-4 py-2.5 border rounded-lg text-base transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed ${
                         errors.confirmPassword ? 'border-red-500' : 'border-gray-200'
                       }`}
@@ -302,12 +304,12 @@ const ResetPassword: React.FC = () => {
                     {loading ? (
                       <>
                         <i className="fas fa-spinner fa-spin"></i>
-                        Resetting Password...
+                        {t('auth.sending')}
                       </>
                     ) : (
                       <>
                         <i className="fas fa-check"></i>
-                        Reset Password
+                        {t('auth.resetPasswordBtn')}
                       </>
                     )}
                   </button>
@@ -321,7 +323,7 @@ const ResetPassword: React.FC = () => {
                     className="text-sm text-gray-700 hover:text-emerald-700 font-medium transition-colors inline-flex items-center gap-1.5"
                   >
                     <i className="fas fa-arrow-left text-xs"></i>
-                    Back to Login
+                    {t('auth.backToLogin')}
                   </Link>
                 </div>
               </div>
@@ -331,19 +333,19 @@ const ResetPassword: React.FC = () => {
                 <div className="flex gap-3">
                   <i className="fas fa-lightbulb text-amber-700 text-lg mt-0.5"></i>
                   <div className="flex-1 text-sm text-gray-700">
-                    <p className="font-medium text-gray-800 mb-2">Password Security Tips</p>
+                    <p className="font-medium text-gray-800 mb-2">{t('auth.passwordSecurityTips')}</p>
                     <ul className="space-y-1 text-gray-600">
                       <li className="flex items-start gap-2">
                         <i className="fas fa-check text-emerald-600 text-xs mt-1"></i>
-                        <span>Use at least 12 characters</span>
+                        <span>{t('auth.passwordTip1')}</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <i className="fas fa-check text-emerald-600 text-xs mt-1"></i>
-                        <span>Mix uppercase, lowercase, numbers & symbols</span>
+                        <span>{t('auth.passwordTip2')}</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <i className="fas fa-check text-emerald-600 text-xs mt-1"></i>
-                        <span>Avoid common words or personal information</span>
+                        <span>{t('auth.passwordTip3')}</span>
                       </li>
                     </ul>
                   </div>

@@ -1,18 +1,21 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-
-const navItems = [
-  { href: '/', label: 'Home' },
-  { href: '/how-it-works', label: 'How it works' },
-  { href: '/benefits', label: 'Benefits' },
-  { href: '/marketplace', label: 'Marketplace' },
-  { href: '/contact', label: 'Contact' },
-];
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function MainNavbar() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navItems = [
+    { href: '/', label: t('nav.home') },
+    { href: '/how-it-works', label: t('nav.howItWorks') },
+    { href: '/benefits', label: t('nav.benefits') },
+    { href: '/marketplace', label: t('nav.marketplace') },
+    { href: '/contact', label: t('nav.contact') },
+  ];
 
   const activePath = useMemo(() => router.pathname, [router.pathname]);
 
@@ -58,16 +61,12 @@ export default function MainNavbar() {
           </div>
 
           <div className="hidden lg:flex items-center gap-3">
-            <div className="hidden sm:flex items-center border border-gray-200 rounded-full px-3 py-1.5 text-sm bg-white/80">
-              <i className="fas fa-globe text-emerald-600 mr-1 text-xs"></i>
-              <span className="font-medium">RW</span>
-              <i className="fas fa-chevron-down ml-1 text-gray-400 text-xs"></i>
-            </div>
+            <LanguageSwitcher />
             <Link href="/auth/login" className="text-sm font-medium text-emerald-800 hover:text-emerald-900 px-3 py-2">
-              Log in
+              {t('auth.login')}
             </Link>
             <Link href="/auth/register" className="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-sm transition">
-              Sign up
+              {t('auth.signup')}
             </Link>
           </div>
         </div>
@@ -87,19 +86,22 @@ export default function MainNavbar() {
               </Link>
             ))}
             <div className="flex flex-col gap-2 mt-2">
+              <div className="px-3 py-2 border-t border-gray-100 mt-2">
+                <LanguageSwitcher />
+              </div>
               <Link
                 href="/auth/login"
                 className="text-emerald-800 hover:text-emerald-900 px-3 py-2 rounded-md transition text-sm font-medium bg-emerald-50"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Log in
+                {t('auth.login')}
               </Link>
               <Link
                 href="/auth/register"
                 className="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-3 py-2 rounded-md shadow-sm transition"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Sign up
+                {t('auth.signup')}
               </Link>
             </div>
           </div>

@@ -4,9 +4,11 @@ import axios from 'axios';
 import { signOut } from 'next-auth/react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import { useTranslation } from 'react-i18next';
 import { clearAuth } from '@/utils/tokenRefresh';
 import { refreshAccessToken } from '@/utils/tokenRefresh';
 import Footer from '@/components/Footer';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import UserManagement from '@/components/admin/UserManagement';
 import MarketplaceManagement from '@/components/admin/MarketplaceManagement';
 import PropertyListings from '@/components/admin/PropertyListings';
@@ -20,30 +22,34 @@ import NotificationManagement from '@/components/admin/NotificationManagement';
 import Refunds from '@/components/admin/Refunds';
 import CurrencyManagement from '@/components/admin/CurrencyManagement';
 
-const NAV = [
-  { key: 'overview', label: 'Dashboard', icon: 'fas fa-tachometer-alt' },
-  { key: 'users', label: 'Users', icon: 'fas fa-users' },
-  { key: 'marketplace', label: 'Marketplace', icon: 'fas fa-map-marked-alt' },
-  { key: 'listings', label: 'Listings', icon: 'fas fa-building' },
-  { key: 'notifications', label: 'Notifications', icon: 'fas fa-bell' },
-  { key: 'payments', label: 'Payments', icon: 'fas fa-hand-holding-usd' },
-  { key: 'analytics', label: 'Analytics', icon: 'fas fa-chart-line' },
-  { key: 'support', label: 'Support', icon: 'fas fa-headset' },
-  { key: 'system', label: 'System', icon: 'fas fa-sliders-h' },
-  { key: 'data',    label: 'System Data', icon: 'fas fa-database' },
-  { key: 'refunds', label: 'Refunds',     icon: 'fas fa-undo-alt' },
-  { key: 'currency', label: 'Currencies',  icon: 'fas fa-coins' },
-];
+const ADMIN_NAV_KEYS = ['overview', 'users', 'marketplace', 'listings', 'notifications', 'payments', 'analytics', 'support', 'system', 'data', 'refunds', 'currency'] as const;
 
-type AdminTabKey = typeof NAV[number]['key'];
+type AdminTabKey = typeof ADMIN_NAV_KEYS[number];
 
 const getValidAdminTab = (rawTab: unknown): AdminTabKey => {
   const tab = typeof rawTab === 'string' ? rawTab : 'overview';
-  return NAV.some((item) => item.key === tab) ? (tab as AdminTabKey) : 'overview';
+  return (ADMIN_NAV_KEYS as readonly string[]).includes(tab) ? (tab as AdminTabKey) : 'overview';
 };
 
 
 function AdminDashboard() {
+  const { t } = useTranslation();
+
+  const NAV: Array<{ key: AdminTabKey; label: string; icon: string }> = [
+    { key: 'overview', label: t('admin.dashboard'), icon: 'fas fa-tachometer-alt' },
+    { key: 'users', label: t('admin.users'), icon: 'fas fa-users' },
+    { key: 'marketplace', label: t('admin.marketplace'), icon: 'fas fa-map-marked-alt' },
+    { key: 'listings', label: t('admin.listings'), icon: 'fas fa-building' },
+    { key: 'notifications', label: t('admin.notifications'), icon: 'fas fa-bell' },
+    { key: 'payments', label: t('admin.payments'), icon: 'fas fa-hand-holding-usd' },
+    { key: 'analytics', label: t('admin.analytics'), icon: 'fas fa-chart-line' },
+    { key: 'support', label: t('admin.support'), icon: 'fas fa-headset' },
+    { key: 'system', label: t('admin.system'), icon: 'fas fa-sliders-h' },
+    { key: 'data',    label: t('admin.systemData'), icon: 'fas fa-database' },
+    { key: 'refunds', label: t('admin.refunds'),     icon: 'fas fa-undo-alt' },
+    { key: 'currency', label: t('admin.currencies'),  icon: 'fas fa-coins' },
+  ];
+
   const [active, setActive] = useState<AdminTabKey>('overview');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const router = useRouter();
@@ -286,7 +292,7 @@ function AdminDashboard() {
             <i className="fas fa-crown text-white text-sm"></i>
           </div>
           <span className="font-bold text-xl tracking-tight text-emerald-900">Land<span className="text-emerald-600">Val</span></span>
-          <span className="ml-2 text-[11px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">ADMIN</span>
+          <span className="ml-2 text-[11px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">{t('admin.badge')}</span>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1.5">
           {NAV.map(item => (
@@ -311,7 +317,7 @@ function AdminDashboard() {
             onClick={switchToUltimateDashboard}
           >
             <i className="fas fa-exchange-alt"></i>
-            Switch to Ultimate Dashboard
+            {t('admin.switchToUltimate')}
           </button>
         </div>
         {/* User Info & Logout */}
@@ -334,7 +340,7 @@ function AdminDashboard() {
             onClick={handleLogout}
           >
             <i className="fas fa-sign-out-alt"></i>
-            Logout
+            {t('auth.logout')}
           </button>
         </div>
       </aside>
@@ -357,7 +363,7 @@ function AdminDashboard() {
               <i className="fas fa-crown text-white text-sm"></i>
             </div>
             <span className="font-bold text-xl tracking-tight text-emerald-900">Land<span className="text-emerald-600">Val</span></span>
-            <span className="ml-2 text-[11px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">ADMIN</span>
+          <span className="ml-2 text-[11px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">{t('admin.badge')}</span>
           </div>
           <button
             type="button"
@@ -396,7 +402,7 @@ function AdminDashboard() {
             }}
           >
             <i className="fas fa-exchange-alt"></i>
-            Switch to Ultimate Dashboard
+            {t('admin.switchToUltimate')}
           </button>
         </div>
 
@@ -415,7 +421,7 @@ function AdminDashboard() {
             onClick={handleLogout}
           >
             <i className="fas fa-sign-out-alt"></i>
-            Logout
+            {t('auth.logout')}
           </button>
         </div>
       </div>
@@ -437,6 +443,7 @@ function AdminDashboard() {
             <h1 className="text-lg md:text-xl font-semibold text-gray-800">{NAV.find(n => n.key === active)?.label || 'Dashboard'}</h1>
           </div>
           <div className="flex gap-2 md:gap-4 items-center">
+            <LanguageSwitcher />
             <button
               type="button"
               onClick={() => navigateToTab('notifications')}

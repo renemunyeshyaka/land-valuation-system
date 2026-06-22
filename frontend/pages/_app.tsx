@@ -4,6 +4,7 @@ import { Provider } from 'react-redux'
 import { Toaster } from 'react-hot-toast'
 import { store } from '../src/store'
 import '../src/styles/globals.css'
+import '../src/utils/i18n' // Initialize i18n
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (

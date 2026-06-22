@@ -102,6 +102,7 @@ func main() {
 	router.Use(gin.Recovery())
 	router.Use(middleware.Logger(log))
 	router.Use(middleware.CORS())
+	router.Use(middleware.SecurityHeaders())
 	router.Use(middleware.RateLimiter(redisCache))
 
 	// Setup routes
