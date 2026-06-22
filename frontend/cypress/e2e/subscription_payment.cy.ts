@@ -7,23 +7,34 @@
 describe('Subscription and Payment Flow', () => {
   // Set up authentication via API before each test
   function setupAuth() {
+    const TEST_EMAIL = Cypress.env('TEST_EMAIL');
+    const TEST_PASSWORD = Cypress.env('TEST_PASSWORD');
+    if (!TEST_EMAIL || !TEST_PASSWORD) {
+      throw new Error('Cypress env vars TEST_EMAIL and TEST_PASSWORD must be set. See cypress.env.example.json');
+    }
+
     // First trigger OTP send by attempting login
     cy.request({
       method: 'POST',
       url: `${Cypress.env('API_URL') || 'http://localhost:5001'}/api/v1/auth/login`,
-      body: { email: 'paymenttest2@test.com', password: 'Test1234!' },
+      body: { email: TEST_EMAIL, password: TEST_PASSWORD },
       headers: { 'Content-Type': 'application/json' },
       failOnStatusCode: false,
     });
 
     // Set OTP code in database
-    cy.exec(`PGPASSWORD=9QRSG5Uq9QKjAwcJ psql -U kcoduyxv_landval_admin -d kcoduyxv_landval_bd -h localhost -c "UPDATE users SET otp_code='123456', otp_expires_at=now()+'1 hour'::interval, otp_attempts=0 WHERE email='paymenttest2@test.com';"`, { failOnNonZeroExit: false });
+    const DB_PASSWORD = Cypress.env('DB_PASSWORD');
+    const DB_USER = Cypress.env('DB_USER');
+    const DB_NAME = Cypress.env('DB_NAME');
+    if (DB_PASSWORD && DB_USER && DB_NAME) {
+      cy.exec(`PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -d ${DB_NAME} -h localhost -c "UPDATE users SET otp_code='123456', otp_expires_at=now()+'1 hour'::interval, otp_attempts=0 WHERE email='${TEST_EMAIL}';"`, { failOnNonZeroExit: false });
+    }
 
     // Verify OTP and get tokens
     cy.request({
       method: 'POST',
       url: `${Cypress.env('API_URL') || 'http://localhost:5001'}/api/v1/auth/verify-otp`,
-      body: { email: 'paymenttest2@test.com', otp: '123456', code: '123456' },
+      body: { email: TEST_EMAIL, otp: '123456', code: '123456' },
       headers: { 'Content-Type': 'application/json' },
       failOnStatusCode: false,
     }).then((resp) => {

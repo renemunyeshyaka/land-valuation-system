@@ -27,6 +27,9 @@ frontend/.env
 !.env.example
 .env.production.example
 
+# Cypress env with secrets
+frontend/cypress.env.json
+
 ## Shell scripts and deployment scripts
 *.sh
 scripts/
