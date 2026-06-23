@@ -113,6 +113,40 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
+// ChangePassword handles authenticated password change
+// @Summary Change password
+// @Description Allows authenticated user to change their password
+// @Tags auth
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body ChangePasswordRequest true "Change password request"
+// @Success 200 {object} gin.H{message:string}
+// @Failure 400 {object} gin.H{error:string,details:string}
+// @Failure 401 {object} gin.H{error:string,details:string}
+// @Router /auth/change-password [post]
+func (h *AuthHandler) ChangePassword(c *gin.Context) {
+	type ChangePasswordRequest struct {
+		CurrentPassword string `json:"current_password" binding:"required"`
+		NewPassword     string `json:"new_password" binding:"required,min=8"`
+	}
+
+	var req ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		return
+	}
+
+	userID := c.MustGet("user_id").(string)
+
+	if err := h.authService.ChangePassword(c.Request.Context(), userID, req.CurrentPassword, req.NewPassword); err != nil {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Password change failed", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Password changed successfully", nil)
+}
+
 // RefreshToken handles token refresh
 // @Summary Refresh access token
 // @Description Get a new access token using refresh token

@@ -17,6 +17,12 @@ const SettingsPage: React.FC = () => {
   const [estimateResult, setEstimateResult] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
 
   const handleEstimate = async (params: LandEstimateRequest) => {
     setLoading(true);
@@ -35,6 +41,38 @@ const SettingsPage: React.FC = () => {
       setError(err.message || 'Unknown error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError('');
+    setPasswordSuccess('');
+    if (!currentPassword) { setPasswordError('Current password is required'); return; }
+    if (!newPassword || newPassword.length < 8) { setPasswordError('New password must be at least 8 characters'); return; }
+    if (newPassword !== confirmPassword) { setPasswordError('Passwords do not match'); return; }
+    setChangingPassword(true);
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) { setPasswordError('You must be logged in'); setChangingPassword(false); return; }
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error?.details || data?.error?.message || 'Failed to change password');
+      setPasswordSuccess('Password changed successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      toast.success('Password changed successfully');
+    } catch (err: any) {
+      setPasswordError(err.message || 'Failed to change password');
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -113,6 +151,59 @@ const SettingsPage: React.FC = () => {
                     </div>
                     <input type="checkbox" checked={smsAlerts} onChange={(e) => setSmsAlerts(e.target.checked)} />
                   </label>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <h2 className="text-xl font-bold text-gray-800 mb-5">Change Password</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Enter current password"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password (min 8 characters)"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter new password"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    />
+                  </div>
+                  {passwordError && (
+                    <p className="text-sm text-red-600 flex items-center gap-1">
+                      <i className="fas fa-exclamation-circle"></i> {passwordError}
+                    </p>
+                  )}
+                  {passwordSuccess && (
+                    <p className="text-sm text-green-600 flex items-center gap-1">
+                      <i className="fas fa-check-circle"></i> {passwordSuccess}
+                    </p>
+                  )}
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={changingPassword}
+                    className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    {changingPassword ? 'Changing...' : 'Update Password'}
+                  </button>
                 </div>
               </div>
 

@@ -421,6 +421,35 @@ func generateSecureToken(length int) (string, error) {
 	return string(b), nil
 }
 
+// ChangePassword allows an authenticated user to change their own password.
+func (s *AuthService) ChangePassword(ctx context.Context, userID, currentPassword, newPassword string) error {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	// Verify current password
+	hash := user.PasswordHash
+	if strings.HasPrefix(hash, "$2b$") {
+		hash = "$2a$" + hash[4:]
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(currentPassword)); err != nil {
+		return errors.New("current password is incorrect")
+	}
+
+	// Hash new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return errors.New("failed to hash password")
+	}
+
+	// Update password_hash column
+	if err := s.userRepo.UpdatePassword(ctx, userID, string(hashedPassword)); err != nil {
+		return errors.New("failed to update password")
+	}
+	return nil
+}
+
 // ResetPassword resets user password
 func (s *AuthService) ResetPassword(ctx context.Context, token, newPassword string) error {
 	// Find user by reset token

@@ -78,6 +78,7 @@ func setupAuthRoutes(router *gin.Engine, db *gorm.DB) {
 		auth.POST("/login", authHandler.Login)
 		auth.POST("/logout", middleware.AuthRequired(), authHandler.Logout)
 		auth.POST("/refresh", authHandler.RefreshToken)
+		auth.POST("/change-password", middleware.AuthRequired(), authHandler.ChangePassword)
 
 		// Email verification endpoints
 		auth.POST("/verify-email", authHandler.VerifyEmail)
