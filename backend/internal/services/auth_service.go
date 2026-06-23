@@ -425,14 +425,8 @@ func generateSecureToken(length int) (string, error) {
 func (s *AuthService) ChangePassword(ctx context.Context, userID, currentPassword, newPassword string) error {
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
-		log.Printf("[CP DEBUG] GetByID(%q) error: %v", userID, err)
 		return errors.New("user not found")
 	}
-
-	log.Printf("[CP DEBUG] userID=%q dbID=%d hash_len=%d hash_prefix=%q pw_len=%d",
-		userID, user.ID, len(user.PasswordHash),
-		user.PasswordHash[:min(len(user.PasswordHash), 10)],
-		len(currentPassword))
 
 	// Verify current password
 	hash := user.PasswordHash
@@ -440,10 +434,8 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID, currentPasswor
 		hash = "$2a$" + hash[4:]
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(currentPassword)); err != nil {
-		log.Printf("[CP DEBUG] bcrypt mismatch: %v", err)
 		return errors.New("current password is incorrect")
 	}
-	log.Printf("[CP DEBUG] current password OK")
 
 	// Hash new password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
