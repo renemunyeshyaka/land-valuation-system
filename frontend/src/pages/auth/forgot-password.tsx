@@ -113,7 +113,7 @@ const ForgotPassword: React.FC = () => {
                 {/* Language Selector */}
                 <div className="hidden sm:flex items-center border border-gray-200 rounded-full px-3 py-1.5 text-sm bg-white/80">
                   <i className="fas fa-globe text-emerald-600 mr-1 text-xs"></i>
-                  <span className="font-medium">{t('nav.switchLanguage')}</span>
+                  <span className="font-medium">{t('nav.language')}</span>
                   <i className="fas fa-chevron-down ml-1 text-gray-400 text-xs"></i>
                 </div>
                 {/* Register Link */}
