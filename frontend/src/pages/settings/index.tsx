@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 import LandEstimateForm, { LandEstimateRequest } from '../../components/LandEstimateForm';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import MainNavbar from '../../components/MainNavbar';
 import Footer from "../../components/Footer";
 
 const SettingsPage: React.FC = () => {
+  const router = useRouter();
   const [language, setLanguage] = useState('en');
   const [currency, setCurrency] = useState('RWF');
   const [emailAlerts, setEmailAlerts] = useState(true);
@@ -64,11 +66,13 @@ const SettingsPage: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error?.details || data?.error?.message || 'Failed to change password');
-      setPasswordSuccess('Password changed successfully!');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      toast.success('Password changed successfully');
+      setPasswordSuccess('Password changed! Redirecting to login...');
+      toast.success('Password changed. Please sign in again.');
+      // Clear auth tokens and redirect to force re-login
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      setTimeout(() => router.push('/auth/login'), 1500);
     } catch (err: any) {
       setPasswordError(err.message || 'Failed to change password');
     } finally {

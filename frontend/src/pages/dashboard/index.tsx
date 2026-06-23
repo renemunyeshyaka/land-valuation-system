@@ -1302,6 +1302,10 @@ function Dashboard() {
                   <i className="fas fa-user-circle mr-1"></i>
                   View Profile
                 </Link>
+                <Link href="/settings" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 transition-colors">
+                  <i className="fas fa-cog mr-1"></i>
+                  Settings
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
@@ -1353,6 +1357,14 @@ function Dashboard() {
                   >
                     <i className="fas fa-user-circle mr-2"></i>
                     {t('dashboard.profile')}
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <i className="fas fa-cog mr-2"></i>
+                    Settings
                   </Link>
                   {canAddProperty && (
                   <Link
