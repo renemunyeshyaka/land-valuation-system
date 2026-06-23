@@ -30,7 +30,7 @@ const LanguageSwitcher: React.FC = () => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 transition-colors rounded-lg hover:bg-gray-50"
+        className="w-full justify-start flex items-center gap-1.5 px-0 sm:px-3 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 transition-colors rounded-lg hover:bg-gray-50"
         aria-label={t('nav.language')}
         title={t('nav.language')}
       >

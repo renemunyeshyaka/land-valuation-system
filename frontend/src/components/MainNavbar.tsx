@@ -86,7 +86,7 @@ export default function MainNavbar() {
               </Link>
             ))}
             <div className="flex flex-col gap-2 mt-2">
-              <div className="px-3 py-2 border-t border-gray-100 mt-2">
+              <div className="py-2 border-t border-gray-100 mt-2">
                 <LanguageSwitcher />
               </div>
               <Link
