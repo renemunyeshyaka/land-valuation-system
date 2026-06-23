@@ -101,14 +101,8 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*model
 		return nil, errors.New("invalid credentials")
 	}
 
-	// DEBUG: log what GORM actually reads
-	hash := user.PasswordHash
-	log.Printf("[LOGIN DEBUG] email=%q userID=%d hash_len=%d hash_prefix=%q password_hash_col=%q",
-		email, user.ID, len(hash),
-		hash[:min(len(hash), 10)],
-		hash)
-
 	// FIX: Convert $2b$ to $2a$ for Go compatibility
+	hash := user.PasswordHash
 	if strings.HasPrefix(hash, "$2b$") {
 		hash = "$2a$" + hash[4:]
 	}
@@ -120,10 +114,8 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*model
 
 	err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	if err != nil {
-		log.Printf("[LOGIN DEBUG] password MISMATCH for email=%q", email)
 		return nil, errors.New("invalid credentials")
 	}
-	log.Printf("[LOGIN DEBUG] password MATCH for email=%q", email)
 
 	// Check if OTP is locked
 	if user.OTPLockedUntil != nil && user.OTPLockedUntil.After(time.Now()) {
