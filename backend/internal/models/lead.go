@@ -107,7 +107,7 @@ type Campaign struct {
 	// Configuration
 	Name        string `gorm:"size:255;not null" json:"name"`
 	Description string `gorm:"type:text" json:"description,omitempty"`
-	Type        string `gorm:"size:50;not null;index" json:"campaign_type"`
+	Type        string `gorm:"column:campaign_type;size:50;not null;index" json:"campaign_type"`
 	// welcome, owner_outreach, agent_onboarding, reactivation, digest, seasonal
 
 	Channel string `gorm:"size:20;not null" json:"channel"` // email, whatsapp, both

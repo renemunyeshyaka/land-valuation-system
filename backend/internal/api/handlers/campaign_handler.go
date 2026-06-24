@@ -84,9 +84,11 @@ func (h *CampaignHandler) CreateCampaign(c *gin.Context) {
 	}
 
 	// Set creator from auth context
-	userID, exists := c.Get("userID")
+	userIDStr, exists := c.Get("user_id")
 	if exists {
-		campaign.CreatedBy = userID.(uint)
+		if id, err := strconv.ParseUint(userIDStr.(string), 10, 32); err == nil {
+			campaign.CreatedBy = uint(id)
+		}
 	}
 
 	created, err := h.campaignRepo.Create(c.Request.Context(), &campaign)
