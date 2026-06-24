@@ -6,19 +6,22 @@ import { Toaster } from 'react-hot-toast'
 import { store } from '../src/store'
 import '../src/styles/globals.css'
 import '../src/utils/i18n' // Initialize i18n (always with 'rw' to match SSR)
-import { applySavedLanguage } from '../src/utils/i18n'
+import { applySavedLanguage, syncLanguageFromBackend } from '../src/utils/i18n'
+import ChatWidget from '../src/components/ChatWidget'
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   // After hydration, apply the user's saved language preference
   // (not done during init to avoid hydration mismatch errors #418/#423/#425)
   useEffect(() => {
-    applySavedLanguage()
+    applySavedLanguage();
+    syncLanguageFromBackend();
   }, [])
 
   return (
     <SessionProvider session={session}>
       <Provider store={store}>
         <Component {...pageProps} />
+        <ChatWidget />
         <Toaster
           position="top-right"
           toastOptions={{

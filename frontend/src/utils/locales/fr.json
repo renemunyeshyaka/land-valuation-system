@@ -540,6 +540,21 @@
     "zoneCoef": "Coefficient de Zone",
     "available": "Disponible"
   },
+  "chat": {
+    "title": "LandVal Assistant",
+    "open": "Ouvrir le chat",
+    "greeting": "Bonjour! 👋 Je peux vous aider avec LandVal. Demandez-moi sur les prix, les fonctionnalités ou comment estimer votre propriété!",
+    "placeholder": "Tapez votre message...",
+    "error": "Désolé, je n'ai pas pu traiter cela. Veuillez réessayer.",
+    "btnPricing": "Tarifs",
+    "btnFeatures": "Fonctionnalités",
+    "btnTrial": "Essai Gratuit",
+    "btnTemplates": "Modèles",
+    "quickPricing": "Quels sont vos plans tarifaires?",
+    "quickFeatures": "Quelles fonctionnalités offrez-vous?",
+    "quickTrial": "Comment commencer l'essai gratuit?",
+    "quickTemplates": "Quels modèles de propriété sont disponibles?"
+  },
   "footer": {
     "product": "Produit",
     "company": "Entreprise",

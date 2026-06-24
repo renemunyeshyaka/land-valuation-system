@@ -40,6 +40,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client, 
 	setupExchangeRateRoutes(router, redisClient)
 	setupAITargetingRoutes(router, db)
 	setupTrackingRoutes(router, db)
+	setupChatRoutes(router)
 	setupDashboardRoutes(router, db)
 	setupCurrencyRoutes(router, db)
 	setupHealthRoutes(router, db)
@@ -479,4 +480,12 @@ func setupTrackingRoutes(router *gin.Engine, db *gorm.DB) {
 	leadRepo := repository.NewLeadRepository(db)
 	unsubscribeHandler := handlers.NewUnsubscribeHandler(leadRepo)
 	router.GET("/api/v1/unsubscribe/:token", unsubscribeHandler.Unsubscribe)
+}
+
+// setupChatRoutes registers the LandVal Assistant chat endpoint (public)
+func setupChatRoutes(router *gin.Engine) {
+	aiService := services.NewAIService()
+	chatHandler := handlers.NewChatHandler(aiService)
+
+	router.POST("/api/v1/chat", chatHandler.Chat)
 }

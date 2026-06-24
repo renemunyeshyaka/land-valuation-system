@@ -540,6 +540,21 @@
     "zoneCoef": "Igipimo cy'Akarere",
     "available": "Iraboneka"
   },
+  "chat": {
+    "title": "LandVal Assistant",
+    "open": "Fungura ikiganiro",
+    "greeting": "Muraho! 👋 Nshobora kugufasha na LandVal. Mbaza ibijyanye n'ibiciro, ibiranga, cyangwa uko ushobora gupima agaciro k'umutiture wawe!",
+    "placeholder": "Andika ubutumwa bwawe...",
+    "error": "Unyereze, sinshoboye kubikora. Ongera ugerageze.",
+    "btnPricing": "Ibiciro",
+    "btnFeatures": "Ibiranga",
+    "btnTrial": "Ugerageze ni Ubuntu",
+    "btnTemplates": "Inyandikorugero",
+    "quickPricing": "Ni ayahe mafaranga musaba?",
+    "quickFeatures": "Ni ibihe biranga mutanga?",
+    "quickTrial": "Nigute ntangira igerageza ni ubuntu?",
+    "quickTemplates": "Ni iyihe nyandikorugero iboneka?"
+  },
   "footer": {
     "product": "Ibicuruzwa",
     "company": "Isosiyete",

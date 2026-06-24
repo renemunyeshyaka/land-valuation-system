@@ -6,8 +6,7 @@ import { Provider } from 'react-redux'
 import { Toaster } from 'react-hot-toast'
 import { store } from '../store'
 import { applySavedLanguage, syncLanguageFromBackend } from '../utils/i18n'
-
-
+import ChatWidget from '../components/ChatWidget'
 
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
@@ -16,12 +15,15 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     applySavedLanguage();
     // Sync language from backend (if logged in)
     syncLanguageFromBackend();
+    console.log('[App] mounted, ChatWidget should appear');
   }, []);
 
   return (
     <SessionProvider session={session}>
       <Provider store={store}>
         <Component {...pageProps} />
+        {/* LandVal Assistant Chat Widget */}
+        <ChatWidget />
         <Toaster
           position="top-right"
           toastOptions={{

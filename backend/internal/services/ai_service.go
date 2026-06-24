@@ -446,6 +446,108 @@ func (s *AIService) AnalyzeCampaignPerformance(ctx context.Context, campaign *mo
 }
 
 // ============================================
+// General Chat (LandVal Assistant)
+// ============================================
+
+const chatSystemPrompt = `You are LandVal Assistant, a friendly and helpful AI assistant for the Land Valuation System (https://landval.kcoders.org/), operating in Rwanda.
+
+Your role is to help users with:
+- Answering questions about land valuation, pricing, and the platform
+- Explaining features: valuation search, marketplace, subscriptions, payment methods (PesaPal, PayPal, bank transfer)
+- Guiding users on how to create property listings, get estimates, and use the dashboard
+- Providing information about pricing plans (Freemium, Premium, Corporate)
+- Helping with technical support questions about the platform
+- The platform supports English, French, and Kinyarwanda — respond in the user's language
+
+Keep responses concise, helpful, and friendly. If you don't know something, be honest. Never make up pricing or legal information. Direct users to the appropriate dashboard section or support contact for complex issues.
+
+Available features: land valuation estimates, property marketplace, subscription plans (Freemium with 3 free valuations, Premium, Corporate), user dashboard with profile, billing, refunds, notifications, multi-language support (EN/FR/RW), PesaPal & PayPal payments, bank transfers.`
+
+// ChatRequest represents a chat request from the frontend
+type ChatRequest struct {
+	Message string           `json:"message"`
+	History []DeepSeekMessage `json:"history,omitempty"`
+}
+
+// ChatResponse represents the AI response
+type ChatResponse struct {
+	Message string `json:"message"`
+}
+
+// Chat sends a message to the LandVal Assistant and returns a response
+func (s *AIService) Chat(ctx context.Context, req ChatRequest) (*ChatResponse, error) {
+	if req.Message == "" {
+		return &ChatResponse{Message: "Hi! 👋 How can I help you with Land Valuation System today?"}, nil
+	}
+
+	// Build conversation history if provided
+	var messages []DeepSeekMessage
+	messages = append(messages, DeepSeekMessage{Role: "system", Content: chatSystemPrompt})
+
+	// Add history (up to last 10 messages to keep context manageable)
+	if len(req.History) > 0 {
+		start := 0
+		if len(req.History) > 10 {
+			start = len(req.History) - 10
+		}
+		messages = append(messages, req.History[start:]...)
+	}
+
+	// Add the current user message
+	messages = append(messages, DeepSeekMessage{Role: "user", Content: req.Message})
+
+	reqBody := DeepSeekRequest{
+		Model:       s.model,
+		Messages:    messages,
+		Temperature: 0.7,
+		MaxTokens:   1024,
+	}
+
+	payload, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", s.baseURL+"/chat/completions", bytes.NewReader(payload))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+s.apiKey)
+
+	resp, err := s.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("API request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		var apiErr DeepSeekResponse
+		if json.Unmarshal(body, &apiErr) == nil && apiErr.Error != nil {
+			return nil, fmt.Errorf("DeepSeek API error (HTTP %d): %s", resp.StatusCode, apiErr.Error.Message)
+		}
+		return nil, fmt.Errorf("DeepSeek API returned HTTP %d: %s", resp.StatusCode, string(body))
+	}
+
+	var result DeepSeekResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	if len(result.Choices) == 0 {
+		return nil, fmt.Errorf("DeepSeek returned no choices")
+	}
+
+	return &ChatResponse{Message: strings.TrimSpace(result.Choices[0].Message.Content)}, nil
+}
+
+// ============================================
 // Health Check
 // ============================================
 
