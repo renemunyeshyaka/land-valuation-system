@@ -13,6 +13,10 @@ export default function HowItWorks() {
     <>
       <Head>
         <title>How It Works · Land Valuation System</title>
+        <link rel="alternate" href="https://landval.kcoders.org/how-it-works" hrefLang="x-default" />
+        <link rel="alternate" href="https://landval.kcoders.org/how-it-works" hrefLang="en" />
+        <link rel="alternate" href="https://landval.kcoders.org/how-it-works" hrefLang="fr" />
+        <link rel="alternate" href="https://landval.kcoders.org/how-it-works" hrefLang="rw" />
       </Head>
       <div className="antialiased text-gray-800 min-h-screen flex flex-col">
         {/* Navigation Bar */}

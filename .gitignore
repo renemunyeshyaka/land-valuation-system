@@ -144,4 +144,4 @@ backend/cmd/propertyscraper/
 !backend/migrations/**
 
 # Android
-release.keystore
+release.keystorebackend/lead-aggregator

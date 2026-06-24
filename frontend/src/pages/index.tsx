@@ -155,6 +155,10 @@ const Home: React.FC = () => {
     <>
       <Head>
         <title>Land Valuation System · Rwanda</title>
+        <link rel="alternate" href="https://landval.kcoders.org/" hrefLang="x-default" />
+        <link rel="alternate" href="https://landval.kcoders.org/" hrefLang="en" />
+        <link rel="alternate" href="https://landval.kcoders.org/" hrefLang="fr" />
+        <link rel="alternate" href="https://landval.kcoders.org/" hrefLang="rw" />
         {/* Inline critical custom styles for SSR/hydration match */}
         <style>{`
           body { font-family: 'Inter', sans-serif; background-color: #fafaf9; }

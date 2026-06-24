@@ -121,6 +121,27 @@ func (s *EmailService) SendPasswordResetEmail(toEmail, firstName, code string) e
 	return s.sendEmail(toEmail, subject, body)
 }
 
+// SendCampaignEmail sends a personalized campaign email with open tracking and unsubscribe link.
+// trackingBaseURL is the base URL for tracking endpoints.
+// unsubscribeToken is the lead's unique token for one-click unsubscribe.
+func (s *EmailService) SendCampaignEmail(toEmail, subject, htmlBody, trackingID, trackingBaseURL, unsubscribeToken string) error {
+	// Tracking pixel for open detection
+	trackingPixel := fmt.Sprintf(
+		`<img src="%s/api/v1/track/open/%s" width="1" height="1" alt="" style="display:none;" />`,
+		trackingBaseURL, trackingID,
+	)
+
+	// Unsubscribe footer
+	unsubscribeLink := fmt.Sprintf("%s/api/v1/unsubscribe/%s", trackingBaseURL, unsubscribeToken)
+	footer := fmt.Sprintf(`
+	<div style="margin-top:30px;padding-top:20px;border-top:1px solid #eee;font-size:11px;color:#999;text-align:center">
+		<p>You are receiving this email because you are registered with Land Valuation System.</p>
+		<p><a href="%s" style="color:#999;text-decoration:underline">Unsubscribe from marketing emails</a></p>
+	</div>`, unsubscribeLink)
+
+	return s.sendEmail(toEmail, subject, htmlBody+trackingPixel+footer)
+}
+
 // sendEmail sends an email using SMTP
 func (s *EmailService) sendEmail(to, subject, body string) error {
 	auth := smtp.PlainAuth("", s.emailUser, s.password, s.smtpHost)

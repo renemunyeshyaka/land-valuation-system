@@ -4,11 +4,13 @@ import LandEstimateForm, { LandEstimateRequest } from '../../components/LandEsti
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import MainNavbar from '../../components/MainNavbar';
 import Footer from "../../components/Footer";
 
 const SettingsPage: React.FC = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const [language, setLanguage] = useState('en');
   const [currency, setCurrency] = useState('RWF');
@@ -67,7 +69,7 @@ const SettingsPage: React.FC = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error?.details || data?.error?.message || 'Failed to change password');
       setPasswordSuccess('Password changed! Redirecting to login...');
-      toast.success('Password changed. Please sign in again.');
+      toast.success(t('toast.passwordChanged'));
       // Clear auth tokens and redirect to force re-login
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
@@ -81,7 +83,7 @@ const SettingsPage: React.FC = () => {
   };
 
   const handleSave = () => {
-    toast.success('Settings updated successfully');
+    toast.success(t('toast.settingsUpdated'));
   };
 
   return (

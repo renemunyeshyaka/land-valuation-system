@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -31,6 +32,7 @@ const PropertyDetail: React.FC = () => {
   const [contactEmail, setContactEmail] = useState('');
   const [contactMessage, setContactMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { t } = useTranslation();
 
   // Mock property details
   const propertyData: { [key: string]: any } = {
@@ -206,14 +208,14 @@ const PropertyDetail: React.FC = () => {
 
     // Validate
     if (!contactName.trim() || !contactEmail.trim() || !contactMessage.trim()) {
-      toast.error('Please fill in all fields');
+      toast.error(t('toast.fillAllFields'));
       setSubmitting(false);
       return;
     }
 
     // Simulate API call
     setTimeout(() => {
-      toast.success('Message sent! We will contact you soon');
+      toast.success(t('toast.messageSent'));
       setContactName('');
       setContactEmail('');
       setContactMessage('');

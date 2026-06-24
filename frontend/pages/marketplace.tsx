@@ -196,6 +196,10 @@ export default function Marketplace() {
     <>
       <Head>
         <title>Marketplace · Land Valuation System</title>
+        <link rel="alternate" href="https://landval.kcoders.org/marketplace" hrefLang="x-default" />
+        <link rel="alternate" href="https://landval.kcoders.org/marketplace" hrefLang="en" />
+        <link rel="alternate" href="https://landval.kcoders.org/marketplace" hrefLang="fr" />
+        <link rel="alternate" href="https://landval.kcoders.org/marketplace" hrefLang="rw" />
       </Head>
       <div className="antialiased text-gray-800 min-h-screen flex flex-col">
         {/* Navigation Bar (copied from homepage) */}

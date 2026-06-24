@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 export type UserEditFormType = {
@@ -42,6 +43,7 @@ export default function UserEditPropertyModal({
   existingImages = [],
   existingDocuments = [],
 }: UserEditPropertyModalProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -72,7 +74,7 @@ export default function UserEditPropertyModal({
       let validFiles = files.filter(f => ['image/jpeg', 'image/png', 'image/gif'].includes(f.type) && f.size <= 2 * 1024 * 1024);
       if (images.length + validFiles.length > 5) {
         validFiles = validFiles.slice(0, 5 - images.length);
-        toast.error('Maximum 5 images allowed');
+        toast.error(t('toast.maxImages'));
       }
       setImages(prev => [...prev, ...validFiles]);
       validFiles.forEach(file => {
@@ -89,7 +91,7 @@ export default function UserEditPropertyModal({
       let validFiles = files.filter(f => f.type === 'application/pdf' && f.size <= 2 * 1024 * 1024);
       if (documents.length + validFiles.length > 5) {
         validFiles = validFiles.slice(0, 5 - documents.length);
-        toast.error('Maximum 5 documents allowed');
+        toast.error(t('toast.maxDocuments'));
       }
       setDocuments(prev => [...prev, ...validFiles]);
     }

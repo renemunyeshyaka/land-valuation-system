@@ -21,8 +21,12 @@ import DataImportExport from '@/components/admin/DataImportExport';
 import NotificationManagement from '@/components/admin/NotificationManagement';
 import Refunds from '@/components/admin/Refunds';
 import CurrencyManagement from '@/components/admin/CurrencyManagement';
+import LeadManagement from '@/components/admin/LeadManagement';
+import CampaignManagement from '@/components/admin/CampaignManagement';
+import CampaignAnalytics from '@/components/admin/CampaignAnalytics';
+import AITargetingConfig from '@/components/admin/AITargetingConfig';
 
-const ADMIN_NAV_KEYS = ['overview', 'users', 'marketplace', 'listings', 'notifications', 'payments', 'analytics', 'support', 'system', 'data', 'refunds', 'currency'] as const;
+const ADMIN_NAV_KEYS = ['overview', 'users', 'marketplace', 'listings', 'notifications', 'payments', 'analytics', 'support', 'system', 'data', 'refunds', 'currency', 'leads', 'campaigns', 'campaign-analytics', 'ai-targeting'] as const;
 
 type AdminTabKey = typeof ADMIN_NAV_KEYS[number];
 
@@ -48,6 +52,10 @@ function AdminDashboard() {
     { key: 'data',    label: t('admin.systemData'), icon: 'fas fa-database' },
     { key: 'refunds', label: t('admin.refunds'),     icon: 'fas fa-undo-alt' },
     { key: 'currency', label: t('admin.currencies'),  icon: 'fas fa-coins' },
+    { key: 'leads',    label: t('admin.leads'),       icon: 'fas fa-users' },
+    { key: 'campaigns',label: t('admin.campaigns'),   icon: 'fas fa-bullhorn' },
+    { key: 'campaign-analytics',label: 'Campaign Analytics',   icon: 'fas fa-chart-simple' },
+    { key: 'ai-targeting',label: 'AI Targeting',   icon: 'fas fa-robot' },
   ];
 
   const [active, setActive] = useState<AdminTabKey>('overview');
@@ -256,6 +264,10 @@ function AdminDashboard() {
       case 'system': return <SystemHealth />;
       case 'data':    return <DataImportExport />;
       case 'refunds':  return <Refunds />;
+      case 'leads':     return <LeadManagement />;
+      case 'campaigns': return <CampaignManagement />;
+      case 'campaign-analytics': return <CampaignAnalytics />;
+      case 'ai-targeting': return <AITargetingConfig />;
       case 'currency':  return <CurrencyManagement />;
       case 'overview':
       default:

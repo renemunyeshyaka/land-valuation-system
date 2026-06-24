@@ -67,7 +67,8 @@ describe('PartnerDashboardPage role guards', () => {
 
     render(<PartnerDashboardPage />);
 
-    const restrictedTab = await screen.findByRole('button', { name: /Properties \(Restricted\)/i });
+    // Find the Properties tab by testid (i18n depends on active language)
+    const restrictedTab = await screen.findByTestId('partner-nav-properties');
     fireEvent.click(restrictedTab);
 
     expect(await screen.findByText(/Add Property is not available for government\/partner accounts/i)).toBeInTheDocument();

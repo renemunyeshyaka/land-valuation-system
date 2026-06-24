@@ -85,7 +85,7 @@ const Login: React.FC = () => {
           throw new Error(data.message || t('auth.loginFailed'));
         }
         // Always redirect to OTP verification page after login
-        toast.success('OTP sent! Please verify.');
+        toast.success(t('toast.otpSent'));
         router.push({
           pathname: '/auth/verify-otp',
           query: { email: formData.email },

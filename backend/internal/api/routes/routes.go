@@ -38,6 +38,8 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client, 
 	setupAdminRoutes(router, db)
 	setupNotificationRoutes(router, db)
 	setupExchangeRateRoutes(router, redisClient)
+	setupAITargetingRoutes(router, db)
+	setupTrackingRoutes(router, db)
 	setupDashboardRoutes(router, db)
 	setupCurrencyRoutes(router, db)
 	setupHealthRoutes(router, db)
@@ -205,14 +207,12 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 	// Initialize all payment services
 	mobilePaymentService := services.NewPaymentService(db)
 	bankPaymentService := services.NewBankPaymentService(db)
-	blockchainPaymentService := services.NewBlockchainPaymentService(db, redisClient)
 
 	// Initialize handlers
 	paymentHandler := handlers.NewPaymentHandler(mobilePaymentService)
 	multiPaymentHandler := handlers.NewMultiPaymentHandler(
 		mobilePaymentService,
 		bankPaymentService,
-		blockchainPaymentService,
 	)
 
 	// Payment history/summary handler
@@ -416,4 +416,67 @@ func setupCurrencyRoutes(router *gin.Engine, db *gorm.DB) {
 	{
 		admin.POST("/sync", currencyHandler.SyncExchangeRates)
 	}
+}
+
+// setupAITargetingRoutes registers Phase 7 — AI Customer Targeting endpoints
+func setupAITargetingRoutes(router *gin.Engine, db *gorm.DB) {
+	leadRepo := repository.NewLeadRepository(db)
+	campaignRepo := repository.NewCampaignRepository(db)
+	aiService := services.NewAIService()
+
+	leadHandler := handlers.NewLeadHandler(leadRepo, aiService)
+	campaignHandler := handlers.NewCampaignHandler(campaignRepo, leadRepo, aiService)
+
+	// Admin-protected AI targeting routes
+	admin := router.Group("/api/v1/admin")
+	admin.Use(middleware.AuthRequired(), middleware.AdminRequired())
+	{
+		// Lead management
+		admin.GET("/leads", leadHandler.ListLeads)
+		admin.GET("/leads/stats", leadHandler.GetLeadStats)
+		admin.GET("/leads/:id", leadHandler.GetLead)
+		admin.POST("/leads", leadHandler.CreateLead)
+		admin.PUT("/leads/:id", leadHandler.UpdateLead)
+		admin.DELETE("/leads/:id", leadHandler.DeleteLead)
+		admin.POST("/leads/:id/enrich", leadHandler.EnrichLead)
+		admin.POST("/leads/:id/re-score", leadHandler.RescoreLead)
+
+		// Campaign management
+		admin.GET("/campaigns", campaignHandler.ListCampaigns)
+		admin.GET("/campaigns/analytics/overview", campaignHandler.GetCampaignAnalytics)
+		admin.GET("/campaigns/:id", campaignHandler.GetCampaign)
+		admin.POST("/campaigns", campaignHandler.CreateCampaign)
+		admin.PUT("/campaigns/:id", campaignHandler.UpdateCampaign)
+		admin.DELETE("/campaigns/:id", campaignHandler.DeleteCampaign)
+		admin.POST("/campaigns/:id/launch", campaignHandler.LaunchCampaign)
+		admin.POST("/campaigns/:id/pause", campaignHandler.PauseCampaign)
+		admin.GET("/campaigns/:id/activities", campaignHandler.ListCampaignActivities)
+
+		// AI content generation
+		admin.POST("/campaigns/ai-generate", campaignHandler.AIGenerateContent)
+
+		// AI Targeting configuration
+		aiConfigHandler := handlers.NewAIConfigHandler()
+		admin.GET("/ai-targeting/config", aiConfigHandler.GetConfig)
+	}
+}
+
+// setupTrackingRoutes registers email open/click tracking endpoints (public, no auth)
+func setupTrackingRoutes(router *gin.Engine, db *gorm.DB) {
+	campaignRepo := repository.NewCampaignRepository(db)
+	trackingHandler := handlers.NewTrackingHandler(campaignRepo)
+
+	track := router.Group("/api/v1/track")
+	{
+		// Email open tracking — 1x1 transparent GIF pixel
+		track.GET("/open/:tracking_id", trackingHandler.TrackOpen)
+
+		// Email click tracking — logs click and redirects to target URL
+		track.GET("/click/:tracking_id", trackingHandler.TrackClick)
+	}
+
+	// Unsubscribe endpoint (public, no auth required)
+	leadRepo := repository.NewLeadRepository(db)
+	unsubscribeHandler := handlers.NewUnsubscribeHandler(leadRepo)
+	router.GET("/api/v1/unsubscribe/:token", unsubscribeHandler.Unsubscribe)
 }

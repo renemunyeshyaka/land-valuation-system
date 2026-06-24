@@ -39,6 +39,12 @@ export default function Document() {
         <meta property="og:site_name" content="LandVal" />
         <meta property="og:locale" content="en_US" />
 
+        {/* International SEO — hreflang alternate language tags */}
+        <link rel="alternate" href="https://landval.kcoders.org/" hrefLang="x-default" />
+        <link rel="alternate" href="https://landval.kcoders.org/" hrefLang="en" />
+        <link rel="alternate" href="https://landval.kcoders.org/" hrefLang="fr" />
+        <link rel="alternate" href="https://landval.kcoders.org/" hrefLang="rw" />
+
         {/* Favicon / PWA Icons */}
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />

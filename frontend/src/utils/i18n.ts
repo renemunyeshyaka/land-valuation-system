@@ -48,12 +48,71 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'rw', label: 'Kinyarwanda', nativeLabel: 'Kinyarwanda' },
 ] as const;
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+
+/**
+ * Gets the auth token from localStorage if the user is logged in.
+ */
+const getAuthToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('access_token');
+};
+
+/**
+ * Sends the user's language preference to the backend so it persists across sessions.
+ * Silently fails if the user is not logged in or the request fails.
+ */
+const syncLanguageToBackend = async (lang: string): Promise<void> => {
+  const token = getAuthToken();
+  if (!token) return; // Not logged in — no need to sync
+
+  try {
+    await fetch(`${API_BASE_URL}/api/v1/users/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ preferred_language: lang }),
+    });
+  } catch {
+    // Silently fail — language still works locally via localStorage
+  }
+};
+
+/**
+ * Fetches the user's preferred language from the backend profile.
+ * Used on login / app init to sync the server-stored preference.
+ */
+export const syncLanguageFromBackend = async (): Promise<void> => {
+  const token = getAuthToken();
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/v1/users/profile`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (data.success && data.data?.preferred_language) {
+      const lang = data.data.preferred_language;
+      if (lang !== i18n.language && SUPPORTED_LANGUAGES.some(l => l.code === lang)) {
+        i18n.changeLanguage(lang);
+        localStorage.setItem('preferred_language', lang);
+        document.documentElement.lang = lang;
+      }
+    }
+  } catch {
+    // Silently fail — fall back to localStorage preference
+  }
+};
+
 export const changeLanguage = (lang: string) => {
   i18n.changeLanguage(lang);
   if (typeof window !== 'undefined') {
     localStorage.setItem('preferred_language', lang);
-    // Update html lang attribute
     document.documentElement.lang = lang;
+    // Sync to backend (fire-and-forget)
+    syncLanguageToBackend(lang);
   }
 };
 

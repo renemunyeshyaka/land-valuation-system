@@ -10,20 +10,17 @@ import (
 
 // MultiPaymentHandler consolidates all payment methods
 type MultiPaymentHandler struct {
-	mobilePaymentService     *services.PaymentService
-	bankPaymentService       *services.BankPaymentService
-	blockchainPaymentService *services.BlockchainPaymentService
+	mobilePaymentService *services.PaymentService
+	bankPaymentService   *services.BankPaymentService
 }
 
 func NewMultiPaymentHandler(
 	mobilePayment *services.PaymentService,
 	bankPayment *services.BankPaymentService,
-	blockchainPayment *services.BlockchainPaymentService,
 ) *MultiPaymentHandler {
 	return &MultiPaymentHandler{
-		mobilePaymentService:     mobilePayment,
-		bankPaymentService:       bankPayment,
-		blockchainPaymentService: blockchainPayment,
+		mobilePaymentService: mobilePayment,
+		bankPaymentService:   bankPayment,
 	}
 }
 
@@ -109,62 +106,6 @@ func (h *MultiPaymentHandler) GetBankPaymentStatus(c *gin.Context) {
 }
 
 // ============================================
-// BLOCKCHAIN PAYMENT ENDPOINTS
-// ============================================
-
-// InitiateBlockchainPayment handles POST /api/v1/payments/crypto/initiate
-func (h *MultiPaymentHandler) InitiateBlockchainPayment(c *gin.Context) {
-	var req services.BlockchainPaymentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
-		return
-	}
-
-	// Get user ID from context
-	userID, exists := c.Get("userID")
-	if exists {
-		req.UserID = userID.(uint)
-	}
-
-	response, err := h.blockchainPaymentService.InitiateBlockchainPayment(c.Request.Context(), &req)
-	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to initiate blockchain payment", err.Error())
-		return
-	}
-
-	utils.SuccessResponse(c, http.StatusCreated, "Blockchain payment initiated successfully", response)
-}
-
-// SubmitBlockchainProof handles POST /api/v1/payments/crypto/submit-proof
-func (h *MultiPaymentHandler) SubmitBlockchainProof(c *gin.Context) {
-	var req services.BlockchainPaymentProofRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
-		return
-	}
-
-	if err := h.blockchainPaymentService.SubmitBlockchainProof(c.Request.Context(), &req); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to verify blockchain transaction", err.Error())
-		return
-	}
-
-	utils.SuccessResponse(c, http.StatusOK, "Blockchain payment verified and completed", nil)
-}
-
-// GetBlockchainPaymentStatus handles GET /api/v1/payments/crypto/status/:transaction_id
-func (h *MultiPaymentHandler) GetBlockchainPaymentStatus(c *gin.Context) {
-	transactionID := c.Param("transaction_id")
-
-	response, err := h.blockchainPaymentService.CheckBlockchainPaymentStatus(c.Request.Context(), transactionID)
-	if err != nil {
-		utils.ErrorResponse(c, http.StatusNotFound, "Transaction not found", err.Error())
-		return
-	}
-
-	utils.SuccessResponse(c, http.StatusOK, "Blockchain payment status retrieved", response)
-}
-
-// ============================================
 // UNIFIED PAYMENT METHODS ENDPOINT
 // ============================================
 
@@ -189,14 +130,6 @@ func (h *MultiPaymentHandler) GetAvailablePaymentMethods(c *gin.Context) {
 			},
 			"currency":    []string{"EUR", "USD"},
 			"description": "Deferred for future implementation",
-		},
-		"cryptocurrency": map[string]interface{}{
-			"enabled":     false,
-			"status":      "disabled",
-			"chain":       "BNB Smart Chain (BEP20)",
-			"tokens":      []string{"USDT", "USDC", "BNB"},
-			"currency":    []string{"EUR", "USD"},
-			"description": "Disabled per deployment policy",
 		},
 	}
 

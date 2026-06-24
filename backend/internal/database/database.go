@@ -90,6 +90,10 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.RefundRequest{},
 		&models.PropertyBoost{},
 		&models.MarketplaceListing{},
+		&models.Lead{},
+		&models.Campaign{},
+		&models.CampaignActivity{},
+		&models.LeadScore{},
 	)
 	if err != nil {
 		// Backward-compatibility: some existing DBs have an index instead of the legacy
@@ -126,6 +130,8 @@ func RunSQLMigrations(db *gorm.DB) error {
 		"014_add_property_admin_hierarchy_fields.sql",
 		"015_create_refund_requests_table.sql",
 		"016_dashboard_property_indexes_and_views.sql",
+		"017_create_currencies_table.sql",
+		"018_create_ai_customer_targeting_tables.sql",
 	}
 
 	// Find migrations directory

@@ -48,6 +48,7 @@ const getCachedPartnerUser = (): PartnerUser | null => {
 export default function PartnerDashboardPage() {
   const { t } = useTranslation();
 
+  // TABS defined inside component so t() evaluates after i18n initialization
   const TABS: Array<{ key: PartnerTab; label: string; icon: string }> = [
     { key: 'overview', label: t('partner.overview'), icon: 'fas fa-home' },
     { key: 'access', label: t('partner.accessPolicy'), icon: 'fas fa-shield-alt' },

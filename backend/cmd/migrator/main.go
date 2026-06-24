@@ -76,6 +76,8 @@ func main() {
 		"011_create_gazette_land_prices_table.sql",
 		"012_create_active_gazette_prices_view.sql",
 		"014_add_property_admin_hierarchy_fields.sql",
+		"017_create_currencies_table.sql",
+		"018_create_ai_customer_targeting_tables.sql",
 	}
 
 	for _, file := range migrationFiles {

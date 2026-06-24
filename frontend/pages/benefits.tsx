@@ -17,6 +17,10 @@ export default function Benefits() {
         <meta name="description" content="Discover the benefits of using the Land Valuation System for property valuation and marketplace services in Rwanda." />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+        <link rel="alternate" href="https://landval.kcoders.org/benefits" hrefLang="x-default" />
+        <link rel="alternate" href="https://landval.kcoders.org/benefits" hrefLang="en" />
+        <link rel="alternate" href="https://landval.kcoders.org/benefits" hrefLang="fr" />
+        <link rel="alternate" href="https://landval.kcoders.org/benefits" hrefLang="rw" />
       </Head>
       <div className="antialiased text-gray-800 min-h-screen flex flex-col">
         {/* Navigation Bar */}

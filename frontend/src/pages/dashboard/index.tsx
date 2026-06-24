@@ -2096,7 +2096,7 @@ function Dashboard() {
               </div>
             )}
             {/* Two-column layout for Land Estimate Search and Result */}
-            <div id="dashboard-estimate" className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
+            <div id="dashboard-estimate" className={`grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8 ${activeDashboardTab !== 'estimate' ? 'hidden' : ''}`}>
               {/* Left: Land Estimate Search */}
               <div className="bg-white border border-amber-200 rounded-2xl shadow-sm p-4 md:p-6">
                 <h2 className="text-lg md:text-xl font-bold text-emerald-800 mb-2 flex items-center gap-2">
@@ -2131,7 +2131,7 @@ function Dashboard() {
               <div className="lg:col-span-2 space-y-4 md:space-y-6">
 
                 {/* Profile Card */}
-                <div id="dashboard-profile" className="bg-white border border-gray-100 rounded-lg shadow-sm p-4 md:p-6">
+                <div id="dashboard-profile" className={`bg-white border border-gray-100 rounded-lg shadow-sm p-4 md:p-6 ${activeDashboardTab !== 'profile' ? 'hidden' : ''}`}>
                   <div className="flex items-start justify-between mb-4">
                     <h2 className="text-lg md:text-xl font-semibold text-gray-800">Profile Overview</h2>
                     <Link
@@ -2270,7 +2270,7 @@ function Dashboard() {
                   </div>
                 </div>
 
-                <div id="dashboard-notifications" className="bg-white border border-gray-100 rounded-lg shadow-sm p-4 md:p-6">
+                <div id="dashboard-notifications" className={`bg-white border border-gray-100 rounded-lg shadow-sm p-4 md:p-6 ${activeDashboardTab !== 'notifications' ? 'hidden' : ''}`}>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-base md:text-lg font-semibold text-gray-800">Admin Notifications</h2>
                     {unreadNotifications > 0 && (
@@ -2323,7 +2323,7 @@ function Dashboard() {
             </div>
 
             {/* Subscription Plans Selector */}
-            <div id="dashboard-subscription" className="mt-10 md:mt-16 mb-8 md:mb-12">
+            <div id="dashboard-subscription" className={`mt-10 md:mt-16 mb-8 md:mb-12 ${activeDashboardTab !== 'subscription' ? 'hidden' : ''}`}>
               <SubscriptionSelector currentPlan={user.subscriptionTier} />
             </div>
 

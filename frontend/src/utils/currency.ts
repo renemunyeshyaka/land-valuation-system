@@ -113,11 +113,29 @@ export function getCurrencySymbol(code: string): string {
 }
 
 /**
- * Format an amount in the given currency
+ * Maps the i18n language code to the appropriate Intl locale for number/currency formatting.
+ * Uses document.documentElement.lang (set by LanguageSwitcher) to avoid circular dependency on i18n.
+ */
+function getFormatLocale(): string {
+  if (typeof window === 'undefined') return 'en-US';
+  const lang = document.documentElement.lang || 'rw';
+  const localeMap: Record<string, string> = {
+    en: 'en-US',
+    fr: 'fr-FR',
+    rw: 'en-RW',
+  };
+  return localeMap[lang] || 'en-US';
+}
+
+/**
+ * Format an amount in the given currency using the user's language-appropriate locale.
+ * - English users see US-formatted numbers (1,234.56)
+ * - French users see FR-formatted numbers (1 234,56)
+ * - Kinyarwanda users see RW-formatted numbers (1,234.56)
  */
 export function formatCurrency(amount: number, currencyCode: string): string {
   const symbol = getCurrencySymbol(currencyCode);
-  const locale = currencyCode === 'RWF' ? 'en-RW' : 'en-US';
+  const locale = getFormatLocale();
 
   // RWF shows no decimals, others show 2
   const decimals = currencyCode === 'RWF' ? 0 : 2;
