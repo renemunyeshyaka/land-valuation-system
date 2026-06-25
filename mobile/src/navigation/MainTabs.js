@@ -3,12 +3,13 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
 import MarketplaceScreen from '../screens/MarketplaceScreen';
 import DashboardScreen from '../screens/DashboardScreen';
+import MoreScreen from '../screens/MoreScreen';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
 import { Text } from 'react-native';
 
 const Tab = createBottomTabNavigator();
 
-const TabIcon = ({ label, icon, focused }) => (
+const TabIcon = ({ icon, focused }) => (
   <Text style={{ fontSize: focused ? 22 : 20, opacity: focused ? 1 : 0.5 }}>{icon}</Text>
 );
 
@@ -51,6 +52,13 @@ export default function MainTabs() {
         component={DashboardScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon icon="👤" focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="More"
+        component={MoreScreen}
+        options={{
+          tabBarIcon: ({ focused }) => <TabIcon icon="⚙️" focused={focused} />,
         }}
       />
     </Tab.Navigator>
