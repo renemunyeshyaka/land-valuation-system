@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
 import MarketplaceScreen from '../screens/MarketplaceScreen';
-import DashboardScreen from '../screens/DashboardScreen';
+import EnhancedDashboardScreen from '../screens/EnhancedDashboardScreen';
 import MoreScreen from '../screens/MoreScreen';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
 import { Text } from 'react-native';
@@ -49,7 +49,7 @@ export default function MainTabs() {
       />
       <Tab.Screen
         name="Dashboard"
-        component={DashboardScreen}
+        component={EnhancedDashboardScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon icon="👤" focused={focused} />,
         }}

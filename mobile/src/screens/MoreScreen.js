@@ -5,9 +5,13 @@ import { clearToken } from '../services/api';
 
 export default function MoreScreen({ navigation }) {
   const menuItems = [
+    { icon: '�', label: 'Profile', screen: 'Profile' },
     { icon: '📞', label: 'Contact Us', screen: 'Contact' },
     { icon: '💳', label: 'Subscription', screen: 'Subscription' },
+    { icon: '📋', label: 'Payment History', screen: 'PaymentHistory' },
+    { icon: '📊', label: 'Analytics', screen: 'Analytics' },
     { icon: '🔔', label: 'Notifications', screen: 'Notifications' },
+    { icon: '🏘️', label: 'Add Property', screen: 'AddProperty' },
   ];
 
   const links = [
