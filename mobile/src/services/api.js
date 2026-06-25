@@ -1,8 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://10.0.2.2:5001/api/v1'; // Android emulator -> host machine
-// For physical device, use your machine's local IP, e.g.:
-// const API_BASE_URL = 'http://192.168.x.x:5001/api/v1';
+const API_BASE_URL = 'http://192.168.1.70:5001/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

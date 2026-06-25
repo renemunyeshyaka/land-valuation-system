@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { COLORS, FONTS, SIZES, SHADOWS } from '../../constants/theme';
 import { authAPI } from '../../services/api';
+import LandValLogo from '../../components/LandValLogo';
 
 export default function RegisterScreen({ navigation }) {
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', password: '', userType: 'buyer' });
@@ -41,6 +42,7 @@ export default function RegisterScreen({ navigation }) {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
+          <LandValLogo size={64} />
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Join Land Valuation System</Text>
         </View>

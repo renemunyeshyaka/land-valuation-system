@@ -6,7 +6,7 @@ import {
 import { COLORS, FONTS, SIZES, SHADOWS } from '../constants/theme';
 import { authAPI } from '../services/api';
 
-const API_BASE = 'http://10.0.2.2:5001/api/v1';
+const API_BASE = 'http://192.168.1.70:5001/api/v1';
 
 export default function ContactScreen() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });

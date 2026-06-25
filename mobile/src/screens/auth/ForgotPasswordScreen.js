@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { COLORS, FONTS, SIZES, SHADOWS } from '../../constants/theme';
 import { authAPI } from '../../services/api';
+import LandValLogo from '../../components/LandValLogo';
 
 export default function ForgotPasswordScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -42,6 +43,9 @@ export default function ForgotPasswordScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
+        <View style={{ alignItems: 'center', marginBottom: 16 }}>
+          <LandValLogo size={64} />
+        </View>
         <Text style={styles.title}>
           {step === 1 ? 'Forgot Password' : step === 2 ? 'Reset Code' : 'New Password'}
         </Text>

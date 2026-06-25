@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { COLORS, FONTS, SIZES, SHADOWS } from '../../constants/theme';
 import { authAPI, setToken } from '../../services/api';
+import LandValLogo from '../../components/LandValLogo';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -36,9 +37,7 @@ export default function LoginScreen({ navigation }) {
       <View style={styles.inner}>
         {/* Logo & Title */}
         <View style={styles.header}>
-          <View style={styles.logo}>
-            <Text style={styles.logoIcon}>🏘️</Text>
-          </View>
+          <LandValLogo size={64} />
           <Text style={styles.title}>LandVal</Text>
           <Text style={styles.subtitle}>Land Valuation System · Rwanda</Text>
         </View>
@@ -102,8 +101,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
   header: { alignItems: 'center', marginBottom: 40 },
-  logo: { width: 64, height: 64, borderRadius: 16, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  logoIcon: { fontSize: 32 },
   title: { fontSize: SIZES.xxxl, ...FONTS.bold, color: COLORS.primary },
   subtitle: { fontSize: SIZES.sm, color: COLORS.textSecondary, marginTop: 4 },
   form: { backgroundColor: COLORS.surface, borderRadius: SIZES.radiusLg, padding: 24, ...SHADOWS.card },

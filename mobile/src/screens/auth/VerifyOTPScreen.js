@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { COLORS, FONTS, SIZES, SHADOWS } from '../../constants/theme';
 import { authAPI, setToken } from '../../services/api';
+import LandValLogo from '../../components/LandValLogo';
 
 export default function VerifyOTPScreen({ route, navigation }) {
   const { email } = route.params || {};
@@ -71,6 +72,9 @@ export default function VerifyOTPScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
+        <View style={{ alignItems: 'center', marginBottom: 8 }}>
+          <LandValLogo size={64} />
+        </View>
         <Text style={styles.title}>Verify Code</Text>
         <Text style={styles.subtitle}>
           Enter the 6-digit code sent to{'\n'}{email}
