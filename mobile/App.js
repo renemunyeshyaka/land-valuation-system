@@ -1,29 +1,14 @@
 
 import React from 'react';
-import { SafeAreaView, Text, View, StyleSheet } from 'react-native';
-import Footer from './components/Footer';
+import { SafeAreaView, StatusBar } from 'react-native';
+import AppNavigator from './src/navigation/AppNavigator';
+import { COLORS } from './src/constants/theme';
 
 export default function App() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Land Valuation Mobile</Text>
-      </View>
-      <Footer />
+    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <AppNavigator />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: 60, // Space for footer
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#064e3b',
-  },
-});
