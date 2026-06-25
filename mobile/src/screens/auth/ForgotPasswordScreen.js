@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
-import { COLORS, FONTS, SIZES, SHADOWS } from '../constants/theme';
-import { authAPI } from '../services/api';
+import { COLORS, FONTS, SIZES, SHADOWS } from '../../constants/theme';
+import { authAPI } from '../../services/api';
 
 export default function ForgotPasswordScreen({ navigation }) {
   const [email, setEmail] = useState('');
