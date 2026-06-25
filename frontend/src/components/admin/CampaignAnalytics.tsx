@@ -52,7 +52,7 @@ export default function CampaignAnalytics() {
         toast.error(json.error?.message || 'Failed to load analytics');
       }
     } catch {
-      toast.error('Failed to load campaign analytics');
+      toast.error(t('toast.campaignAnalyticsLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -61,11 +61,11 @@ export default function CampaignAnalytics() {
   useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
 
   if (loading) {
-    return <div className="text-center py-8 text-gray-500">Loading analytics...</div>;
+    return <div className="text-center py-8 text-gray-500">{t('common.loading')}</div>;
   }
 
   if (!data) {
-    return <div className="text-center py-8 text-gray-500">No analytics data available.</div>;
+    return <div className="text-center py-8 text-gray-500">{t('common.noData')}</div>;
   }
 
   const statCard = (label: string, value: string | number, sub?: string, color = 'text-gray-800') => (
@@ -86,7 +86,7 @@ export default function CampaignAnalytics() {
             activeTab === 'overview' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
-          Performance Overview
+          {t('admin.analyticsOverview')}
         </button>
         <button
           onClick={() => setActiveTab('insights')}
@@ -94,7 +94,7 @@ export default function CampaignAnalytics() {
             activeTab === 'insights' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
-          AI Insights
+          {t('admin.analyticsInsights')}
         </button>
       </div>
 
@@ -102,21 +102,21 @@ export default function CampaignAnalytics() {
         <>
           {/* Funnel metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            {statCard('Total Sent', data.total_sent.toLocaleString(), `${data.total_campaigns} campaigns`)}
-            {statCard('Opened', data.total_opened.toLocaleString(), `${data.open_rate.toFixed(1)}% open rate`, 'text-blue-600')}
-            {statCard('Clicked', data.total_clicked.toLocaleString(), `${data.click_rate.toFixed(1)}% click rate`, 'text-purple-600')}
-            {statCard('Converted', data.total_converted.toLocaleString(), `${data.conversion_rate.toFixed(1)}% conversion`, 'text-green-600')}
+            {statCard(t('admin.analyticsSent'), data.total_sent.toLocaleString(), `${data.total_campaigns} campaigns`)}
+            {statCard(t('admin.analyticsOpened'), data.total_opened.toLocaleString(), `${data.open_rate.toFixed(1)}% open rate`, 'text-blue-600')}
+            {statCard(t('admin.analyticsClicked'), data.total_clicked.toLocaleString(), `${data.click_rate.toFixed(1)}% click rate`, 'text-purple-600')}
+            {statCard(t('admin.analyticsConverted'), data.total_converted.toLocaleString(), `${data.conversion_rate.toFixed(1)}% conversion`, 'text-green-600')}
           </div>
 
           {/* Funnel visualization */}
           <div className="bg-white rounded-xl border p-6 mb-6">
-            <h3 className="font-semibold text-gray-800 mb-4">Conversion Funnel</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">{t('admin.analyticsFunnel')}</h3>
             <div className="space-y-3">
               {[
-                { label: 'Sent', count: data.total_sent, pct: 100, color: 'bg-blue-400' },
-                { label: 'Opened', count: data.total_opened, pct: data.open_rate, color: 'bg-indigo-400' },
-                { label: 'Clicked', count: data.total_clicked, pct: data.click_rate, color: 'bg-purple-400' },
-                { label: 'Converted', count: data.total_converted, pct: data.conversion_rate, color: 'bg-emerald-400' },
+                { label: t('admin.analyticsSent'), count: data.total_sent, pct: 100, color: 'bg-blue-400' },
+                { label: t('admin.analyticsOpened'), count: data.total_opened, pct: data.open_rate, color: 'bg-indigo-400' },
+                { label: t('admin.analyticsClicked'), count: data.total_clicked, pct: data.click_rate, color: 'bg-purple-400' },
+                { label: t('admin.analyticsConverted'), count: data.total_converted, pct: data.conversion_rate, color: 'bg-emerald-400' },
               ].map(item => (
                 <div key={item.label}>
                   <div className="flex justify-between text-sm mb-1">
@@ -136,13 +136,13 @@ export default function CampaignAnalytics() {
 
           {/* Status breakdown */}
           <div className="bg-white rounded-xl border p-6">
-            <h3 className="font-semibold text-gray-800 mb-4">Campaign Status</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">{t('admin.analyticsStatus')}</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { label: 'Running', count: data.status_breakdown.running, color: 'text-green-600 bg-green-50' },
-                { label: 'Draft', count: data.status_breakdown.draft, color: 'text-gray-600 bg-gray-50' },
-                { label: 'Completed', count: data.status_breakdown.completed, color: 'text-teal-600 bg-teal-50' },
-                { label: 'Paused', count: data.status_breakdown.paused, color: 'text-yellow-600 bg-yellow-50' },
+                { label: t('admin.campaignRunning'), count: data.status_breakdown.running, color: 'text-green-600 bg-green-50' },
+                { label: t('admin.campaignDraft'), count: data.status_breakdown.draft, color: 'text-gray-600 bg-gray-50' },
+                { label: t('admin.campaignCompleted'), count: data.status_breakdown.completed, color: 'text-teal-600 bg-teal-50' },
+                { label: t('admin.campaignPaused'), count: data.status_breakdown.paused, color: 'text-yellow-600 bg-yellow-50' },
               ].map(item => (
                 <div key={item.label} className={`${item.color} rounded-lg p-3 text-center`}>
                   <p className="text-2xl font-bold">{item.count}</p>
@@ -158,28 +158,28 @@ export default function CampaignAnalytics() {
           {data.ai_insights ? (
             <div className="space-y-6">
               <div>
-                <h3 className="font-semibold text-gray-800 mb-2">Summary</h3>
+                <h3 className="font-semibold text-gray-800 mb-2">{t('admin.analyticsSummary')}</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">{data.ai_insights.summary}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-emerald-50 rounded-lg p-4">
-                  <p className="text-xs text-emerald-600 font-medium mb-1">Top Segment</p>
+                  <p className="text-xs text-emerald-600 font-medium mb-1">{t('admin.analyticsTopSegment')}</p>
                   <p className="text-lg font-bold text-emerald-800">{data.ai_insights.top_segment}</p>
                 </div>
                 <div className="bg-indigo-50 rounded-lg p-4">
-                  <p className="text-xs text-indigo-600 font-medium mb-1">Overall Rate</p>
+                  <p className="text-xs text-indigo-600 font-medium mb-1">{t('admin.analyticsOverallRate')}</p>
                   <p className="text-lg font-bold text-indigo-800">{data.conversion_rate.toFixed(1)}%</p>
                 </div>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800 mb-2">AI Recommendation</h3>
+                <h3 className="font-semibold text-gray-800 mb-2">{t('admin.analyticsRecommendation')}</h3>
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
                   <p className="text-blue-800 text-sm leading-relaxed">{data.ai_insights.recommendation}</p>
                 </div>
               </div>
               {data.ai_insights.segment_scores && Object.keys(data.ai_insights.segment_scores).length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-gray-800 mb-2">Segment Performance</h3>
+                  <h3 className="font-semibold text-gray-800 mb-2">{t('admin.analyticsSegmentPerformance')}</h3>
                   <div className="space-y-2">
                     {Object.entries(data.ai_insights.segment_scores).map(([segment, score]) => (
                       <div key={segment} className="flex items-center gap-3">
@@ -197,7 +197,7 @@ export default function CampaignAnalytics() {
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-400 text-lg mb-2">🤖</p>
-              <p className="text-gray-500">No AI insights available yet.</p>
+              <p className="text-gray-500">{t('admin.analyticsNoInsights')}</p>
               <p className="text-xs text-gray-400 mt-1">Launch a campaign and collect engagement data to generate insights.</p>
             </div>
           )}

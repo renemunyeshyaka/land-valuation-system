@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import MainNavbar from '../../components/MainNavbar';
 import ExchangeRateDisplay from '../../components/ExchangeRateDisplay';
 import { getPaymentSummary, getPaymentHistory, getPaymentDetail, getRefundRequests, createRefundRequest } from '../../utils/paymentApi';
@@ -78,6 +79,7 @@ const normalizePayment = (txn: any): Payment => ({
 });
 
 const PaymentHistory: React.FC = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
@@ -205,9 +207,9 @@ const PaymentHistory: React.FC = () => {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(downloadUrl);
-      toast.success(`Receipt downloaded!`);
+      toast.success(t('toast.receiptDownloaded'));
     } catch (err: any) {
-      toast.error(err.message || 'Download failed');
+      toast.error(err.message || t('toast.downloadFailed'));
     }
   };
 
@@ -267,11 +269,11 @@ const PaymentHistory: React.FC = () => {
     const reason = refundReason.trim();
 
     if (!Number.isFinite(amount) || amount <= 0) {
-      toast.error('Enter a valid refund amount.');
+      toast.error(t('toast.refundAmountInvalid'));
       return;
     }
     if (reason.length < 8) {
-      toast.error('Refund reason must be at least 8 characters.');
+      toast.error(t('toast.refundReasonRequired'));
       return;
     }
 
@@ -293,7 +295,7 @@ const PaymentHistory: React.FC = () => {
         reason,
       });
 
-      toast.success('Refund request submitted.');
+      toast.success(t('toast.refundSubmitted'));
       await loadRefundRequests(refundStatus);
       setRefundReason('');
     } catch (err: any) {

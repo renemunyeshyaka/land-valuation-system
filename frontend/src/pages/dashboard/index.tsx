@@ -141,7 +141,7 @@ function Dashboard() {
           try {
             const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
             if (!accessToken) {
-              toast.error('Not authenticated. Please log in again.');
+              toast.error(t('toast.notAuthenticated'));
               return;
             }
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/properties/${updatedProperty.id}`, {
@@ -155,12 +155,12 @@ function Dashboard() {
             if (!response.ok) {
               throw new Error('Failed to update property');
             }
-            toast.success('Property updated successfully!');
+            toast.success(t('toast.propertyUpdated'));
             handleCloseEditModal();
             // Refresh properties list
             fetchProperties(propertyTab);
           } catch (err: any) {
-            toast.error(err.message || 'Failed to update property');
+            toast.error(err.message || t('toast.propertyUpdateFailed'));
           }
         };
       // --- Location Data for Property Modal ---
@@ -322,7 +322,7 @@ function Dashboard() {
     try {
       const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
       if (!accessToken) {
-        toast.error('Not authenticated. Please sign in again.');
+        toast.error(t('toast.notAuthenticated'));
         return;
       }
 
@@ -344,7 +344,7 @@ function Dashboard() {
         throw new Error('Failed to update saved properties');
       }
 
-      toast.success(isSaved ? 'Property removed from saved list.' : 'Property saved successfully.');
+      toast.success(isSaved ? t('toast.propertyRemoved') : t('toast.propertySaved'));
       await fetchProperties(propertyTab, propertyPage);
     } catch (err: any) {
       toast.error(err.message || 'Failed to update saved properties');
@@ -608,23 +608,23 @@ function Dashboard() {
   const submitRefundRequest = async () => {
     const payment = refundablePayments.find((txn) => String(txn.id || txn.reference || '') === selectedRefundPaymentId);
     if (!payment) {
-      toast.error('Please select a payment first.');
+      toast.error(t('toast.refundSelectPayment'));
       return;
     }
 
     if (!refundReason.trim() || refundReason.trim().length < 8) {
-      toast.error('Please provide a clear reason (at least 8 characters).');
+      toast.error(t('toast.refundReasonRequired'));
       return;
     }
 
     const paymentAmount = Number(payment.amount || payment.amount_rwf || 0);
     const requestedAmount = Number(refundAmount || 0);
     if (requestedAmount <= 0) {
-      toast.error('Refund amount must be greater than zero.');
+      toast.error(t('toast.refundAmountInvalid'));
       return;
     }
     if (requestedAmount > paymentAmount) {
-      toast.error('Refund amount cannot exceed paid amount.');
+      toast.error(t('toast.refundAmountExceeded'));
       return;
     }
 
@@ -663,7 +663,7 @@ function Dashboard() {
 
     await fetchRefundRequests();
     setRefundReason('');
-    toast.success('Refund request submitted successfully.');
+    toast.success(t('toast.refundSubmitted'));
   };
 
   // Open modal and fetch properties for default tab
@@ -856,7 +856,7 @@ function Dashboard() {
     setAuthRedirecting(true);
     setLoading(false);
     clearAuth();
-    toast.error('Session expired. Please sign in again.');
+    toast.error(t('toast.sessionExpired'));
     router.replace('/auth/login');
   };
 
@@ -872,7 +872,7 @@ function Dashboard() {
     console.error('Profile fetch failed:', error);
     setLoading(false);
     // Don't redirect - show a useful error instead
-    toast.error('Unable to load profile. Please refresh the page or try again.');
+    toast.error(t('toast.profileLoadError'));
   };
 
   const fetchProfileWithTimeout = async (accessToken: string, timeoutMs = 12000) => {
@@ -1015,7 +1015,7 @@ function Dashboard() {
           }
           // Block banned, inactive, or deleted users (if backend provides status)
           if (payload.data.status && payload.data.status !== 'active') {
-            toast.error('Account is not active. Contact support.');
+            toast.error(t('toast.accountInactive'));
             clearAuthAndRedirectToLogin();
             return;
           }
@@ -1030,7 +1030,7 @@ function Dashboard() {
             }
           } else if (router.pathname.startsWith('/admin')) {
             // Non-admin trying to access admin dashboard
-            toast.error('Access denied. Admins only.');
+            toast.error(t('toast.accessDenied'));
             router.replace('/dashboard');
             return;
           }

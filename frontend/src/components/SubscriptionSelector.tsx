@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import CurrencySelector from './CurrencySelector';
 import { Currency, getCurrencies, getPreferredCurrency, findCurrency, convertFromRwf, formatCurrency } from '../utils/currency';
 
@@ -128,6 +129,7 @@ export default function SubscriptionSelector({
   currentPlan = 'free',
   onSubscribe
 }: SubscriptionSelectorProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -177,7 +179,7 @@ export default function SubscriptionSelector({
 
   const handleSubscribe = async (planId: string) => {
     if (planId === currentPlan) {
-      toast.success('You are already on this plan');
+      toast.success(t('subscription.alreadyOnPlan'));
       return;
     }
 
@@ -189,9 +191,9 @@ export default function SubscriptionSelector({
         // Default: redirect to payment page with preferred currency
         router.push(`/subscription/checkout?plan=${planId}&billing=${billingPeriod}&currency=${preferredCurrency}`);
       }
-      toast.success(`Subscribed to ${planId} plan!`);
+      toast.success(t('subscription.subscribedTo', { plan: planId }));
     } catch (error: any) {
-      toast.error(error.message || 'Failed to subscribe');
+      toast.error(error.message || t('subscription.subscribeFailed'));
     } finally {
       setLoadingPlan(null);
     }

@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { Currency, getCurrencies, formatCurrency, clearCurrencyCache } from '../../utils/currency';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
 export default function CurrencyManagement() {
+  const { t } = useTranslation();
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -17,7 +19,7 @@ export default function CurrencyManagement() {
       const data = await getCurrencies(token);
       setCurrencies(data);
     } catch (err) {
-      toast.error('Failed to load currencies');
+      toast.error(t('toast.currencyLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -31,7 +33,7 @@ export default function CurrencyManagement() {
   const handleSyncRates = async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
     if (!token) {
-      toast.error('Not authenticated');
+      toast.error(t('toast.notAuthenticated'));
       return;
     }
 
@@ -47,7 +49,7 @@ export default function CurrencyManagement() {
         throw new Error(data?.message || 'Sync failed');
       }
 
-      toast.success('Exchange rates synced successfully!');
+      toast.success(t('toast.currencySyncSuccess'));
       clearCurrencyCache();
       await fetchCurrencies(token);
     } catch (err: any) {
@@ -70,13 +72,13 @@ export default function CurrencyManagement() {
   const saveRate = async (currency: Currency) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
     if (!token) {
-      toast.error('Not authenticated');
+      toast.error(t('toast.notAuthenticated'));
       return;
     }
 
     const newRate = parseFloat(editRate);
     if (isNaN(newRate) || newRate <= 0) {
-      toast.error('Please enter a valid positive number');
+      toast.error(t('toast.invalidPositiveNumber'));
       return;
     }
 

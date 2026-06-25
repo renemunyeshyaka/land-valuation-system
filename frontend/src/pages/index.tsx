@@ -108,7 +108,10 @@ const Home: React.FC = () => {
             }).setView([-1.9441, 30.0619], 10);
             
             window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-              subdomains: 'abcd'
+              subdomains: 'abcd',
+              updateWhenIdle: true,
+              updateWhenZooming: false,
+              keepBuffer: 4
             }).addTo(map);
             
             // Markers for major cities
@@ -162,7 +165,8 @@ const Home: React.FC = () => {
         {/* Inline critical custom styles for SSR/hydration match */}
         <style>{`
           body { font-family: 'Inter', sans-serif; background-color: #fafaf9; }
-          .map-preview { height: 280px; width: 100%; border-radius: 1.5rem; overflow: hidden; box-shadow: 0 12px 30px -10px rgba(0,40,20,0.2); }
+          .map-preview { height: 280px; width: 100%; border-radius: 1.5rem; overflow: hidden; box-shadow: 0 12px 30px -10px rgba(0,40,20,0.2); isolation: isolate; will-change: transform; contain: layout style paint; }
+          .map-preview .leaflet-container { width: 100% !important; height: 100% !important; }
           .hero-gradient { background: linear-gradient(112deg, #0b3b2c 0%, #1f6e4a 100%); }
           .feature-card { transition: all 0.15s ease; }
           .feature-card:hover { transform: translateY(-4px); box-shadow: 0 25px 35px -12px rgba(0,80,30,0.25); }

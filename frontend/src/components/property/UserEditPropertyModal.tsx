@@ -119,7 +119,7 @@ export default function UserEditPropertyModal({
     setError(null);
     try {
       await onEdit(editForm, images, documents);
-      toast.success('Property updated successfully!');
+      toast.success(t('toast.propertyUpdated'));
       onClose();
     } catch (err: any) {
       setError(err.message || 'Failed to update property');

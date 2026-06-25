@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { syncLanguageFromBackend } from '../../utils/i18n';
 
 /**
  * OTP VERIFICATION PAGE · Land Valuation System
@@ -117,6 +118,9 @@ const VerifyOTP: React.FC = () => {
         localStorage.setItem('refresh_token', data.data.refresh_token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
       }
+
+      // Sync user's saved language preference from backend immediately
+      syncLanguageFromBackend();
 
       toast.success(t('auth.loginSuccessful'));
       

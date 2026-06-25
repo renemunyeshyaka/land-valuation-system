@@ -2,7 +2,7 @@ import { Html, Head, Main, NextScript } from 'next/document'
 
 export default function Document() {
   return (
-    <Html lang="en">
+    <Html lang="rw">
       <Head>
         {/* Font Awesome 6.0.0-beta3 - Icon System */}
         <link

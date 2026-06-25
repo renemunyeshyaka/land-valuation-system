@@ -81,9 +81,27 @@ func runPipeline(ctx context.Context, leadRepo *repository.LeadRepository, aiSer
 	var totalEnriched int
 
 	// ==========================================
-	// Step 1: Discover leads from existing users
+	// Step 1: Discover leads from external sources
 	// ==========================================
-	log.Println("Step 1/4: Discovering leads from existing users...")
+	log.Println("Step 1/4: Discovering leads from external sources...")
+	scraper := services.NewScraperService()
+
+	// Discover from web scrapers
+	scrapedLeads, err := scraper.DiscoverLeads(ctx)
+	if err != nil {
+		log.Printf("⚠️  Scraper discovery warning: %v", err)
+	}
+	for _, lead := range scrapedLeads {
+		created, err := leadRepo.Create(ctx, lead)
+		if err != nil {
+			log.Printf("⚠️  Failed to create scraped lead: %v", err)
+			continue
+		}
+		totalDiscovered++
+		log.Printf("  ✓ Scraped lead: %s", created.Email)
+	}
+
+	// Discover from existing users
 	userLeads, err := discoverFromUsers(ctx, db)
 	if err != nil {
 		log.Printf("⚠️  User discovery warning: %v", err)
@@ -100,11 +118,30 @@ func runPipeline(ctx context.Context, leadRepo *repository.LeadRepository, aiSer
 		log.Printf("  → %d leads discovered from existing users", len(userLeads))
 	}
 
+	// Discover from source-specific sample data
+	for _, source := range []string{"rlmua", "rdb"} {
+		sampleLeads := services.GenerateSampleLeadsForSource(source)
+		for _, lead := range sampleLeads {
+			created, err := leadRepo.Create(ctx, lead)
+			if err != nil {
+				log.Printf("⚠️  Failed to create %s sample lead: %v", source, err)
+				continue
+			}
+			totalDiscovered++
+			log.Printf("  ✓ %s sample lead: %s %s (%s)", source, created.FirstName, created.LastName, created.Role)
+		}
+	}
+
 	// ==========================================
 	// Step 2: Discover leads from test/seed data
 	// ==========================================
 	log.Println("Step 2/4: Generating sample leads for testing...")
 	sampleLeads := generateSampleLeads()
+
+	// Deduplicate before inserting (email/phone unique constraints)
+	sampleLeads = services.DeduplicateLeads(sampleLeads)
+	log.Printf("  → %d unique sample leads after dedup", len(sampleLeads))
+
 	for _, lead := range sampleLeads {
 		created, err := leadRepo.Create(ctx, lead)
 		if err != nil {

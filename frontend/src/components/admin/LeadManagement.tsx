@@ -72,7 +72,7 @@ export default function LeadManagement() {
         toast.error(data.error?.message || 'Failed to load leads');
       }
     } catch {
-      toast.error('Failed to load leads');
+      toast.error(t('toast.leadLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -91,13 +91,13 @@ export default function LeadManagement() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Lead enriched successfully');
+        toast.success(t('toast.leadEnriched'));
         fetchLeads();
       } else {
         toast.error(data.error?.message || 'Enrichment failed');
       }
     } catch {
-      toast.error('Enrichment request failed');
+      toast.error(t('toast.leadEnrichFailed'));
     } finally {
       setEnrichingId(null);
     }
@@ -120,7 +120,7 @@ export default function LeadManagement() {
         toast.error(data.error?.message || 'Re-scoring failed');
       }
     } catch {
-      toast.error('Re-scoring request failed');
+      toast.error(t('toast.leadRescoreFailed'));
     } finally {
       setRescoringId(null);
     }

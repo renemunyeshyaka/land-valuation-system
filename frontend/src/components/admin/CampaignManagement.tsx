@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import CampaignForm from './CampaignForm';
+import type { CampaignFormData } from './CampaignForm';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
@@ -72,7 +74,7 @@ export default function CampaignManagement() {
         toast.error(data.error?.message || 'Failed to load campaigns');
       }
     } catch {
-      toast.error('Failed to load campaigns');
+      toast.error(t('toast.campaignLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -81,7 +83,7 @@ export default function CampaignManagement() {
   useEffect(() => { fetchCampaigns(); }, [fetchCampaigns]);
 
   const handleCreate = async () => {
-    if (!formData.name.trim()) { toast.error('Campaign name is required'); return; }
+    if (!formData.name.trim()) { toast.error(t('toast.campaignNameRequired')); return; }
     const token = getToken();
     if (!token) return;
 
@@ -96,7 +98,7 @@ export default function CampaignManagement() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Campaign created');
+        toast.success(t('toast.campaignCreated'));
         setShowCreateForm(false);
         setFormData({ name: '', description: '', campaign_type: 'owner_outreach', channel: 'email', language: 'all' });
         fetchCampaigns();
@@ -104,7 +106,7 @@ export default function CampaignManagement() {
         toast.error(data.error?.message || 'Failed to create campaign');
       }
     } catch {
-      toast.error('Failed to create campaign');
+      toast.error(t('toast.campaignCreateFailed'));
     }
   };
 
@@ -118,13 +120,13 @@ export default function CampaignManagement() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Campaign launched');
+        toast.success(t('toast.campaignLaunched'));
         fetchCampaigns();
       } else {
         toast.error(data.error?.message || 'Launch failed');
       }
     } catch {
-      toast.error('Launch request failed');
+      toast.error(t('toast.campaignLaunchFailed'));
     }
   };
 
@@ -138,13 +140,13 @@ export default function CampaignManagement() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Campaign paused');
+        toast.success(t('toast.campaignPaused'));
         fetchCampaigns();
       } else {
         toast.error(data.error?.message || 'Pause failed');
       }
     } catch {
-      toast.error('Pause request failed');
+      toast.error(t('toast.campaignPauseFailed'));
     }
   };
 
@@ -159,13 +161,13 @@ export default function CampaignManagement() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Campaign deleted');
+        toast.success(t('toast.campaignDeleted'));
         fetchCampaigns();
       } else {
         toast.error(data.error?.message || 'Delete failed');
       }
     } catch {
-      toast.error('Delete request failed');
+      toast.error(t('toast.campaignDeleteFailed'));
     }
   };
 
@@ -213,78 +215,14 @@ export default function CampaignManagement() {
       </div>
 
       {showCreateForm && (
-        <div className="bg-gray-50 border rounded-lg p-4 mb-4">
-          <h3 className="font-semibold mb-3">Create Campaign</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gray-500 block mb-1">Name</label>
-              <input
-                className="border rounded px-3 py-2 text-sm w-full"
-                value={formData.name}
-                onChange={e => setFormData(f => ({ ...f, name: e.target.value }))}
-                placeholder="Campaign name"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 block mb-1">Type</label>
-              <select
-                className="border rounded px-3 py-2 text-sm w-full"
-                value={formData.campaign_type}
-                onChange={e => setFormData(f => ({ ...f, campaign_type: e.target.value }))}
-              >
-                <option value="welcome">Welcome</option>
-                <option value="owner_outreach">Owner Outreach</option>
-                <option value="agent_onboarding">Agent Onboarding</option>
-                <option value="reactivation">Reactivation</option>
-                <option value="digest">Market Digest</option>
-                <option value="seasonal">Seasonal</option>
-              </select>
-            </div>
-            <div className="col-span-2">
-              <label className="text-xs text-gray-500 block mb-1">Description</label>
-              <textarea
-                className="border rounded px-3 py-2 text-sm w-full"
-                value={formData.description}
-                onChange={e => setFormData(f => ({ ...f, description: e.target.value }))}
-                placeholder="Campaign description"
-                rows={2}
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 block mb-1">Channel</label>
-              <select
-                className="border rounded px-3 py-2 text-sm w-full"
-                value={formData.channel}
-                onChange={e => setFormData(f => ({ ...f, channel: e.target.value }))}
-              >
-                <option value="email">Email</option>
-                <option value="whatsapp">WhatsApp</option>
-                <option value="both">Both</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 block mb-1">Language</label>
-              <select
-                className="border rounded px-3 py-2 text-sm w-full"
-                value={formData.language}
-                onChange={e => setFormData(f => ({ ...f, language: e.target.value }))}
-              >
-                <option value="all">All Languages</option>
-                <option value="en">English</option>
-                <option value="fr">French</option>
-                <option value="rw">Kinyarwanda</option>
-              </select>
-            </div>
-          </div>
-          <div className="flex gap-2 mt-3">
-            <button onClick={handleCreate} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-sm">
-              Create
-            </button>
-            <button onClick={() => setShowCreateForm(false)} className="border px-4 py-2 rounded text-sm hover:bg-gray-50">
-              Cancel
-            </button>
-          </div>
-        </div>
+        <CampaignForm
+          formData={formData}
+          onChange={setFormData}
+          onSubmit={handleCreate}
+          onCancel={() => setShowCreateForm(false)}
+          submitLabel="Create"
+          title="Create Campaign"
+        />
       )}
 
       {loading ? (

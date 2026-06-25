@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
@@ -14,6 +15,7 @@ interface AIConfig {
 }
 
 export default function AITargetingConfig() {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<AIConfig | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,7 +33,7 @@ export default function AITargetingConfig() {
       if (json.success) setConfig(json.data);
       else toast.error(json.error?.message || 'Failed to load config');
     } catch {
-      toast.error('Failed to load configuration');
+      toast.error(t('toast.failedToLoadConfig'));
     } finally {
       setLoading(false);
     }

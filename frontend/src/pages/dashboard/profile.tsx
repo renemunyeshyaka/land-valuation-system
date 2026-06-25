@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '../../utils/tokenRefresh';
 
 interface ProfileData {
@@ -26,6 +27,7 @@ interface ProfileData {
 }
 
 const Profile: React.FC = () => {
+  const { t } = useTranslation();
 
   // State for "View Properties" modal and selector
   const [showPropertiesModal, setShowPropertiesModal] = useState(false);
@@ -138,7 +140,7 @@ const Profile: React.FC = () => {
     if (mode === 'off') {
       localStorage.removeItem('admin_experience_mode');
       setAdminExperienceMode('off');
-      toast.success('Admin mode restored');
+      toast.success(t('toast.adminModeRestored'));
       return;
     }
 
@@ -149,9 +151,9 @@ const Profile: React.FC = () => {
     setAdminExperienceMode(mode);
 
     if (mode === 'user') {
-      toast.success('Switched to user experience mode');
+      toast.success(t('toast.userModeSwitched'));
     } else {
-      toast.success('Switched to Ultimate non-expiry experience mode');
+      toast.success(t('toast.ultimateModeSwitched'));
     }
 
     router.push('/dashboard');
@@ -306,12 +308,12 @@ const Profile: React.FC = () => {
       } else {
         console.error('Failed to load profile:', response.status);
         setUserLoading(false);
-        toast.error('Failed to load profile data');
+        toast.error(t('toast.failedToLoadProfile'));
       }
     } catch (error) {
       console.error('Failed to load profile:', error);
       setUserLoading(false);
-      toast.error('Failed to load profile data');
+      toast.error(t('toast.failedToLoadProfile'));
     }
   };
 
@@ -319,12 +321,12 @@ const Profile: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        toast.error('Profile picture must be less than 2 MB');
+        toast.error(t('toast.profilePictureSize'));
         return;
       }
 
       if (!file.type.startsWith('image/')) {
-        toast.error('Please upload an image file');
+        toast.error(t('toast.uploadImageFile'));
         return;
       }
 
@@ -333,7 +335,7 @@ const Profile: React.FC = () => {
         const dataUrl = event.target?.result as string;
         setProfilePicturePreview(dataUrl);
         setFormData(prev => ({ ...prev, profilePicture: dataUrl }));
-        toast.success('Profile picture updated');
+        toast.success(t('toast.profilePictureUpdated'));
       };
       reader.readAsDataURL(file);
     }
@@ -365,7 +367,7 @@ const Profile: React.FC = () => {
     e.preventDefault();
     
     if (!validateForm()) {
-      toast.error('Please fix the errors in the form');
+      toast.error(t('toast.fillAllFields'));
       return;
     }
     
@@ -395,7 +397,7 @@ const Profile: React.FC = () => {
       if (!response.ok) {
         if (response.status === 401) {
           // Token expired - don't logout, just show error and let user retry
-          toast.error('Session expired. Please reload the page and try again.');
+          toast.error(t('toast.sessionExpired'));
         } else {
           const data = await response.json();
           throw new Error(data.message || 'Failed to update profile');
@@ -422,7 +424,7 @@ const Profile: React.FC = () => {
         }
       }
 
-      toast.success('Profile updated successfully!');
+      toast.success(t('toast.settingsUpdated'));
       setTimeout(() => router.push('/dashboard'), 1500);
       
     } catch (error: any) {
