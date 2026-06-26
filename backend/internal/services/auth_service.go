@@ -381,12 +381,14 @@ func (s *AuthService) RequestPasswordReset(ctx context.Context, email string) er
 	user, err := s.userRepo.GetByEmail(ctx, email)
 	if err != nil {
 		// Don't reveal if email exists
+		log.Printf("[PasswordReset] user not found for email %s: %v", email, err)
 		return nil
 	}
 
 	// Generate secure reset token
 	token, err := generateSecureToken(32)
 	if err != nil {
+		log.Printf("[PasswordReset] failed to generate token for user %d: %v", user.ID, err)
 		return nil // Don't reveal error
 	}
 	expiresAt := time.Now().Add(1 * time.Hour)
@@ -394,6 +396,7 @@ func (s *AuthService) RequestPasswordReset(ctx context.Context, email string) er
 	// Store token and expiry
 	err = s.userRepo.UpdatePasswordResetToken(ctx, fmt.Sprintf("%d", user.ID), token, expiresAt)
 	if err != nil {
+		log.Printf("[PasswordReset] failed to store token for user %d: %v", user.ID, err)
 		return nil // Don't reveal error
 	}
 
@@ -402,7 +405,12 @@ func (s *AuthService) RequestPasswordReset(ctx context.Context, email string) er
 	if firstName == "" {
 		firstName = "User"
 	}
-	_ = s.emailService.SendPasswordResetEmail(user.Email, firstName, token)
+	if err := s.emailService.SendPasswordResetEmail(user.Email, firstName, token); err != nil {
+		log.Printf("[PasswordReset] failed to send email to %s (user %d): %v", user.Email, user.ID, err)
+		// Still return nil to avoid leaking info — the token is stored and can be retried
+		return nil
+	}
+	log.Printf("[PasswordReset] reset email sent successfully to %s (user %d)", user.Email, user.ID)
 	// Always return nil to avoid leaking info
 	return nil
 }

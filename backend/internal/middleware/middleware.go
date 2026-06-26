@@ -85,8 +85,14 @@ func SecurityHeaders() gin.HandlerFunc {
 
 // RateLimiter implements sliding window rate limiting using Redis.
 // It limits requests per IP address based on configured window and max requests.
-// General API: 100 requests per 15 minute window
-// Auth endpoints: 5 requests per 15 minute window (stricter)
+// General API: 100 requests per 15 minute window (configurable via env)
+// Auth endpoints: 20 requests per 15 minute window (configurable via env)
+//
+// Env vars:
+//   RATE_LIMIT_MAX_REQUESTS  — general max requests (default: 100)
+//   RATE_LIMIT_WINDOW_MS     — general window in ms (default: 900000 / 15 min)
+//   AUTH_RATE_LIMIT_MAX_REQUESTS — auth max requests (default: 20)
+//   AUTH_RATE_LIMIT_WINDOW_MS    — auth window in ms (default: 900000 / 15 min)
 func RateLimiter(redisClient interface{}) gin.HandlerFunc {
 	rdb, ok := redisClient.(*redis.Client)
 	if !ok || rdb == nil {
@@ -94,15 +100,30 @@ func RateLimiter(redisClient interface{}) gin.HandlerFunc {
 		return func(c *gin.Context) { c.Next() }
 	}
 
-	// Get config from env with defaults
-	generalLimit, _ := strconv.Atoi(os.Getenv("RATE_LIMIT"))
+	// General rate limit config
+	generalLimit, _ := strconv.Atoi(os.Getenv("RATE_LIMIT_MAX_REQUESTS"))
+	if generalLimit <= 0 {
+		generalLimit, _ = strconv.Atoi(os.Getenv("RATE_LIMIT"))
+	}
 	if generalLimit <= 0 {
 		generalLimit = 100
 	}
-	generalWindow := 15 * 60 // 15 minutes in seconds
+	generalWindowMs, _ := strconv.Atoi(os.Getenv("RATE_LIMIT_WINDOW_MS"))
+	if generalWindowMs <= 0 {
+		generalWindowMs = 15 * 60 * 1000 // 15 minutes
+	}
+	generalWindow := generalWindowMs / 1000 // convert to seconds
 
-	authLimit := 5
-	authWindow := 15 * 60 // 15 minutes
+	// Auth rate limit config
+	authLimit, _ := strconv.Atoi(os.Getenv("AUTH_RATE_LIMIT_MAX_REQUESTS"))
+	if authLimit <= 0 {
+		authLimit = 20
+	}
+	authWindowMs, _ := strconv.Atoi(os.Getenv("AUTH_RATE_LIMIT_WINDOW_MS"))
+	if authWindowMs <= 0 {
+		authWindowMs = 15 * 60 * 1000 // 15 minutes
+	}
+	authWindow := authWindowMs / 1000 // convert to seconds
 
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
@@ -134,11 +155,22 @@ func RateLimiter(redisClient interface{}) gin.HandlerFunc {
 		}
 
 		if int(count) >= limit {
+			// Calculate actual remaining wait time — the oldest entry's age
+			oldest, err := rdb.ZRangeWithScores(ctx, key, 0, 0).Result()
+			retryAfter := window
+			if err == nil && len(oldest) > 0 {
+				elapsed := now - int64(oldest[0].Score)
+				remaining := window - int(elapsed)
+				if remaining > 0 {
+					retryAfter = remaining
+				}
+			}
+			c.Header("Retry-After", strconv.Itoa(retryAfter))
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"success": false,
 				"error": gin.H{
 					"message": "Rate limit exceeded. Please try again later.",
-					"details": "Too many requests. Try again in " + strconv.Itoa(window) + " seconds.",
+					"details": "Too many requests. Try again in " + strconv.Itoa(retryAfter) + " seconds.",
 				},
 			})
 			c.Abort()
