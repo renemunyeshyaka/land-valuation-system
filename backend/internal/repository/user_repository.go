@@ -84,9 +84,26 @@ func (r *UserRepository) Update(ctx context.Context, user *models.User) (*models
 	return user, nil
 }
 
-// Delete soft-deletes a user
+// Delete soft-deletes a user (sets deleted_at). Used for self-account deletion.
 func (r *UserRepository) Delete(ctx context.Context, id string) error {
 	result := r.db.WithContext(ctx).Delete(&models.User{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("user not found")
+	}
+	return nil
+}
+
+// HardDelete permanently removes a user and their owned properties from the database.
+// Used by admin panel — admin expects actual removal.
+func (r *UserRepository) HardDelete(ctx context.Context, id string) error {
+	userID := id
+	// First permanently delete all properties owned by this user
+	r.db.WithContext(ctx).Unscoped().Where("owner_id = ?", userID).Delete(&models.Property{})
+	// Then permanently delete the user
+	result := r.db.WithContext(ctx).Unscoped().Delete(&models.User{}, userID)
 	if result.Error != nil {
 		return result.Error
 	}

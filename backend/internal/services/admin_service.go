@@ -107,7 +107,7 @@ func (s *AdminService) GetUser(ctx context.Context, userID string) (*models.User
 
 // DeleteUser soft-deletes a user account (admin only).
 func (s *AdminService) DeleteUser(ctx context.Context, userID string) error {
-	return s.userRepo.Delete(ctx, userID)
+	return s.userRepo.HardDelete(ctx, userID)
 }
 
 // VerifyUserKYC verifies user KYC
