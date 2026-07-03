@@ -5,11 +5,11 @@ services:
     image: postgis/postgis:15-3.4
     container_name: land_valuation_db
     environment:
-      POSTGRES_DB: land_valuation
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
@@ -47,17 +47,17 @@ services:
     container_name: land_valuation_backend
     environment:
       - ENVIRONMENT=development
-      - PORT=8080
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_NAME=land_valuation
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-      - UPLOAD_PATH=/app/property_images
-      - ALLOW_IMAGE_DELETE=false
+      - PORT=${BACKEND_PORT}
+      - DB_HOST=${BACKEND_DB_HOST}
+      - DB_PORT=${BACKEND_DB_PORT}
+      - DB_USER=${BACKEND_DB_USER}
+      - DB_PASSWORD=${BACKEND_DB_PASSWORD}
+      - DB_NAME=${BACKEND_DB_NAME}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - ELASTICSEARCH_URL=${ELASTICSEARCH_URL}
+      - UPLOAD_PATH=${BACKEND_UPLOAD_PATH:-/app/property_images}
+      - ALLOW_IMAGE_DELETE=${BACKEND_ALLOW_IMAGE_DELETE:-false}
     ports:
       - "8080:8080"
     depends_on:
@@ -108,8 +108,8 @@ services:
     image: dpage/pgadmin4
     container_name: land_valuation_pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@landvaluationsystem.rw
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
       - "5050:80"
     depends_on:
