@@ -51,6 +51,12 @@ export default function MTNPaymentPage() {
   const [statusInfo, setStatusInfo] = useState<any>(null);
   const [statusLoading, setStatusLoading] = useState(false);
 
+  // Hydration safety: prevent rendering until client-side language is applied
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Get query params
   useEffect(() => {
     if (router.query.plan && ['basic', 'professional', 'ultimate'].includes(router.query.plan as string)) {
@@ -192,7 +198,7 @@ export default function MTNPaymentPage() {
               )}
             </p>
             <p className="text-sm text-gray-500 mt-1">
-              /{billingPeriod === 'monthly' ? t('subscription.monthly').toLowerCase().slice(0,2) : t('subscription.yearly').toLowerCase().slice(0,2)}
+              /{billingPeriod === 'monthly' ? t('subscription.monthly') : t('subscription.yearly')}
             </p>
           </button>
         ))}
@@ -521,6 +527,27 @@ export default function MTNPaymentPage() {
       </div>
     </div>
   );
+
+  // Don't render dynamic content until client-side hydration is complete
+  // to prevent i18n hydration mismatch errors
+  if (!mounted) {
+    return (
+      <>
+        <Head>
+          <title>{t('subscription.mtnManualTitle')} · Land Valuation System</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        </Head>
+        <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
+          <MainNavbar />
+          <main className="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+            <div className="flex items-center justify-center py-20">
+              <i className="fas fa-spinner fa-spin text-3xl text-emerald-700"></i>
+            </div>
+          </main>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

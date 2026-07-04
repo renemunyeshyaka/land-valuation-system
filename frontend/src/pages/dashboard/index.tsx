@@ -1230,8 +1230,8 @@ function Dashboard() {
     : 'Never';
 
   // Check if subscription is expiring within 30 days
-  const isExpiringSoon = hasValidExpiry && user.subscriptionTier !== 'free'
-    ? (new Date(user.subscriptionExpiresAt as string).getTime() - Date.now()) < 30 * 24 * 60 * 60 * 1000
+  const isExpiringSoon = hasValidExpiry && user?.subscriptionTier !== 'free'
+    ? (new Date(user?.subscriptionExpiresAt as string).getTime() - Date.now()) < 30 * 24 * 60 * 60 * 1000
     : false;
 
   if (loading || authRedirecting) {
