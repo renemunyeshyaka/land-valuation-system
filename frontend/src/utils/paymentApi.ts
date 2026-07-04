@@ -123,3 +123,122 @@ export async function createRefundRequest(token: string, payload: CreateRefundRe
     throw new Error(err?.response?.data?.error?.message || err?.response?.data?.message || 'Failed to create refund request');
   }
 }
+
+// ============================================================
+// MTN MANUAL PAYMENT APIs
+// ============================================================
+
+export interface MTNManualPaymentInitRequest {
+  amount: number;
+  currency: string;
+  plan_type: string;
+  billing_period: 'monthly' | 'yearly';
+  description?: string;
+}
+
+export interface MTNManualPaymentInitResponse {
+  transaction_id: string;
+  status: string;
+  message: string;
+  mtn_phone_number: string;
+  mtn_account_name: string;
+  amount: number;
+  currency: string;
+  plan_type: string;
+  billing_period: string;
+  reference_number: string;
+  instructions: string;
+}
+
+export interface MTNManualPaymentProofRequest {
+  transaction_id: string;
+  mtn_transaction_ref: string;
+  sender_phone_number: string;
+  payment_date: string;
+  sender_name: string;
+  notes?: string;
+}
+
+/**
+ * Initiate a manual MTN payment (user sees phone number to send money to)
+ */
+export async function initiateMTNManualPayment(
+  token: string,
+  data: MTNManualPaymentInitRequest
+): Promise<MTNManualPaymentInitResponse> {
+  if (!token) throw new Error('Not authenticated');
+  try {
+    const res = await axios.post(
+      `${API_BASE_URL}/api/v1/payments/mtn-manual/initiate`,
+      data,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return res.data?.data || res.data;
+  } catch (err: any) {
+    throw new Error(
+      err?.response?.data?.message || 'Failed to initiate MTN payment'
+    );
+  }
+}
+
+/**
+ * Submit proof of MTN manual payment
+ */
+export async function submitMTNPaymentProof(
+  token: string,
+  data: MTNManualPaymentProofRequest
+): Promise<void> {
+  if (!token) throw new Error('Not authenticated');
+  try {
+    await axios.post(
+      `${API_BASE_URL}/api/v1/payments/mtn-manual/submit-proof`,
+      data,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+  } catch (err: any) {
+    throw new Error(
+      err?.response?.data?.message || 'Failed to submit payment proof'
+    );
+  }
+}
+
+/**
+ * Get MTN manual payment status
+ */
+export async function getMTNManualPaymentStatus(
+  token: string,
+  transactionId: string
+): Promise<MTNManualPaymentInitResponse> {
+  if (!token) throw new Error('Not authenticated');
+  try {
+    const res = await axios.get(
+      `${API_BASE_URL}/api/v1/payments/mtn-manual/status/${transactionId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return res.data?.data || res.data;
+  } catch (err: any) {
+    throw new Error(
+      err?.response?.data?.message || 'Failed to get payment status'
+    );
+  }
+}
+
+/**
+ * Get MTN manual payment methods / instructions
+ */
+export async function getMTNManualPaymentMethods(
+  token: string
+): Promise<any> {
+  if (!token) throw new Error('Not authenticated');
+  try {
+    const res = await axios.get(
+      `${API_BASE_URL}/api/v1/payments/mtn-manual/methods`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return res.data?.data || res.data;
+  } catch (err: any) {
+    throw new Error(
+      err?.response?.data?.message || 'Failed to get payment methods'
+    );
+  }
+}

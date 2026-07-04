@@ -33,6 +33,19 @@ jest.mock('react-hot-toast', () => ({
   },
 }));
 
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'toast.fillAllFields': 'Please fix the errors in the form',
+        'toast.settingsUpdated': 'Profile updated successfully!',
+      };
+      return translations[key] || key;
+    },
+    i18n: { language: 'en', changeLanguage: jest.fn() },
+  }),
+}));
+
 jest.mock('../../../components/Footer', () => function MockFooter() {
   return <div data-testid="footer">footer</div>;
 });

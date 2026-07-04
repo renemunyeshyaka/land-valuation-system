@@ -1229,6 +1229,11 @@ function Dashboard() {
     ? new Date(user?.subscriptionExpiresAt as string).toLocaleDateString('en-US')
     : 'Never';
 
+  // Check if subscription is expiring within 30 days
+  const isExpiringSoon = hasValidExpiry && user.subscriptionTier !== 'free'
+    ? (new Date(user.subscriptionExpiresAt as string).getTime() - Date.now()) < 30 * 24 * 60 * 60 * 1000
+    : false;
+
   if (loading || authRedirecting) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -2218,7 +2223,11 @@ function Dashboard() {
                   <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4">Subscription</h2>
                   
                   {/* Tier Badge */}
-                  <div className="mb-4 p-3 md:p-4 bg-emerald-50 border border-emerald-100 rounded-lg">
+                  <div className={`mb-4 p-3 md:p-4 rounded-lg ${
+                    isExpiringSoon
+                      ? 'bg-amber-50 border border-amber-200'
+                      : 'bg-emerald-50 border border-emerald-100'
+                  }`}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-600">Current Tier</span>
                       <span className="inline-block px-3 py-1 bg-emerald-700 text-white text-xs font-semibold rounded-full">
@@ -2226,8 +2235,14 @@ function Dashboard() {
                       </span>
                     </div>
                     <p className="text-xs text-gray-600">
-                      Expires: {subscriptionExpiryText}
+                      Expires: <span className={isExpiringSoon ? 'font-bold text-amber-700' : ''}>{subscriptionExpiryText}</span>
                     </p>
+                    {isExpiringSoon && user.subscriptionTier !== 'free' && (
+                      <div className="mt-2 flex items-center gap-1 text-xs text-amber-700">
+                        <i className="fas fa-exclamation-triangle"></i>
+                        <span>Your subscription is expiring soon. Renew now to continue enjoying {tierInfo?.name} features.</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Usage Bar (for Free tier) */}
@@ -2246,6 +2261,19 @@ function Dashboard() {
                       <p className="text-xs text-gray-500 mt-2">
                         {maxValuations - usedValuations} valuations remaining
                       </p>
+                    </div>
+                  )}
+
+                  {/* Renewal / Payment options for paid subscribers or expiring soon */}
+                  {user.subscriptionTier !== 'free' && (
+                    <div className="mb-4">
+                      <Link
+                        href={`/dashboard/mtn-payment?plan=${user.subscriptionTier}&billing=monthly`}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-all text-sm"
+                      >
+                        <i className="fas fa-mobile-alt"></i>
+                        {isExpiringSoon ? 'Renew Now via MTN MoMo' : 'Pay via MTN Mobile Money (Manual)'}
+                      </Link>
                     </div>
                   )}
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import CurrencySelector from './CurrencySelector';
@@ -297,9 +298,9 @@ export default function SubscriptionSelector({
                 {/* CTA Button */}
                 <button
                   onClick={() => handleSubscribe(plan.id)}
-                  disabled={loadingPlan === plan.id || isCurrentPlan}
-                  className={`w-full py-3 px-4 rounded-lg font-bold text-white mb-6 transition-all ${
-                    isCurrentPlan
+                  disabled={loadingPlan === plan.id || isCurrentPlan || plan.id === 'free'}
+                  className={`w-full py-3 px-4 rounded-lg font-bold text-white mb-3 transition-all ${
+                    isCurrentPlan || plan.id === 'free'
                       ? 'bg-gray-400 cursor-default'
                       : `bg-gradient-to-r ${plan.color} hover:shadow-lg hover:scale-105 disabled:opacity-50`
                   }`}
@@ -315,6 +316,17 @@ export default function SubscriptionSelector({
                     plan.cta
                   )}
                 </button>
+
+                {/* MTN Manual Payment Option for Rwanda users */}
+                {plan.id !== 'free' && !isCurrentPlan && (
+                  <Link
+                    href={`/dashboard/mtn-payment?plan=${plan.id}&billing=${billingPeriod}`}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-all text-sm mb-6"
+                  >
+                    <i className="fas fa-mobile-alt"></i>
+                    Pay via MTN Mobile Money (Manual)
+                  </Link>
+                )}
 
                 {/* Features List */}
                 <div className="mb-6">
@@ -447,8 +459,17 @@ export default function SubscriptionSelector({
               <span className="text-blue-600">Q:</span> What payment methods do you accept?
             </h4>
             <p className="text-gray-600 text-sm">
-              We accept mobile money (MTN, Airtel), bank transfers, and credit cards.
+              We accept automatic MTN MoMo, bank transfers, and credit cards. MTN Rwanda users can also pay via <strong>Manual MTN Payment</strong> — send money to 0788620201 and submit your transaction reference for verification.
             </p>
+            <div className="mt-3">
+              <Link
+                href="/dashboard/mtn-payment"
+                className="text-emerald-700 hover:text-emerald-800 text-sm font-semibold"
+              >
+                <i className="fas fa-mobile-alt mr-1"></i>
+                Pay with MTN Mobile Money (Manual) →
+              </Link>
+            </div>
           </div>
 
           <div>

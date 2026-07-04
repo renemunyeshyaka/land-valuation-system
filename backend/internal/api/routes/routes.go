@@ -208,6 +208,8 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 	// Initialize all payment services
 	mobilePaymentService := services.NewPaymentService(db)
 	bankPaymentService := services.NewBankPaymentService(db)
+	subscriptionService := services.NewSubscriptionService(db)
+	mtnManualPaymentService := services.NewMTNManualPaymentService(db, subscriptionService)
 
 	// Initialize handlers
 	paymentHandler := handlers.NewPaymentHandler(mobilePaymentService)
@@ -215,6 +217,7 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 		mobilePaymentService,
 		bankPaymentService,
 	)
+	mtnManualPaymentHandler := handlers.NewMTNManualPaymentHandler(mtnManualPaymentService)
 
 	// Payment history/summary handler
 	txnRepo := repository.NewTransactionRepository(db)
@@ -247,6 +250,12 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 			protected.POST("/refunds", refundHandler.CreateRefundRequest)
 			protected.GET("/refunds", refundHandler.GetUserRefundRequests)
 
+			// MTN Manual Payment (MTN Rwanda users pay to 0788620201)
+			protected.POST("/mtn-manual/initiate", mtnManualPaymentHandler.InitiateMTNManualPayment)
+			protected.POST("/mtn-manual/submit-proof", mtnManualPaymentHandler.SubmitMTNPaymentProof)
+			protected.GET("/mtn-manual/status/:transaction_id", mtnManualPaymentHandler.GetMTNPaymentStatus)
+			protected.GET("/mtn-manual/methods", mtnManualPaymentHandler.GetMTNManualPaymentMethods)
+
 			// Provider payment initiation
 			protected.POST("/pesapal/initiate", providerPaymentHandler.InitiatePesapalPayment)
 			protected.POST("/paypal/initiate", providerPaymentHandler.InitiatePayPalPayment)
@@ -257,6 +266,13 @@ func setupPaymentRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Clie
 	webhooks := router.Group("/api/v1/payments/webhook")
 	{
 		webhooks.POST("", paymentHandler.HandlePaymentCallback)
+	}
+
+	// Admin MTN manual payment verification
+	adminMTN := router.Group("/api/v1/admin/payments")
+	adminMTN.Use(middleware.AuthRequired(), middleware.AdminRequired())
+	{
+		adminMTN.POST("/mtn-manual/verify", mtnManualPaymentHandler.VerifyMTNPayment)
 	}
 
 	// PesaPal IPN callback (no auth, PesaPal calls this directly)
