@@ -118,7 +118,7 @@ const Login: React.FC = () => {
                 </div>
                 {/* Login Card */}
                 <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-8">
-                  <form onSubmit={handleSubmit} className="space-y-5">
+                  <form method="POST" onSubmit={handleSubmit} className="space-y-5">
                     {/* Email Field */}
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
