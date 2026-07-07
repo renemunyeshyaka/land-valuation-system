@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"net/smtp"
 	"os"
+	"strings"
 )
 
 type EmailService struct {
@@ -146,9 +147,16 @@ func (s *EmailService) SendCampaignEmail(toEmail, subject, htmlBody, trackingID,
 func (s *EmailService) sendEmail(to, subject, body string) error {
 	auth := smtp.PlainAuth("", s.emailUser, s.password, s.smtpHost)
 
-	// Use system name in the From header so recipients see "Land Valuation System" instead of raw email
-	systemName := "LandVal System"
-	fromHeader := fmt.Sprintf("%s <%s>", systemName, s.from)
+	// s.from is already "Name <email>" format (from EMAIL_FROM env var)
+	fromHeader := s.from
+
+	// Extract bare email for SMTP envelope (MAIL FROM)
+	fromEmail := s.from
+	if start := strings.Index(s.from, "<"); start != -1 {
+		if end := strings.Index(s.from, ">"); end > start {
+			fromEmail = s.from[start+1 : end]
+		}
+	}
 
 	msg := []byte(fmt.Sprintf(
 		"From: %s\r\n"+
@@ -162,8 +170,7 @@ func (s *EmailService) sendEmail(to, subject, body string) error {
 	))
 
 	addr := fmt.Sprintf("%s:%s", s.smtpHost, s.smtpPort)
-	// Keep raw email as the SMTP envelope sender (MAIL FROM)
-	return smtp.SendMail(addr, auth, s.from, []string{to}, msg)
+	return smtp.SendMail(addr, auth, fromEmail, []string{to}, msg)
 }
 
 // buildActivationEmailBody creates HTML email for account activation
