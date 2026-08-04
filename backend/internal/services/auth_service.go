@@ -95,9 +95,11 @@ func (s *AuthService) Register(ctx context.Context, user *models.User, password 
 func (s *AuthService) Login(ctx context.Context, email, password string) (*models.User, error) {
 	user, err := s.userRepo.GetByEmail(ctx, email)
 	if err != nil {
+		log.Printf("[Login] user lookup error for %s: %v", email, err)
 		return nil, errors.New("invalid credentials")
 	}
 	if user == nil {
+		log.Printf("[Login] user not found: %s", email)
 		return nil, errors.New("invalid credentials")
 	}
 
@@ -109,11 +111,14 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*model
 
 	// Check if email is verified
 	if !user.EmailVerified {
+		log.Printf("[Login] email not verified: %s", email)
 		return nil, errors.New("email not verified. Please check your email for verification code")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	if err != nil {
+		log.Printf("[Login] password mismatch for %s (hash prefix=%s, hash len=%d, email_verified=%v, active=%v, user_type=%s)",
+			email, safeHashPrefix(user.PasswordHash), len(user.PasswordHash), user.EmailVerified, user.IsActive, user.UserType)
 		return nil, errors.New("invalid credentials")
 	}
 
@@ -143,10 +148,24 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*model
 	}
 	err = s.emailService.SendOTPEmail(user.Email, firstName, otpCode)
 	if err != nil {
+		log.Printf("[Login] OTP email failed for %s (user %d): %v", user.Email, user.ID, err)
 		return nil, fmt.Errorf("failed to send OTP email: %w", err)
 	}
+	log.Printf("[Login] OTP sent to %s (user %d)", user.Email, user.ID)
 
 	return user, nil
+}
+
+// safeHashPrefix returns a short, safe prefix of a stored password hash for
+// diagnostics (never log the full hash).
+func safeHashPrefix(h string) string {
+	if h == "" {
+		return "(empty)"
+	}
+	if len(h) > 7 {
+		return h[:7]
+	}
+	return h
 }
 
 // VerifyEmail verifies user email with activation code
