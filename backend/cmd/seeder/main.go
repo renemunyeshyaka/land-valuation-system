@@ -72,6 +72,7 @@ func seedAdminUser(ctx context.Context) {
 	}
 
 	adminUser := models.User{
+		Email:            "admin@landval.rw",
 		FirstName:        "Admin",
 		LastName:         "User",
 		UserType:         "admin",
@@ -79,6 +80,7 @@ func seedAdminUser(ctx context.Context) {
 		EmailVerified:    true,
 		IsActive:         true,
 		Password:         string(hashedPassword),
+		PasswordHash:     string(hashedPassword),
 		SubscriptionTier: "ultimate",
 		TwoFAEnabled:     false,
 	}
@@ -181,6 +183,7 @@ func seedRegularUsers(ctx context.Context) {
 			continue
 		}
 		user.Password = string(hashedPassword)
+		user.PasswordHash = string(hashedPassword)
 
 		result := db.WithContext(ctx).Create(&user)
 		if result.Error != nil {

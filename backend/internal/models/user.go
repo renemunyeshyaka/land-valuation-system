@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -90,12 +91,19 @@ type User struct {
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
-	if u.Password != "" {
+	// Hash a plaintext password exactly once; never re-hash an already-bcrypted value.
+	if u.Password != "" && !strings.HasPrefix(u.Password, "$2") {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 		if err != nil {
 			return err
 		}
 		u.Password = string(hashedPassword)
+	}
+	// Keep PasswordHash in sync with Password. Login() verifies against
+	// PasswordHash, so a user created with only Password set (as the seeder
+	// did) would otherwise be locked out with 401 forever.
+	if u.PasswordHash == "" && u.Password != "" {
+		u.PasswordHash = u.Password
 	}
 	return nil
 }
