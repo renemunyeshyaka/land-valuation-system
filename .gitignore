@@ -51,6 +51,14 @@ backend/api
 backend/main
 backend/landval-api
 backend/backend
+backend/cmd/api/api
+backend/csv-ingest
+backend/csv_ingest
+backend/gazette_import
+backend/lead-aggregator
+backend/seeder
+backend/output.csv
+backend/output.txt
 
 ## Uploads and temporary files
 temp/

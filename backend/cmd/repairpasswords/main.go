@@ -57,9 +57,6 @@ func main() {
 	fmt.Println()
 
 	tempPassword := os.Getenv("REPAIR_TEMP_PASSWORD")
-	if tempPassword == "" {
-		tempPassword = "Temp@123456"
-	}
 	force := os.Getenv("REPAIR_FORCE") == "1"
 
 	// ---- Diagnose: show what is currently stored ----
@@ -84,12 +81,6 @@ func main() {
 	fmt.Println()
 
 	// ---- Repair ----
-	hash, err := bcrypt.GenerateFromPassword([]byte(tempPassword), bcrypt.DefaultCost)
-	if err != nil {
-		log.Fatalf("failed to hash temp password: %v", err)
-	}
-	hashStr := string(hash)
-
 	// Determine affected users
 	singleEmail := os.Getenv("REPAIR_EMAIL")
 	var affected []models.User
@@ -122,6 +113,18 @@ func main() {
 		}
 		fmt.Printf("🔧 Repairing %d user(s) with missing password_hash...\n", len(affected))
 	}
+
+	// Never fall back to a hardcoded password: require an explicit temp password.
+	if len(affected) > 0 && tempPassword == "" {
+		log.Fatalf("REPAIR_TEMP_PASSWORD is required to repair or reset passwords; " +
+			"set it to a strong temporary password and re-run")
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(tempPassword), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatalf("failed to hash temp password: %v", err)
+	}
+	hashStr := string(hash)
 
 	repaired := 0
 	for _, u := range affected {

@@ -40,7 +40,7 @@ func main() {
 
 	dbPassword := os.Getenv("DB_PASSWORD")
 	if dbPassword == "" {
-		dbPassword = "password"
+		log.Fatalf("DB_PASSWORD is required to run migrations (set it in the environment or .env)")
 	}
 
 	dbSSL := os.Getenv("DB_SSL")
