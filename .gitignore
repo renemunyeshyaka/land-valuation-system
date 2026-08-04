@@ -116,6 +116,7 @@ Thumbs.db
 # Documentation and project notes (keep local only)
 # Policy: markdown planning/docs are intentionally not tracked in git.
 *.md
+README.md
 NEW_IMPLEMENTATION_ROADMAP.md
 docs/
 !backend/docs/
