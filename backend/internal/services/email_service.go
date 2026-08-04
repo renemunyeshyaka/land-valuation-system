@@ -150,10 +150,27 @@ func (s *EmailService) SendCampaignEmail(toEmail, subject, htmlBody, trackingID,
 // and reports the exact step on failure.
 func (s *EmailService) sendEmail(to, subject, body string) error {
 	addr := fmt.Sprintf("%s:%s", s.smtpHost, s.smtpPort)
+	// Port 465 = implicit TLS (SMTPS): dial TLS first, no STARTTLS.
+	// Port 587 (and others) = plain dial + STARTTLS.
+	implicitTLS := s.smtpPort == "465"
 
-	client, err := smtp.Dial(addr)
-	if err != nil {
-		return fmt.Errorf("smtp dial %s: %w", addr, err)
+	var client *smtp.Client
+	var err error
+	if implicitTLS {
+		conn, derr := tls.Dial("tcp", addr, &tls.Config{ServerName: s.smtpHost})
+		if derr != nil {
+			return fmt.Errorf("smtp tls dial %s: %w", addr, derr)
+		}
+		client, err = smtp.NewClient(conn, s.smtpHost)
+		if err != nil {
+			conn.Close()
+			return fmt.Errorf("smtp new client: %w", err)
+		}
+	} else {
+		client, err = smtp.Dial(addr)
+		if err != nil {
+			return fmt.Errorf("smtp dial %s: %w", addr, err)
+		}
 	}
 	defer client.Close()
 
@@ -165,9 +182,11 @@ func (s *EmailService) sendEmail(to, subject, body string) error {
 		return fmt.Errorf("smtp ehlo: %w", err)
 	}
 
-	if ok, _ := client.Extension("STARTTLS"); ok {
-		if err := client.StartTLS(&tls.Config{ServerName: s.smtpHost}); err != nil {
-			return fmt.Errorf("smtp starttls: %w", err)
+	if !implicitTLS {
+		if ok, _ := client.Extension("STARTTLS"); ok {
+			if err := client.StartTLS(&tls.Config{ServerName: s.smtpHost}); err != nil {
+				return fmt.Errorf("smtp starttls: %w", err)
+			}
 		}
 	}
 
