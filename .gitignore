@@ -144,6 +144,7 @@ copyright/*.pdf
 
 # Property Search
 backend/cmd/propertyscraper/
+!backend/.env.production.example
 
 # Allow migrations to be tracked
 !backend/migrations/
