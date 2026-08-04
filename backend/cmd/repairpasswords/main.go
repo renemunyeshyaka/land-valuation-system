@@ -24,12 +24,16 @@
 //
 //	# force-reset ALL users to the temp password
 //	REPAIR_FORCE=1 REPAIR_TEMP_PASSWORD='Temp@123456' go run ./cmd/repairpasswords
+//
+//	# set ONE user's password (cleanup after a shared temp reset)
+//	REPAIR_EMAIL='munyeshyaka@hotmail.com' REPAIR_TEMP_PASSWORD='YourNewPass123!' go run ./cmd/repairpasswords
 package main
 
 import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"backend/internal/config"
 	"backend/internal/database"
@@ -87,11 +91,24 @@ func main() {
 	hashStr := string(hash)
 
 	// Determine affected users
+	singleEmail := os.Getenv("REPAIR_EMAIL")
 	var affected []models.User
-	if force {
+	switch {
+	case singleEmail != "":
+		for _, u := range users {
+			if strings.EqualFold(u.Email, singleEmail) {
+				affected = append(affected, u)
+			}
+		}
+		if len(affected) == 0 {
+			fmt.Printf("❌ No user found with email %q. Nothing to do.\n", singleEmail)
+			return
+		}
+		fmt.Printf("🔧 Setting password for single user: %s\n", affected[0].Email)
+	case force:
 		affected = users
 		fmt.Printf("🔧 REPAIR_FORCE=1: resetting ALL %d user(s) to temp password...\n", len(users))
-	} else {
+	default:
 		for _, u := range users {
 			if u.PasswordHash == "" {
 				affected = append(affected, u)
@@ -99,7 +116,8 @@ func main() {
 		}
 		if len(affected) == 0 {
 			fmt.Println("✅ No users with missing password_hash. Nothing to repair.")
-			fmt.Println("   Tip: run with REPAIR_FORCE=1 to reset ALL users to the temp password.")
+			fmt.Println("   Tip: REPAIR_EMAIL=<email> REPAIR_TEMP_PASSWORD=<pass> to set ONE user's password,")
+			fmt.Println("        or REPAIR_FORCE=1 REPAIR_TEMP_PASSWORD=<pass> to reset ALL users.")
 			return
 		}
 		fmt.Printf("🔧 Repairing %d user(s) with missing password_hash...\n", len(affected))
