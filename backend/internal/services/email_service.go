@@ -2,6 +2,7 @@ package services
 
 import (
 	"crypto/rand"
+	"crypto/tls"
 	"fmt"
 	"math/big"
 	"net/smtp"
@@ -143,12 +144,36 @@ func (s *EmailService) SendCampaignEmail(toEmail, subject, htmlBody, trackingID,
 	return s.sendEmail(toEmail, subject, htmlBody+trackingPixel+footer)
 }
 
-// sendEmail sends an email using SMTP
+// sendEmail sends an email using SMTP.
+// Uses an explicit fully-qualified EHLO name (some SMTP servers, incl. Gmail,
+// can drop the connection with EOF when the OS hostname is short/non-FQDN)
+// and reports the exact step on failure.
 func (s *EmailService) sendEmail(to, subject, body string) error {
-	auth := smtp.PlainAuth("", s.emailUser, s.password, s.smtpHost)
+	addr := fmt.Sprintf("%s:%s", s.smtpHost, s.smtpPort)
 
-	// s.from is already "Name <email>" format (from EMAIL_FROM env var)
-	fromHeader := s.from
+	client, err := smtp.Dial(addr)
+	if err != nil {
+		return fmt.Errorf("smtp dial %s: %w", addr, err)
+	}
+	defer client.Close()
+
+	ehloName := os.Getenv("SMTP_EHLO")
+	if ehloName == "" {
+		ehloName = "landval.kcoders.org"
+	}
+	if err := client.Hello(ehloName); err != nil {
+		return fmt.Errorf("smtp ehlo: %w", err)
+	}
+
+	if ok, _ := client.Extension("STARTTLS"); ok {
+		if err := client.StartTLS(&tls.Config{ServerName: s.smtpHost}); err != nil {
+			return fmt.Errorf("smtp starttls: %w", err)
+		}
+	}
+
+	if err := client.Auth(smtp.PlainAuth("", s.emailUser, s.password, s.smtpHost)); err != nil {
+		return fmt.Errorf("smtp auth: %w", err)
+	}
 
 	// Extract bare email for SMTP envelope (MAIL FROM)
 	fromEmail := s.from
@@ -158,6 +183,17 @@ func (s *EmailService) sendEmail(to, subject, body string) error {
 		}
 	}
 
+	if err := client.Mail(fromEmail); err != nil {
+		return fmt.Errorf("smtp mail from: %w", err)
+	}
+	if err := client.Rcpt(to); err != nil {
+		return fmt.Errorf("smtp rcpt: %w", err)
+	}
+
+	w, err := client.Data()
+	if err != nil {
+		return fmt.Errorf("smtp data open: %w", err)
+	}
 	msg := []byte(fmt.Sprintf(
 		"From: %s\r\n"+
 			"To: %s\r\n"+
@@ -166,11 +202,19 @@ func (s *EmailService) sendEmail(to, subject, body string) error {
 			"Content-Type: text/html; charset=UTF-8\r\n"+
 			"\r\n"+
 			"%s",
-		fromHeader, to, subject, body,
+		s.from, to, subject, body,
 	))
+	if _, err := w.Write(msg); err != nil {
+		return fmt.Errorf("smtp data write: %w", err)
+	}
+	if err := w.Close(); err != nil {
+		return fmt.Errorf("smtp data close: %w", err)
+	}
 
-	addr := fmt.Sprintf("%s:%s", s.smtpHost, s.smtpPort)
-	return smtp.SendMail(addr, auth, fromEmail, []string{to}, msg)
+	if err := client.Quit(); err != nil {
+		return fmt.Errorf("smtp quit: %w", err)
+	}
+	return nil
 }
 
 // buildActivationEmailBody creates HTML email for account activation
