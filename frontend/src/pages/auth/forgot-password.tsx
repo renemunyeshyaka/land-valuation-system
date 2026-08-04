@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { getApiBaseUrl } from '../../utils/api';
 
 /**
  * FORGOT PASSWORD PAGE · Land Valuation System
@@ -46,7 +47,7 @@ const ForgotPassword: React.FC = () => {
     if (!validateEmail()) return;
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/auth/forgot-password`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/v1/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

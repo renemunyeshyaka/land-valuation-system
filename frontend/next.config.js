@@ -52,4 +52,20 @@ const nextConfig = {
   },
 };
 
+// Fail the production build loudly if the API base URL is missing or is a
+// localhost value. This prevents baking http://localhost:5001 into the bundle,
+// which silently breaks login (OTP) and password reset for every user in
+// production. Use `next dev` for local development instead of `next build`.
+const nextPublicApiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+if (
+  process.env.NODE_ENV === 'production' &&
+  process.argv.includes('build') &&
+  (!nextPublicApiUrl || /localhost|127\.0\.0\.1/.test(nextPublicApiUrl))
+) {
+  throw new Error(
+    'NEXT_PUBLIC_API_URL must be a real server URL (not localhost) when building for production. ' +
+      'Example: NEXT_PUBLIC_API_URL=https://landval.kcoders.org next build',
+  );
+}
+
 module.exports = nextConfig;

@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { syncLanguageFromBackend } from '../../utils/i18n';
+import { getApiBaseUrl } from '../../utils/api';
 
 /**
  * OTP VERIFICATION PAGE · Land Valuation System
@@ -95,7 +96,7 @@ const VerifyOTP: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/auth/verify-otp`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/v1/auth/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -147,7 +148,7 @@ const VerifyOTP: React.FC = () => {
     setResending(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/auth/resend-otp`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/v1/auth/resend-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

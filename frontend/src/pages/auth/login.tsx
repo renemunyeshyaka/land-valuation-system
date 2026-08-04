@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 import MainNavbar from '../../components/MainNavbar';
 import Footer from '../../components/Footer';
+import { getApiBaseUrl } from '../../utils/api';
 
 /**
  * LOGIN PAGE · Land Valuation System
@@ -72,7 +73,7 @@ const Login: React.FC = () => {
       setLoading(true);
       try {
         // Call login API
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/auth/login`, {
+        const response = await fetch(`${getApiBaseUrl()}/api/v1/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

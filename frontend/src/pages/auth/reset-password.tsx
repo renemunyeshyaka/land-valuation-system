@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Footer from "../../components/Footer";
+import { getApiBaseUrl } from '../../utils/api';
 
 /**
  * RESET PASSWORD PAGE · Land Valuation System
@@ -95,7 +96,7 @@ const ResetPassword: React.FC = () => {
     setLoading(true);
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/auth/reset-password`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/v1/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
