@@ -35,7 +35,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client, 
 	setupSubscriptionRoutes(router, db)
 	setupPaymentRoutes(router, db, redisClient)
 	setupAnalyticsRoutes(router, db)
-	setupAdminRoutes(router, db)
+	setupAdminRoutes(router, db, redisClient)
 	setupNotificationRoutes(router, db)
 	setupExchangeRateRoutes(router, redisClient)
 	setupAITargetingRoutes(router, db)
@@ -307,8 +307,8 @@ func setupAnalyticsRoutes(router *gin.Engine, db *gorm.DB) {
 	}
 }
 
-func setupAdminRoutes(router *gin.Engine, db *gorm.DB) {
-	adminService := services.NewAdminService(db)
+func setupAdminRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
+	adminService := services.NewAdminService(db, redisClient)
 	adminHandler := handlers.NewAdminHandler(adminService)
 	userService := services.NewUserService(db)
 	userHandler := handlers.NewUserHandler(userService)
@@ -407,6 +407,7 @@ func setupFileRoutes(router *gin.Engine, cfg *config.Config) {
 	files.Use(middleware.AuthRequired())
 	{
 		files.POST("/upload-image", fileHandler.UploadPropertyImage)
+		files.POST("/upload-document", fileHandler.UploadPropertyDocuments)
 		files.DELETE("/delete-image", fileHandler.DeletePropertyImage)
 	}
 

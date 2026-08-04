@@ -62,6 +62,7 @@ interface UserData {
   userType: string;
   phone?: string;
   subscriptionTier: string;
+  isUltimateNoExpiry: boolean;
   subscriptionExpiresAt?: string | null;
   recentValuations: any[];
 }
@@ -119,6 +120,7 @@ const getCachedDashboardUser = (): UserData | null => {
       userType: effectiveUserType,
       phone: userData?.phone,
       subscriptionTier: effectiveSubscriptionTier,
+      isUltimateNoExpiry: Boolean(userData?.is_ultimate_no_expiry || false),
       subscriptionExpiresAt: userData?.subscription_expiry || userData?.subscriptionExpiresAt || null,
       recentValuations: Array.isArray(userData?.recent_valuations) ? userData.recent_valuations : [],
     };
@@ -986,6 +988,7 @@ function Dashboard() {
         userType: effectiveUserType,
         phone: userData.phone,
         subscriptionTier: effectiveSubscriptionTier,
+        isUltimateNoExpiry: Boolean(userData.is_ultimate_no_expiry || false),
         subscriptionExpiresAt: effectiveSubscriptionExpiry,
         recentValuations: userData.recent_valuations || [],
       });
@@ -1216,7 +1219,10 @@ function Dashboard() {
     return tiers[tier] || tiers.free;
   };
 
-  const tierInfo = user ? getTierInfo(user.subscriptionTier) : null;
+  const isUltimateNoExpiry = Boolean(user?.isUltimateNoExpiry);
+  // Ultimate No-Expiry accounts always behave as the Ultimate tier and never expire
+  const effectiveSubscriptionTier = isUltimateNoExpiry ? 'ultimate' : (user?.subscriptionTier || 'free');
+  const tierInfo = user ? getTierInfo(effectiveSubscriptionTier) : null;
   const normalizedUserType = String(user?.userType || '').toLowerCase();
   const canAddProperty = normalizedUserType !== 'government' && normalizedUserType !== 'partner' && normalizedUserType !== 'gov_partner';
   const usedValuations = user?.recentValuations.length || 0;
@@ -1229,8 +1235,8 @@ function Dashboard() {
     ? new Date(user?.subscriptionExpiresAt as string).toLocaleDateString('en-US')
     : 'Never';
 
-  // Check if subscription is expiring within 30 days
-  const isExpiringSoon = hasValidExpiry && user?.subscriptionTier !== 'free'
+  // Check if subscription is expiring within 30 days (Ultimate No-Expiry never expires)
+  const isExpiringSoon = !isUltimateNoExpiry && hasValidExpiry && effectiveSubscriptionTier !== 'free'
     ? (new Date(user?.subscriptionExpiresAt as string).getTime() - Date.now()) < 30 * 24 * 60 * 60 * 1000
     : false;
 
@@ -2237,7 +2243,7 @@ function Dashboard() {
                     <p className="text-xs text-gray-600">
                       Expires: <span className={isExpiringSoon ? 'font-bold text-amber-700' : ''}>{subscriptionExpiryText}</span>
                     </p>
-                    {isExpiringSoon && user.subscriptionTier !== 'free' && (
+                    {isExpiringSoon && effectiveSubscriptionTier !== 'free' && (
                       <div className="mt-2 flex items-center gap-1 text-xs text-amber-700">
                         <i className="fas fa-exclamation-triangle"></i>
                         <span>Your subscription is expiring soon. Renew now to continue enjoying {tierInfo?.name} features.</span>
@@ -2246,7 +2252,7 @@ function Dashboard() {
                   </div>
 
                   {/* Usage Bar (for Free tier) */}
-                  {user.subscriptionTier === 'free' && (
+                  {effectiveSubscriptionTier === 'free' && (
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-gray-700">Valuations Used</span>
@@ -2265,10 +2271,10 @@ function Dashboard() {
                   )}
 
                   {/* Renewal / Payment options for paid subscribers or expiring soon */}
-                  {user.subscriptionTier !== 'free' && (
+                  {effectiveSubscriptionTier !== 'free' && !isUltimateNoExpiry && (
                     <div className="mb-4">
                       <Link
-                        href={`/dashboard/mtn-payment?plan=${user.subscriptionTier}&billing=monthly`}
+                        href={`/dashboard/mtn-payment?plan=${effectiveSubscriptionTier}&billing=monthly`}
                         className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-all text-sm"
                       >
                         <i className="fas fa-mobile-alt"></i>
@@ -2286,7 +2292,7 @@ function Dashboard() {
                       <i className="fas fa-arrow-right mr-2"></i>
                       Manage Subscription
                     </Link>
-                    {user.subscriptionTier === 'free' && (
+                    {effectiveSubscriptionTier === 'free' && (
                       <Link
                         href="/dashboard/subscription"
                         className="block w-full px-4 py-2.5 text-center text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
@@ -2352,7 +2358,7 @@ function Dashboard() {
 
             {/* Subscription Plans Selector */}
             <div id="dashboard-subscription" className={`mt-10 md:mt-16 mb-8 md:mb-12 ${activeDashboardTab !== 'subscription' ? 'hidden' : ''}`}>
-              <SubscriptionSelector currentPlan={user.subscriptionTier} />
+              <SubscriptionSelector currentPlan={effectiveSubscriptionTier} />
             </div>
 
               </div>

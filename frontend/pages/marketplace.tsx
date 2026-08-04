@@ -95,6 +95,8 @@ export default function Marketplace() {
     { value: '100000000-', labelKey: 'marketplacePage.price100MPlus' },
   ];
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Track whether the current viewer is a registered user (plot contacts are gated to registered users)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Sample properties removed (no longer used)
 
@@ -162,6 +164,11 @@ export default function Marketplace() {
   useEffect(() => {
     fetchProperties(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Determine auth state for gating plot-related contacts (registered users only)
+  useEffect(() => {
+    setIsAuthenticated(!!localStorage.getItem('access_token'));
   }, []);
 
   // Reload every 2 minutes to increase views
@@ -382,7 +389,7 @@ export default function Marketplace() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
                 {properties.map((property) => (
-                  <PropertyCard key={property.id} property={property} />
+                  <PropertyCard key={property.id} property={property} isAuthenticated={isAuthenticated} />
                 ))}
               </div>
 

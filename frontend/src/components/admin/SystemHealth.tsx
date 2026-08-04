@@ -102,7 +102,9 @@ const SystemHealth: React.FC = () => {
             <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}><div style={{ color: '#666', fontSize: 12 }}>Status</div><div style={{ fontWeight: 700 }}>{health?.status || '-'}</div></div>
             <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}><div style={{ color: '#666', fontSize: 12 }}>Database</div><div style={{ fontWeight: 700 }}>{health?.database || '-'}</div></div>
             <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}><div style={{ color: '#666', fontSize: 12 }}>Cache</div><div style={{ fontWeight: 700 }}>{health?.cache || '-'}</div></div>
+            <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}><div style={{ color: '#666', fontSize: 12 }}>Elasticsearch</div><div style={{ fontWeight: 700 }}>{health?.elasticsearch || '-'}</div></div>
             <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}><div style={{ color: '#666', fontSize: 12 }}>Uptime</div><div style={{ fontWeight: 700 }}>{health?.uptime || '-'}</div></div>
+            <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}><div style={{ color: '#666', fontSize: 12 }}>Started At</div><div style={{ fontWeight: 700 }}>{health?.started_at ? new Date(health.started_at).toLocaleString() : '-'}</div></div>
             <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}><div style={{ color: '#666', fontSize: 12 }}>Payment Enabled</div><div style={{ fontWeight: 700 }}>{String(config?.payment_enabled ?? '-')}</div></div>
             <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}><div style={{ color: '#666', fontSize: 12 }}>KYC Required</div><div style={{ fontWeight: 700 }}>{String(config?.kyc_required ?? '-')}</div></div>
           </div>

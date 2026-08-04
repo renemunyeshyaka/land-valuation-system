@@ -2,18 +2,24 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"backend/internal/models"
 	"backend/internal/repository"
 
+	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
 type AdminService struct {
-	userRepo *repository.UserRepository
-	db       *gorm.DB
+	userRepo    *repository.UserRepository
+	db          *gorm.DB
+	redisClient *redis.Client
 }
 
 // parseUint tries to parse a string as uint, returns (value, true) if valid, (0, false) otherwise
@@ -75,10 +81,11 @@ func (s *AdminService) GetAllNotifications(ctx context.Context, page, limit int,
 	return notifications, int(total), nil
 }
 
-func NewAdminService(db *gorm.DB) *AdminService {
+func NewAdminService(db *gorm.DB, redisClient *redis.Client) *AdminService {
 	return &AdminService{
-		userRepo: repository.NewUserRepository(db),
-		db:       db,
+		userRepo:    repository.NewUserRepository(db),
+		db:          db,
+		redisClient: redisClient,
 	}
 }
 
@@ -214,18 +221,76 @@ func (s *AdminService) GetAuditLogs(ctx context.Context, page, limit int, action
 	return result, int(total), nil
 }
 
+// processStartTime records when the service started, used for dynamic uptime reporting
+var processStartTime = time.Now()
+
 // GetSystemHealth retrieves system health status
 func (s *AdminService) GetSystemHealth(ctx context.Context) (map[string]interface{}, error) {
-	// TODO: Check database, cache, elasticsearch connectivity
+	// Database connectivity
+	databaseStatus := "connected"
+	sqlDB, err := s.db.DB()
+	if err != nil {
+		databaseStatus = "error"
+	} else if err := sqlDB.PingContext(ctx); err != nil {
+		databaseStatus = "disconnected"
+	}
+
+	// Cache (Redis) connectivity
+	cacheStatus := "not configured"
+	if s.redisClient != nil {
+		pingCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		defer cancel()
+		if err := s.redisClient.Ping(pingCtx).Err(); err != nil {
+			cacheStatus = "disconnected"
+		} else {
+			cacheStatus = "connected"
+		}
+	}
+
+	// Elasticsearch connectivity (lightweight HTTP ping when configured)
+	esStatus := "not configured"
+	if esURL := strings.TrimSpace(os.Getenv("ELASTICSEARCH_URL")); esURL != "" {
+		esClient := &http.Client{Timeout: 2 * time.Second}
+		if resp, err := esClient.Get(esURL); err != nil {
+			esStatus = "disconnected"
+		} else {
+			resp.Body.Close()
+			esStatus = "connected"
+		}
+	}
+
+	// Derive overall status from individual checks
+	status := "healthy"
+	if databaseStatus != "connected" || cacheStatus == "disconnected" || esStatus == "disconnected" {
+		status = "degraded"
+	}
+
 	health := map[string]interface{}{
-		"status":        "healthy",
-		"database":      "connected",
-		"cache":         "connected",
-		"elasticsearch": "connected",
-		"uptime":        "2h 30m",
+		"status":        status,
+		"database":      databaseStatus,
+		"cache":         cacheStatus,
+		"elasticsearch": esStatus,
+		"uptime":        formatUptime(time.Since(processStartTime)),
+		"started_at":    processStartTime.UTC().Format(time.RFC3339),
 	}
 
 	return health, nil
+}
+
+// formatUptime renders a duration as a human-readable uptime string
+func formatUptime(d time.Duration) string {
+	days := int(d.Hours()) / 24
+	hours := int(d.Hours()) % 24
+	minutes := int(d.Minutes()) % 60
+	seconds := int(d.Seconds()) % 60
+	switch {
+	case days > 0:
+		return fmt.Sprintf("%dd %dh %dm", days, hours, minutes)
+	case hours > 0:
+		return fmt.Sprintf("%dh %dm", hours, minutes)
+	default:
+		return fmt.Sprintf("%dm %ds", minutes, seconds)
+	}
 }
 
 // GetSubscriptions retrieves all subscriptions from the database

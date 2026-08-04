@@ -58,7 +58,7 @@ const NotificationManagement: React.FC = () => {
     setError(null);
     setSuccess(null);
     try {
-      await axios.put(`${API_BASE_URL}/api/v1/admin/notifications/${editNotification.id}`, data);
+      await axios.put(`${API_BASE_URL}/api/v1/admin/notifications/${editNotification.id}`, data, getAuthConfig());
       setSuccess('Notification updated successfully');
       setEditModalOpen(false);
       setEditNotification(null);
@@ -73,7 +73,7 @@ const NotificationManagement: React.FC = () => {
     setError(null);
     setSuccess(null);
     try {
-      await axios.delete(`${API_BASE_URL}/api/v1/admin/notifications/${id}`);
+      await axios.delete(`${API_BASE_URL}/api/v1/admin/notifications/${id}`, getAuthConfig());
       setSuccess('Notification deleted successfully');
       fetchNotifications();
     } catch (e: any) {

@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
 import {
   MapPin,
@@ -18,10 +19,13 @@ import { resolveImageUrl } from '../../utils/image'
 
 interface PropertyCardProps {
   property: any
-  isAuthenticated?: boolean // (Unused, but kept for future use)
+  /** Whether the current viewer is a registered/authenticated user.
+   *  Plot-related contacts are only accessible to registered users. */
+  isAuthenticated?: boolean
 }
 
-export default function PropertyCard({ property }: PropertyCardProps) {
+export default function PropertyCard({ property, isAuthenticated }: PropertyCardProps) {
+  const router = useRouter()
 
 
 
@@ -96,6 +100,20 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       navigator.share(shareData).catch(() => {});
     } else {
       setShareOpen(true);
+    }
+  };
+
+  // Contact handler — plot-related contacts are only accessible to registered users
+  const handleContact = () => {
+    const detailUrl = `/search/${property.id}`;
+    const authenticated =
+      isAuthenticated ??
+      (typeof window !== 'undefined' && !!localStorage.getItem('access_token'));
+    if (authenticated) {
+      router.push(detailUrl);
+    } else {
+      // Non-registered users must register/log in before viewing plot contacts
+      router.push(`/auth/login?next=${encodeURIComponent(detailUrl)}`);
     }
   };
 
@@ -245,7 +263,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               View Details
             </button>
           </Link>
-          <button className="px-4 py-2 border border-green-600 text-green-600 rounded-lg text-sm font-medium hover:bg-green-50 transition flex items-center justify-center">
+          <button
+            type="button"
+            onClick={handleContact}
+            title={isAuthenticated ? 'Contact the seller about this plot' : 'Log in to view plot contact details'}
+            className="px-4 py-2 border border-green-600 text-green-600 rounded-lg text-sm font-medium hover:bg-green-50 transition flex items-center justify-center"
+          >
             <MessageCircle className="w-4 h-4 mr-1" />
             Contact
           </button>

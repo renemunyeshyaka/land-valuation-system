@@ -130,9 +130,11 @@ const PropertyDetail: React.FC = () => {
         const payload = await response.json();
         const userData = payload?.data || {};
         const userTier = String(userData.subscription_tier || 'free').toLowerCase();
+        const isUltimateNoExpiry = Boolean(userData.is_ultimate_no_expiry);
         const allowedTiers = ['basic', 'professional', 'ultimate', 'enterprise'];
 
-        if (!allowedTiers.includes(userTier)) {
+        // Ultimate No Expiry accounts always have full access, regardless of tier, renewal, or expiry
+        if (!isUltimateNoExpiry && !allowedTiers.includes(userTier)) {
           setAccessMessage('Property details are available on Basic, Professional, or Ultimate plans.');
           setHasAccess(false);
           setLoading(false);

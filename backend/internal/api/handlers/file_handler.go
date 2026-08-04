@@ -23,6 +23,10 @@ var allowedImageTypes = map[string]bool{
 	"image/gif":  true,
 }
 
+var allowedDocumentTypes = map[string]bool{
+	"application/pdf": true,
+}
+
 // FileHandler handles file uploads
 type FileHandler struct {
 	uploadDir       string
@@ -117,10 +121,84 @@ func (h *FileHandler) UploadPropertyImage(c *gin.Context) {
 	})
 }
 
-// UploadPropertyDocuments handles property document uploads (placeholder for future use)
+// UploadPropertyDocuments handles property document uploads (PDF only)
 func (h *FileHandler) UploadPropertyDocuments(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "Document upload coming soon",
+	// Validate file size
+	if c.Request.ContentLength > maxFileSize {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "File size exceeds 2 MB limit",
+		})
+		return
+	}
+
+	// Parse multipart form
+	file, header, err := c.Request.FormFile("document")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to parse file: " + err.Error(),
+		})
+		return
+	}
+	defer file.Close()
+
+	// Validate file type
+	contentType := header.Header.Get("Content-Type")
+	if !allowedDocumentTypes[contentType] {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("Invalid file type. Allowed types: PDF. Got: %s", contentType),
+		})
+		return
+	}
+
+	// Read file content
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to read file",
+		})
+		return
+	}
+
+	if len(fileBytes) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "File is empty",
+		})
+		return
+	}
+
+	// Create upload directory if it doesn't exist
+	if err := os.MkdirAll(h.uploadDir, 0755); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to create upload directory",
+		})
+		return
+	}
+
+	// Generate unique filename
+	ext := filepath.Ext(header.Filename)
+	if ext == "" {
+		ext = ".pdf"
+	}
+	timestamp := time.Now().UnixNano()
+	filename := fmt.Sprintf("document_%d%s", timestamp, ext)
+	filePath := filepath.Join(h.uploadDir, filename)
+
+	// Save file
+	if err := os.WriteFile(filePath, fileBytes, 0644); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to save file",
+		})
+		return
+	}
+
+	// Return the file URL (relative path that can be served)
+	fileURL := h.publicURLPrefix + "/" + filename
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": gin.H{
+			"url":      fileURL,
+			"filename": filename,
+		},
 	})
 }
 

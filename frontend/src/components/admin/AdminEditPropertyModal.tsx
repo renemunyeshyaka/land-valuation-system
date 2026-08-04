@@ -83,6 +83,7 @@ export default function AdminEditPropertyModal({ editForm, setEditForm, onEdit, 
             <input name="price" type="number" value={editForm.price} onChange={e => setEditForm(f => ({ ...f, price: e.target.value }))} placeholder="Price (RWF)" style={{ width: '100%', marginBottom: 12, padding: 8 }} />
             <input name="gazette_reference" value={editForm.gazette_reference || ''} onChange={e => setEditForm(f => ({ ...f, gazette_reference: e.target.value }))} placeholder="Gazette Reference" style={{ width: '100%', marginBottom: 12, padding: 8 }} />
             <button onClick={() => setStep(2)} style={{ width: '100%', background: '#2d6a4f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, marginTop: 8 }}>Next: Location</button>
+            <button onClick={onClose} style={{ width: '100%', background: '#eee', color: '#222', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, marginTop: 8 }}>Cancel</button>
           </div>
         )}
         {step === 2 && (
@@ -114,6 +115,7 @@ export default function AdminEditPropertyModal({ editForm, setEditForm, onEdit, 
             </div>
             <button onClick={() => setStep(1)} style={{ marginRight: 8, background: '#eee', color: '#222', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600 }}>Back</button>
             <button onClick={() => setStep(3)} style={{ background: '#2d6a4f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, marginLeft: 8 }}>Next: Media</button>
+            <button onClick={onClose} style={{ marginLeft: 8, background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600 }}>Cancel</button>
           </div>
         )}
         {step === 3 && (
@@ -261,6 +263,7 @@ export default function AdminEditPropertyModal({ editForm, setEditForm, onEdit, 
             >
               {loading ? 'Saving...' : 'Save'}
             </button>
+            <button onClick={onClose} style={{ marginLeft: 8, background: '#d9534f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600 }}>Cancel</button>
             {error && (
               <div style={{ color: '#d9534f', marginTop: 12, fontWeight: 500, fontSize: 14 }}>{error}</div>
             )}
