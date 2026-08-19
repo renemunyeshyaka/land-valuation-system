@@ -81,6 +81,14 @@
       "step4Desc": "Inkunga yo guhererekanya inyandiko n'ububiko bw'ishyurwa"
     }
   },
+  "promo": {
+    "bannerText": "🎉 Abakoresha 20,000 ba mbere babona uburyo bw'ubuntu burundu — fungura konti yawe uyu munsi!",
+    "cta": "Fungura nonaha",
+    "claimed": "{{count}} / 20,000 basanzwe bafite",
+    "claimedPlaceholder": "Konti 20,000 za mbere z'ubuntu",
+    "neverExpires": "Ntizigera zirangira — nta karte ikenewe",
+    "registrationNote": "Uri mu ba mbere — konti yawe y'ubuntu ntizigera irangira."
+  },
   "auth": {
     "login": "Injira",
     "signup": "Iyandikishe",

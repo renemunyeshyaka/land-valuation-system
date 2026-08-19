@@ -94,6 +94,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.Campaign{},
 		&models.CampaignActivity{},
 		&models.LeadScore{},
+		&models.PromoCounter{},
 	)
 	if err != nil {
 		// Backward-compatibility: some existing DBs have an index instead of the legacy
@@ -132,6 +133,7 @@ func RunSQLMigrations(db *gorm.DB) error {
 		"016_dashboard_property_indexes_and_views.sql",
 		"017_create_currencies_table.sql",
 		"018_create_ai_customer_targeting_tables.sql",
+		"021_add_early_adopter_promo.sql",
 	}
 
 	// Find migrations directory

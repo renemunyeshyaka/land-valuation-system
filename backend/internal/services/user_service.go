@@ -232,6 +232,7 @@ func (s *UserService) logAdminUserChanges(ctx context.Context, audit *AdminUserA
 				"two_factor_enabled",
 				"two_fa_enabled",
 				"is_ultimate_no_expiry",
+				"is_early_adopter",
 			}),
 		},
 		{
@@ -373,6 +374,8 @@ func userAuditFieldValue(user *models.User, field string) interface{} {
 		return user.TwoFAEnabled
 	case "is_ultimate_no_expiry":
 		return user.IsUltimateNoExpiry
+	case "is_early_adopter":
+		return user.IsEarlyAdopter
 	default:
 		return nil
 	}

@@ -40,7 +40,8 @@ func (w *SubscriptionBillingWorker) Start(ctx context.Context, interval time.Dur
 
 func (w *SubscriptionBillingWorker) processRenewals(ctx context.Context) {
 	var users []models.User
-	err := w.DB.Where("subscription_status = ? AND subscription_next_renewal <= ?", "active", time.Now()).Find(&users).Error
+	// Early-adopter accounts are free forever — never loaded for automated renewal.
+	err := w.DB.Where("subscription_status = ? AND subscription_next_renewal <= ? AND is_early_adopter = ?", "active", time.Now(), false).Find(&users).Error
 	if err != nil {
 		log.Printf("[SubscriptionBillingWorker] DB error: %v", err)
 		return
@@ -51,6 +52,11 @@ func (w *SubscriptionBillingWorker) processRenewals(ctx context.Context) {
 }
 
 func (w *SubscriptionBillingWorker) processUserRenewal(ctx context.Context, user *models.User) {
+	// Defensive guard: early-adopter accounts are never charged, expired, or downgraded.
+	if user.IsEarlyAdopter {
+		log.Printf("[SubscriptionBillingWorker] Skipping early-adopter user %d (lifetime free)", user.ID)
+		return
+	}
 	log.Printf("[SubscriptionBillingWorker] Processing renewal for user %d (%s)", user.ID, user.Email)
 
 	// Determine plan and amount

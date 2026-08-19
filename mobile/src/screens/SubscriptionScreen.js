@@ -58,6 +58,11 @@ export default function SubscriptionScreen() {
               <Text style={[styles.planPrice, { color: plan.color }]}>
                 {plan.price === 0 ? 'Free' : `RWF ${plan.price.toLocaleString()}/mo`}
               </Text>
+              {plan.id === 'free' && (
+                <View style={styles.promoNote}>
+                  <Text style={styles.promoNoteText}>🎉 First 20,000 users — free forever (never expires)</Text>
+                </View>
+              )}
               <View style={styles.featureList}>
                 {plan.features.map((f, i) => (
                   <Text key={i} style={styles.featureItem}>✓ {f}</Text>
@@ -100,6 +105,11 @@ const styles = StyleSheet.create({
   activeBadge: { backgroundColor: COLORS.primary, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4 },
   activeBadgeText: { color: COLORS.white, fontSize: SIZES.xs, ...FONTS.semibold },
   planPrice: { fontSize: SIZES.xxl, ...FONTS.bold, marginBottom: 16 },
+  promoNote: {
+    backgroundColor: '#fffbeb', borderRadius: 10, padding: 10, marginBottom: 12,
+    borderWidth: 1, borderColor: '#fde68a',
+  },
+  promoNoteText: { color: '#92400e', fontSize: SIZES.xs, ...FONTS.medium, textAlign: 'center' },
   featureList: { marginBottom: 16, gap: 8 },
   featureItem: { fontSize: SIZES.sm, color: COLORS.textSecondary },
   upgradeBtn: { borderRadius: SIZES.radius, paddingVertical: 14, alignItems: 'center' },

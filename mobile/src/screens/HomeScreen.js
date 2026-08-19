@@ -26,6 +26,9 @@ export default function HomeScreen({ navigation }) {
         <Text style={styles.heroSubtitle}>
           Connect with verified buyers — diaspora & foreign investors. Get instant pricing based on zone coefficients.
         </Text>
+        <View style={styles.promoBanner}>
+          <Text style={styles.promoText}>🎉 First 20,000 users get FREE access forever — claim your account today!</Text>
+        </View>
         <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate('Estimate')}>
           <Text style={styles.ctaText}>Get Started</Text>
         </TouchableOpacity>
@@ -78,7 +81,12 @@ const styles = StyleSheet.create({
   },
   badgeText: { color: COLORS.white, fontSize: SIZES.xs, ...FONTS.medium },
   heroTitle: { color: COLORS.white, fontSize: 26, ...FONTS.bold, lineHeight: 34, marginBottom: 12 },
-  heroSubtitle: { color: 'rgba(255,255,255,0.85)', fontSize: SIZES.sm, lineHeight: 22, marginBottom: 24 },
+  heroSubtitle: { color: 'rgba(255,255,255,0.85)', fontSize: SIZES.sm, lineHeight: 22, marginBottom: 16 },
+  promoBanner: {
+    backgroundColor: '#fffbeb', borderRadius: 12, padding: 12, marginBottom: 16,
+    borderWidth: 1, borderColor: '#fde68a',
+  },
+  promoText: { color: '#92400e', fontSize: SIZES.sm, ...FONTS.medium, textAlign: 'center' },
   ctaButton: {
     backgroundColor: COLORS.accent, borderRadius: SIZES.radius, paddingVertical: 16,
     alignItems: 'center', marginBottom: 24,

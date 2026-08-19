@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import EarlyAdopterBanner from '@/components/EarlyAdopterBanner';
 import Footer from '@/components/Footer';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useRouter } from 'next/router';
@@ -247,6 +248,9 @@ const Home: React.FC = () => {
         {/* HERO section with search & map preview */}
         <section className="hero-gradient text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+            <div className="mb-10">
+              <EarlyAdopterBanner showCta />
+            </div>
             <div className="grid md:grid-cols-2 gap-12 items-center">
               {/* left text */}
               <div>

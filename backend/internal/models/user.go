@@ -88,6 +88,9 @@ type User struct {
 
 	// Ultimate No Expiry Privilege
 	IsUltimateNoExpiry bool `gorm:"default:false" json:"is_ultimate_no_expiry"`
+
+	// Early Adopter Privilege (first 20k sign-ups — free account, never expires)
+	IsEarlyAdopter bool `gorm:"default:false" json:"is_early_adopter"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {

@@ -1,4 +1,5 @@
 
+import EarlyAdopterBanner from '../../components/EarlyAdopterBanner';
 import Footer from '../../components/Footer';
 import React, { useState } from 'react';
 import Head from 'next/head';
@@ -161,6 +162,11 @@ const Register: React.FC = () => {
                 <p className="text-gray-600">
                   {t('auth.registerSubtitle')}
                 </p>
+              </div>
+
+              {/* Early-adopter offer: first 20k free accounts */}
+              <div className="mb-6">
+                <EarlyAdopterBanner />
               </div>
 
               {/* Registration Form Card */}
