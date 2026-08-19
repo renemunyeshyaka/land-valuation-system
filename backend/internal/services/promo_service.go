@@ -3,19 +3,52 @@ package services
 import (
 	"context"
 	"errors"
+	"os"
+	"strconv"
+	"strings"
 
 	"backend/internal/models"
 
 	"gorm.io/gorm"
 )
 
-// Early-adopter promotion constants (first 20,000 sign-ups get a free,
-// never-expiring account). New sign-ups only — existing users are not counted.
+// Early-adopter promotion (first 20,000 sign-ups get a free, never-expiring account).
+// New sign-ups only — existing users are not counted. Tune via env:
+//   EARLY_ADOPTER_ENABLED=true|false              (default true)
+//   EARLY_ADOPTER_LIMIT=<n>                       (default 20000)
+//   EARLY_ADOPTER_UPGRADE_POLICY=baseline_free|keep_forever (default baseline_free)
 const (
-	earlyAdopterCounterID   = 1
-	earlyAdopterCounterName = "early_adopter_free"
-	earlyAdopterLimit       = 20000
+	earlyAdopterCounterID     = 1
+	earlyAdopterCounterName   = "early_adopter_free"
+	defaultEarlyAdopterLimit  = 20000
 )
+
+// earlyAdopterLimit returns the configured promo cap.
+func earlyAdopterLimit() int {
+	if v := strings.TrimSpace(os.Getenv("EARLY_ADOPTER_LIMIT")); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+	}
+	return defaultEarlyAdopterLimit
+}
+
+// isEarlyAdopterEnabled reports whether the promo is enabled.
+func isEarlyAdopterEnabled() bool {
+	return strings.ToLower(strings.TrimSpace(os.Getenv("EARLY_ADOPTER_ENABLED"))) != "false"
+}
+
+// EarlyAdopterUpgradePolicy reports the configured upgrade policy:
+//   baseline_free — upgraded early adopters fall back to the lifetime-free tier
+//                   if their paid renewal fails (never deactivated).
+//   keep_forever  — early adopters keep their paid tier indefinitely (never
+//                   charged or downgraded).
+func EarlyAdopterUpgradePolicy() string {
+	if v := strings.TrimSpace(os.Getenv("EARLY_ADOPTER_UPGRADE_POLICY")); v != "" {
+		return v
+	}
+	return "baseline_free"
+}
 
 // PromoService manages promotional counters (e.g. the first-20k free accounts).
 type PromoService struct {
@@ -41,6 +74,8 @@ func (s *PromoService) GetEarlyAdopterStatus(ctx context.Context) (map[string]in
 		"granted":   counter.Granted,
 		"limit":     counter.GrantLimit,
 		"remaining": remaining,
+		"enabled":   isEarlyAdopterEnabled(),
+		"policy":    EarlyAdopterUpgradePolicy(),
 	}, nil
 }
 
@@ -49,6 +84,9 @@ func (s *PromoService) GetEarlyAdopterStatus(ctx context.Context) (map[string]in
 // active, never-expiring account). Concurrent registrations serialize on the
 // counter row lock so the 20k cap can never be exceeded.
 func (s *PromoService) ClaimEarlyAdopterSlot(ctx context.Context, user *models.User) (bool, error) {
+	if !isEarlyAdopterEnabled() {
+		return false, nil
+	}
 	granted := false
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// Ensure the counter row exists (fresh DB before seed).
@@ -97,7 +135,7 @@ func (s *PromoService) ensureCounterRow(ctx context.Context, tx *gorm.DB) error 
 		return tx.Create(&models.PromoCounter{
 			ID:         earlyAdopterCounterID,
 			Name:       earlyAdopterCounterName,
-			GrantLimit: earlyAdopterLimit,
+			GrantLimit: earlyAdopterLimit(),
 		}).Error
 	}
 	return nil
@@ -109,7 +147,7 @@ func (s *PromoService) getOrCreateCounter(ctx context.Context) (*models.PromoCou
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
 		}
-		counter = models.PromoCounter{ID: earlyAdopterCounterID, Name: earlyAdopterCounterName, GrantLimit: earlyAdopterLimit}
+		counter = models.PromoCounter{ID: earlyAdopterCounterID, Name: earlyAdopterCounterName, GrantLimit: earlyAdopterLimit()}
 		if err := s.db.WithContext(ctx).Create(&counter).Error; err != nil {
 			return nil, err
 		}

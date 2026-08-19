@@ -32,8 +32,10 @@ func TestPromoService_GetEarlyAdopterStatus_Default(t *testing.T) {
 	status, err := svc.GetEarlyAdopterStatus(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, 0, status["granted"])
-	require.Equal(t, earlyAdopterLimit, status["limit"])
-	require.Equal(t, earlyAdopterLimit, status["remaining"])
+	require.Equal(t, defaultEarlyAdopterLimit, status["limit"])
+	require.Equal(t, defaultEarlyAdopterLimit, status["remaining"])
+	require.Equal(t, true, status["enabled"])
+	require.Equal(t, "baseline_free", status["policy"])
 }
 
 func TestPromoService_ClaimEarlyAdopterSlot_RespectsLimit(t *testing.T) {
