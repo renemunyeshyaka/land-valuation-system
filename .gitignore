@@ -143,6 +143,10 @@ copyright/*.txt
 copyright/*.docx
 copyright/*.pdf
 
+# backend/data generated reports (keep local only — CI regenerates them)
+# Note: backend/data/*.csv stays tracked (runtime data); only *.txt reports are excluded.
+backend/data/*.txt
+
 # Property Search
 backend/cmd/propertyscraper/
 !backend/.env.production.example
