@@ -82,12 +82,12 @@
     }
   },
   "promo": {
-    "bannerText": "🎉 Abakoresha 20,000 ba mbere babona uburyo bw'ubuntu burundu — fungura konti yawe uyu munsi!",
+    "bannerText": "🎉 Abakoresha 20,000 ba mbere babona ukwezi k'ubuntu — fungura konti yawe uyu munsi!",
     "cta": "Fungura nonaha",
     "claimed": "{{count}} / 20,000 basanzwe bafite",
-    "claimedPlaceholder": "Konti 20,000 za mbere z'ubuntu",
-    "neverExpires": "Ntizigera zirangira — nta karte ikenewe",
-    "registrationNote": "Uri mu ba mbere — konti yawe y'ubuntu ntizigera irangira."
+    "claimedPlaceholder": "Abakoresha 20,000 ba mbere babona ukwezi k'ubuntu",
+    "oneMonthFree": "Ukwezi k'ubuntu — hanyuma uhitamo umugabane uwo ari wo wose",
+    "registrationNote": "Uri mu ba mbere — fungura ukwezi k'ubuntu, hanyuma uhitamo umugabane ukwiriye."
   },
   "auth": {
     "login": "Injira",

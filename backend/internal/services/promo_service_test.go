@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 
 	"backend/internal/models"
 
@@ -35,7 +36,8 @@ func TestPromoService_GetEarlyAdopterStatus_Default(t *testing.T) {
 	require.Equal(t, defaultEarlyAdopterLimit, status["limit"])
 	require.Equal(t, defaultEarlyAdopterLimit, status["remaining"])
 	require.Equal(t, true, status["enabled"])
-	require.Equal(t, "baseline_free", status["policy"])
+	require.Equal(t, defaultFreeMembershipDays, status["membership_days"])
+	require.Equal(t, defaultFreeMembershipDays+defaultFreeRetentionGraceDays, status["retention_days"])
 }
 
 func TestPromoService_ClaimEarlyAdopterSlot_RespectsLimit(t *testing.T) {
@@ -61,7 +63,9 @@ func TestPromoService_ClaimEarlyAdopterSlot_RespectsLimit(t *testing.T) {
 	require.True(t, reloaded.IsEarlyAdopter)
 	require.Equal(t, "free", reloaded.SubscriptionTier)
 	require.Equal(t, "active", reloaded.SubscriptionStatus)
-	require.Nil(t, reloaded.SubscriptionExpiry)
+	require.NotNil(t, reloaded.SubscriptionExpiry)
+	require.WithinDuration(t, time.Now().Add(FreeMembershipDuration()), *reloaded.SubscriptionExpiry, time.Minute)
+	require.Nil(t, reloaded.SubscriptionNextRenewal)
 
 	// Fill the remaining 2 slots.
 	for i := 0; i < 2; i++ {

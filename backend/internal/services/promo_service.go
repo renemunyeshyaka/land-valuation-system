@@ -6,21 +6,31 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"backend/internal/models"
 
 	"gorm.io/gorm"
 )
 
-// Early-adopter promotion (first 20,000 sign-ups get a free, never-expiring account).
+// Early-adopter promotion (first 20,000 sign-ups get a one-month free membership).
 // New sign-ups only — existing users are not counted. Tune via env:
-//   EARLY_ADOPTER_ENABLED=true|false              (default true)
-//   EARLY_ADOPTER_LIMIT=<n>                       (default 20000)
-//   EARLY_ADOPTER_UPGRADE_POLICY=baseline_free|keep_forever (default baseline_free)
+//   EARLY_ADOPTER_ENABLED=true|false   (default true)
+//   EARLY_ADOPTER_LIMIT=<n>            (default 20000)
+//   FREE_MEMBERSHIP_DAYS=<n>           (default 30 — one-month free membership)
+//   FREE_RETENTION_GRACE_DAYS=<n>      (default 30 — data kept 30 days after expiry)
+//
+// Free-tier lifecycle (no "lifetime free" accounts):
+//   - A free membership lasts 30 days (one month), then the account expires.
+//   - Data is retained for 60 days total (30 days after expiry) so the user can
+//     subscribe to a plan of their choice during that window.
+//   - After the 60-day window the account is locked. Nothing is kept forever.
 const (
-	earlyAdopterCounterID     = 1
-	earlyAdopterCounterName   = "early_adopter_free"
-	defaultEarlyAdopterLimit  = 20000
+	earlyAdopterCounterID         = 1
+	earlyAdopterCounterName       = "early_adopter_free"
+	defaultEarlyAdopterLimit      = 20000
+	defaultFreeMembershipDays     = 30
+	defaultFreeRetentionGraceDays = 30
 )
 
 // earlyAdopterLimit returns the configured promo cap.
@@ -38,19 +48,29 @@ func isEarlyAdopterEnabled() bool {
 	return strings.ToLower(strings.TrimSpace(os.Getenv("EARLY_ADOPTER_ENABLED"))) != "false"
 }
 
-// EarlyAdopterUpgradePolicy reports the configured upgrade policy:
-//   baseline_free — upgraded early adopters fall back to the lifetime-free tier
-//                   if their paid renewal fails (never deactivated).
-//   keep_forever  — early adopters keep their paid tier indefinitely (never
-//                   charged or downgraded).
-func EarlyAdopterUpgradePolicy() string {
-	if v := strings.TrimSpace(os.Getenv("EARLY_ADOPTER_UPGRADE_POLICY")); v != "" {
-		return v
+// FreeMembershipDuration returns how long a free membership lasts
+// (default 30 days = one month). Used at signup and by the retention worker.
+func FreeMembershipDuration() time.Duration {
+	if v := strings.TrimSpace(os.Getenv("FREE_MEMBERSHIP_DAYS")); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return time.Duration(n) * 24 * time.Hour
+		}
 	}
-	return "baseline_free"
+	return time.Duration(defaultFreeMembershipDays) * 24 * time.Hour
 }
 
-// PromoService manages promotional counters (e.g. the first-20k free accounts).
+// FreeRetentionGraceDuration returns how long free-account data is kept after the
+// membership expires (default 30 days, i.e. 60 days total retention).
+func FreeRetentionGraceDuration() time.Duration {
+	if v := strings.TrimSpace(os.Getenv("FREE_RETENTION_GRACE_DAYS")); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return time.Duration(n) * 24 * time.Hour
+		}
+	}
+	return time.Duration(defaultFreeRetentionGraceDays) * 24 * time.Hour
+}
+
+// PromoService manages promotional counters (e.g. the first-20k one-month free memberships).
 type PromoService struct {
 	db *gorm.DB
 }
@@ -70,18 +90,20 @@ func (s *PromoService) GetEarlyAdopterStatus(ctx context.Context) (map[string]in
 		remaining = 0
 	}
 	return map[string]interface{}{
-		"name":      counter.Name,
-		"granted":   counter.Granted,
-		"limit":     counter.GrantLimit,
-		"remaining": remaining,
-		"enabled":   isEarlyAdopterEnabled(),
-		"policy":    EarlyAdopterUpgradePolicy(),
+		"name":            counter.Name,
+		"granted":         counter.Granted,
+		"limit":           counter.GrantLimit,
+		"remaining":       remaining,
+		"enabled":         isEarlyAdopterEnabled(),
+		"benefit":         "one-month free membership",
+		"membership_days": defaultFreeMembershipDays,
+		"retention_days":  defaultFreeMembershipDays + defaultFreeRetentionGraceDays,
 	}, nil
 }
 
 // ClaimEarlyAdopterSlot atomically claims a slot for a new user, if any remain.
 // Returns true when the user was granted the early-adopter benefit (free tier,
-// active, never-expiring account). Concurrent registrations serialize on the
+// active, one-month free membership). Concurrent registrations serialize on the
 // counter row lock so the 20k cap can never be exceeded.
 func (s *PromoService) ClaimEarlyAdopterSlot(ctx context.Context, user *models.User) (bool, error) {
 	if !isEarlyAdopterEnabled() {
@@ -105,17 +127,18 @@ func (s *PromoService) ClaimEarlyAdopterSlot(ctx context.Context, user *models.U
 			return nil // cap reached — user keeps a normal free account
 		}
 
-		// Grant the benefit: free tier, active, never expires.
+		// Grant the benefit: free tier, active, one-month (30-day) free membership.
+		expiry := time.Now().Add(FreeMembershipDuration())
 		user.IsEarlyAdopter = true
 		user.SubscriptionTier = "free"
 		user.SubscriptionStatus = "active"
-		user.SubscriptionExpiry = nil
+		user.SubscriptionExpiry = &expiry
 		user.SubscriptionNextRenewal = nil
 		if err := tx.Model(&models.User{}).Where("id = ?", user.ID).Updates(map[string]interface{}{
 			"is_early_adopter":          true,
 			"subscription_tier":         "free",
 			"subscription_status":       "active",
-			"subscription_expiry":       nil,
+			"subscription_expiry":       expiry,
 			"subscription_next_renewal": nil,
 		}).Error; err != nil {
 			return err

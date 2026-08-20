@@ -10,7 +10,7 @@ import (
 )
 
 // EarlyAdopterStatusHandler returns the granted/limit/remaining status of the
-// first-20k free-accounts promotion. Public endpoint (no auth required).
+// first-20k one-month free-membership promotion. Public endpoint (no auth required).
 func EarlyAdopterStatusHandler(promoService *services.PromoService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		status, err := promoService.GetEarlyAdopterStatus(c.Request.Context())

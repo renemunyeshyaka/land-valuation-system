@@ -140,6 +140,11 @@ func main() {
 	subBillingWorker := workers.NewSubscriptionBillingWorker(db, paymentService)
 	subBillingWorker.Start(ctx, 24*time.Hour) // Run daily
 
+	// Start free-account retention worker (background): expires one-month free
+	// memberships and enforces the 60-day data retention window.
+	freeRetentionWorker := workers.NewFreeAccountRetentionWorker(db)
+	freeRetentionWorker.Start(ctx, 24*time.Hour) // Run daily
+
 	// Register Prometheus metrics
 	metrics.Register()
 

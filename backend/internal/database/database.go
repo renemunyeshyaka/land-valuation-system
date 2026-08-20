@@ -134,6 +134,7 @@ func RunSQLMigrations(db *gorm.DB) error {
 		"017_create_currencies_table.sql",
 		"018_create_ai_customer_targeting_tables.sql",
 		"021_add_early_adopter_promo.sql",
+		"022_backfill_early_adopter_expiry.sql",
 	}
 
 	// Find migrations directory

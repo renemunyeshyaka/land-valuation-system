@@ -45,7 +45,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, redisClient *redis.Client, 
 	setupCurrencyRoutes(router, db)
 	setupHealthRoutes(router, db)
 
-	// Early-adopter promo status (public) — first 20k free accounts.
+	// Early-adopter promo status (public) — first 20k one-month free memberships.
 	promoService := services.NewPromoService(db)
 	router.GET("/api/v1/promo/early-adopter", handlers.EarlyAdopterStatusHandler(promoService))
 

@@ -82,12 +82,12 @@
     }
   },
   "promo": {
-    "bannerText": "🎉 First 20,000 users get FREE access forever — claim your account today!",
+    "bannerText": "🎉 First 20,000 users get 1 month FREE — claim your account today!",
     "cta": "Claim now",
     "claimed": "{{count}} / 20,000 claimed",
-    "claimedPlaceholder": "First 20,000 free accounts",
-    "neverExpires": "Never expires — no card required",
-    "registrationNote": "You're one of the first users — your free account never expires."
+    "claimedPlaceholder": "First 20,000 one-month free memberships",
+    "oneMonthFree": "1 month free — then choose any plan",
+    "registrationNote": "You're one of the first users — enjoy 1 month free, then choose the plan that fits you."
   },
   "auth": {
     "login": "Login",

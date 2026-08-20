@@ -12,9 +12,9 @@ interface PromoStatus {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
 /**
- * EarlyAdopterBanner — short, simple announcement for the first-20k free-accounts
- * promotion (early adoption gratuity). Shows a live "X / 20,000 claimed" counter
- * when the backend promo endpoint is reachable; otherwise the banner still renders.
+ * EarlyAdopterBanner — short, simple announcement for the first-20k one-month
+ * free-membership promotion. Shows a live "X / 20,000 claimed" counter when the
+ * backend promo endpoint is reachable; otherwise the banner still renders.
  */
 const EarlyAdopterBanner: React.FC<{ showCta?: boolean }> = ({ showCta = false }) => {
   const { t } = useTranslation();
@@ -51,7 +51,7 @@ const EarlyAdopterBanner: React.FC<{ showCta?: boolean }> = ({ showCta = false }
       <div className="flex items-center gap-3">
         <span
           className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white border border-amber-200 rounded-full px-3 py-1 whitespace-nowrap"
-          title={t('promo.neverExpires')}
+          title={t('promo.oneMonthFree')}
         >
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
           {counterLabel}

@@ -89,7 +89,7 @@ type User struct {
 	// Ultimate No Expiry Privilege
 	IsUltimateNoExpiry bool `gorm:"default:false" json:"is_ultimate_no_expiry"`
 
-	// Early Adopter Privilege (first 20k sign-ups — free account, never expires)
+	// Early Adopter Privilege (first 20k sign-ups — one-month free membership)
 	IsEarlyAdopter bool `gorm:"default:false" json:"is_early_adopter"`
 }
 

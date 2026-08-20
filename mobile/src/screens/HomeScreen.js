@@ -27,7 +27,7 @@ export default function HomeScreen({ navigation }) {
           Connect with verified buyers — diaspora & foreign investors. Get instant pricing based on zone coefficients.
         </Text>
         <View style={styles.promoBanner}>
-          <Text style={styles.promoText}>🎉 First 20,000 users get FREE access forever — claim your account today!</Text>
+          <Text style={styles.promoText}>🎉 First 20,000 users get 1 month FREE — claim your account today!</Text>
         </View>
         <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate('Estimate')}>
           <Text style={styles.ctaText}>Get Started</Text>

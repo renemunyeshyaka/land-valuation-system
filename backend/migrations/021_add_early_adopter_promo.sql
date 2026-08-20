@@ -1,4 +1,4 @@
--- Early Adopter promo: the first 20,000 new sign-ups get a free, never-expiring account.
+-- Early Adopter promo: the first 20,000 new sign-ups get a one-month free membership.
 -- Existing users keep is_early_adopter = FALSE (unchanged). The counter counts new sign-ups only.
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_early_adopter BOOLEAN NOT NULL DEFAULT FALSE;

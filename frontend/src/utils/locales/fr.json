@@ -82,12 +82,12 @@
     }
   },
   "promo": {
-    "bannerText": "🎉 Les 20 000 premiers utilisateurs bénéficient d'un accès GRATUIT à vie — créez votre compte dès aujourd'hui !",
+    "bannerText": "🎉 Les 20 000 premiers utilisateurs bénéficient d'un mois GRATUIT — créez votre compte dès aujourd'hui !",
     "cta": "Créer mon compte",
     "claimed": "{{count}} / 20 000 comptes créés",
-    "claimedPlaceholder": "Les 20 000 premiers comptes gratuits",
-    "neverExpires": "N'expire jamais — aucune carte requise",
-    "registrationNote": "Vous faites partie des premiers utilisateurs — votre compte gratuit n'expire jamais."
+    "claimedPlaceholder": "Les 20 000 premières adhésions gratuites d'un mois",
+    "oneMonthFree": "1 mois gratuit — puis choisissez n'importe quelle formule",
+    "registrationNote": "Vous faites partie des premiers utilisateurs — profitez d'un mois gratuit, puis choisissez la formule qui vous convient."
   },
   "auth": {
     "login": "Connexion",

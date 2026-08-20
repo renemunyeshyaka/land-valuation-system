@@ -88,7 +88,7 @@ func (s *AuthService) Register(ctx context.Context, user *models.User, password 
 		return nil, fmt.Errorf("failed to send activation email: %w", err)
 	}
 
-	// Early-adopter promo: the first 20,000 sign-ups get a free, never-expiring account.
+	// Early-adopter promo: the first 20,000 sign-ups get a one-month free membership.
 	// Non-fatal — if claiming fails, the user is still created with a normal free account.
 	promoService := NewPromoService(s.db)
 	claimed, claimErr := promoService.ClaimEarlyAdopterSlot(ctx, createdUser)

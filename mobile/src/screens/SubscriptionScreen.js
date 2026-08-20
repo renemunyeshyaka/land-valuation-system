@@ -60,7 +60,7 @@ export default function SubscriptionScreen() {
               </Text>
               {plan.id === 'free' && (
                 <View style={styles.promoNote}>
-                  <Text style={styles.promoNoteText}>🎉 First 20,000 users — free forever (never expires)</Text>
+                  <Text style={styles.promoNoteText}>🎉 First 20,000 users — 1 month free membership</Text>
                 </View>
               )}
               <View style={styles.featureList}>

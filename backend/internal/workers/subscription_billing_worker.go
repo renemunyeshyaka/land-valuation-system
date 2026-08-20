@@ -40,8 +40,8 @@ func (w *SubscriptionBillingWorker) Start(ctx context.Context, interval time.Dur
 
 func (w *SubscriptionBillingWorker) processRenewals(ctx context.Context) {
 	var users []models.User
-	// Includes early adopters who upgraded to a paid tier so their paid renewals are
-	// processed; free-tier early adopters have no next_renewal and are skipped below.
+	// Active subscriptions with a due renewal are charged; free accounts have no
+	// next_renewal and are handled by the free-account retention worker.
 	err := w.DB.Where("subscription_status = ? AND subscription_next_renewal <= ?", "active", time.Now()).Find(&users).Error
 	if err != nil {
 		log.Printf("[SubscriptionBillingWorker] DB error: %v", err)
@@ -104,14 +104,6 @@ func (w *SubscriptionBillingWorker) processUserRenewal(ctx context.Context, user
 		body := fmt.Sprintf("Dear %s,\n\nYour subscription for the %s plan has been successfully renewed.\nAmount: %.0f EUR\n\nThank you for staying with us!\n\nLand Valuation System Team", user.FirstName, planType, amount)
 		_ = alert.SendEmail(subject, body)
 	} else {
-		// Early-adopter accounts keep a lifetime-free baseline: a failed paid renewal
-		// reverts them to the free tier instead of leaving them past-due/deactivated.
-		if user.IsEarlyAdopter && services.EarlyAdopterUpgradePolicy() == "baseline_free" {
-			log.Printf("[SubscriptionBillingWorker] Early-adopter user %d (%s) renewal failed — reverting to lifetime free baseline", user.ID, planType)
-			w.revertEarlyAdopterToFree(ctx, user, planType)
-			return
-		}
-
 		user.SubscriptionStatus = "past_due"
 		if err := w.DB.Save(user).Error; err != nil {
 			log.Printf("[SubscriptionBillingWorker] Failed to update user %d: %v", user.ID, err)
@@ -123,23 +115,4 @@ func (w *SubscriptionBillingWorker) processUserRenewal(ctx context.Context, user
 		body := fmt.Sprintf("Dear %s,\n\nWe were unable to renew your subscription for the %s plan. Please check your payment method and try again.\nIf you need assistance, contact support.\n\nLand Valuation System Team", user.FirstName, planType)
 		_ = alert.SendEmail(subject, body)
 	}
-}
-
-// revertEarlyAdopterToFree returns an early adopter to the lifetime-free baseline
-// (never deactivated, no expiry) after their paid upgrade cannot be renewed.
-func (w *SubscriptionBillingWorker) revertEarlyAdopterToFree(ctx context.Context, user *models.User, planType string) {
-	user.SubscriptionTier = "free"
-	user.SubscriptionStatus = "active"
-	user.SubscriptionExpiry = nil
-	user.SubscriptionNextRenewal = nil
-	user.SubscriptionCancelReason = "early_adopter_upgrade_renewal_failed:" + planType
-	if err := w.DB.Save(user).Error; err != nil {
-		log.Printf("[SubscriptionBillingWorker] Failed to revert early-adopter user %d to free: %v", user.ID, err)
-		return
-	}
-	log.Printf("[SubscriptionBillingWorker] Early-adopter user %d reverted to lifetime free baseline", user.ID)
-
-	subject := "LandVal: back on your Lifetime Free plan"
-	body := fmt.Sprintf("Dear %s,\n\nYour %s plan could not be renewed, so your account has returned to your Lifetime Free plan. Your account stays active — no expiry, no card needed.\n\nLand Valuation System Team", user.FirstName, planType)
-	_ = alert.SendEmail(subject, body)
 }
