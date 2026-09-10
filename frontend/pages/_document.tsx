@@ -1,8 +1,30 @@
-import { Html, Head, Main, NextScript } from 'next/document'
+import Document, { Html, Head, Main, NextScript } from 'next/document'
+import { readLanguageFromCookieHeader } from '../src/utils/i18n'
 
-export default function Document() {
-  return (
-    <Html lang="rw">
+/** og:locale value for each language the app ships. */
+const OG_LOCALES: Record<string, string> = {
+  en: 'en_US',
+  fr: 'fr_FR',
+  rw: 'rw_RW',
+}
+
+type DocumentContext = Parameters<typeof Document.getInitialProps>[0]
+
+/**
+ * `<html lang>` is resolved from the language cookie on the server so the document
+ * language always matches the language the page was actually rendered in.
+ */
+class LandValDocument extends Document {
+  static async getInitialProps(ctx: DocumentContext) {
+    const initialProps = await Document.getInitialProps(ctx)
+    const lang = readLanguageFromCookieHeader(ctx.req?.headers?.cookie) || 'rw'
+    return { ...initialProps, lang }
+  }
+
+  render() {
+    const lang = (this.props as unknown as { lang?: string }).lang || 'rw'
+    return (
+    <Html lang={lang}>
       <Head>
         {/* Font Awesome 6.0.0-beta3 - Icon System */}
         <link
@@ -37,7 +59,7 @@ export default function Document() {
         <meta property="og:title" content="Land Valuation System - Rwanda" />
         <meta property="og:description" content="Accurate property valuations powered by official Rwanda gazette data" />
         <meta property="og:site_name" content="LandVal" />
-        <meta property="og:locale" content="en_US" />
+        <meta property="og:locale" content={OG_LOCALES[lang] || 'rw_RW'} />
 
         {/* International SEO — hreflang alternate language tags */}
         <link rel="alternate" href="https://landval.kcoders.org/" hrefLang="x-default" />
@@ -62,5 +84,8 @@ export default function Document() {
         <NextScript />
       </body>
     </Html>
-  )
+    )
+  }
 }
+
+export default LandValDocument

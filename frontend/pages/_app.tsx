@@ -1,17 +1,15 @@
-import type { AppProps } from 'next/app'
+import NextApp, { type AppContext, type AppProps } from 'next/app'
 import { useEffect } from 'react'
 import { SessionProvider } from 'next-auth/react'
 import { Provider } from 'react-redux'
 import { Toaster } from 'react-hot-toast'
 import { store } from '../src/store'
 import '../src/styles/globals.css'
-import '../src/utils/i18n' // Initialize i18n (always with 'rw' to match SSR)
-import { applySavedLanguage, syncLanguageFromBackend } from '../src/utils/i18n'
+import i18n, { applySavedLanguage, readLanguageFromCookieHeader, syncLanguageFromBackend } from '../src/utils/i18n'
 import ChatWidget from '../src/components/ChatWidget'
 
-export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
-  // After hydration, apply the user's saved language preference
-  // (not done during init to avoid hydration mismatch errors #418/#423/#425)
+function LandValApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
+  // After hydration, apply the user's saved language preference.
   useEffect(() => {
     applySavedLanguage();
     syncLanguageFromBackend();
@@ -50,3 +48,24 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     </SessionProvider>
   )
 }
+
+/**
+ * Render the user's saved language on the server.
+ *
+ * The preference lives in a cookie as well as localStorage; the cookie is the
+ * only one visible to the server, so reading it here means the first paint is
+ * already in the right language instead of flashing Kinyarwanda (the bundled
+ * fallback) until hydration completes.
+ */
+LandValApp.getInitialProps = async (appContext: AppContext) => {
+  const appProps = await NextApp.getInitialProps(appContext);
+  const lang = readLanguageFromCookieHeader(appContext.ctx.req?.headers?.cookie);
+
+  if (lang && i18n.language !== lang) {
+    await i18n.changeLanguage(lang);
+  }
+
+  return { ...appProps };
+};
+
+export default LandValApp;

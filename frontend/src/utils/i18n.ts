@@ -6,14 +6,60 @@ import fr from './locales/fr.json';
 import rw from './locales/rw.json';
 
 /**
+ * The language preference is mirrored into a cookie as well as localStorage.
+ *
+ * localStorage is not readable during SSR, so the server always painted the
+ * fallback language ('rw') and the real preference was only applied in an
+ * effect after hydration. Two consequences: every page flashed Kinyarwanda
+ * first, and if hydration was slow or failed the page stayed in Kinyarwanda
+ * permanently. The cookie lets _app.getInitialProps render the correct
+ * language on the very first paint.
+ */
+export const LANGUAGE_COOKIE = 'preferred_language';
+const LANGUAGE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
+
+const ALL_LANGUAGE_CODES = ['en', 'fr', 'rw'];
+
+const isSupportedLanguage = (lang: unknown): lang is string =>
+  typeof lang === 'string' && ALL_LANGUAGE_CODES.includes(lang);
+
+const readLanguageFromCookieString = (cookieString: string | null | undefined): string | null => {
+  if (!cookieString) return null;
+  const prefix = `${LANGUAGE_COOKIE}=`;
+  const part = cookieString
+    .split(';')
+    .map((chunk) => chunk.trim())
+    .find((chunk) => chunk.startsWith(prefix));
+  if (!part) return null;
+  const value = decodeURIComponent(part.slice(prefix.length));
+  return isSupportedLanguage(value) ? value : null;
+};
+
+/** Reads the preference from document.cookie (client only). */
+export const readLanguageCookie = (): string | null => {
+  if (typeof document === 'undefined') return null;
+  return readLanguageFromCookieString(document.cookie);
+};
+
+/** Reads the preference from a raw Cookie header (server, inside getInitialProps). */
+export const readLanguageFromCookieHeader = (cookieHeader?: string | null): string | null =>
+  readLanguageFromCookieString(cookieHeader);
+
+/** Mirrors the language into a cookie so SSR can honour it. */
+export const writeLanguageCookie = (lang: string): void => {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${LANGUAGE_COOKIE}=${encodeURIComponent(lang)}; path=/; max-age=${LANGUAGE_COOKIE_MAX_AGE}; SameSite=Lax`;
+};
+
+/**
  * Detects the user's preferred language from localStorage or URL path.
  * This should ONLY be called on the client side (inside useEffect).
  * During SSR / module init time we always use the fallback ('rw')
  * to keep server and client renders consistent (avoid hydration mismatch).
  */
 const detectClientLanguage = (): string => {
-  // Check localStorage for user preference
-  const stored = localStorage.getItem('preferred_language');
+  // Check localStorage for user preference, then the SSR-visible cookie
+  const stored = localStorage.getItem('preferred_language') || readLanguageCookie();
   if (stored) return stored;
 
   // Check URL path for locale prefix
@@ -98,6 +144,7 @@ export const syncLanguageFromBackend = async (): Promise<void> => {
       if (lang !== i18n.language && SUPPORTED_LANGUAGES.some(l => l.code === lang)) {
         i18n.changeLanguage(lang);
         localStorage.setItem('preferred_language', lang);
+        writeLanguageCookie(lang);
         document.documentElement.lang = lang;
       }
     }
@@ -110,6 +157,7 @@ export const changeLanguage = (lang: string) => {
   i18n.changeLanguage(lang);
   if (typeof window !== 'undefined') {
     localStorage.setItem('preferred_language', lang);
+    writeLanguageCookie(lang);
     document.documentElement.lang = lang;
     // Sync to backend (fire-and-forget)
     syncLanguageToBackend(lang);
