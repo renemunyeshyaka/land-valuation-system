@@ -6,9 +6,24 @@ import (
 	"strconv"
 	"strings"
 
+	"backend/internal/models"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"gorm.io/gorm"
 )
+
+// authDB is the optional database handle used to reject tokens belonging to
+// accounts that no longer exist (for example, after a user deletes their own
+// account). It is registered once at startup via SetAuthDB; when nil (unit
+// tests, tools) the extra lookup is skipped.
+var authDB *gorm.DB
+
+// SetAuthDB registers the database used by AuthRequired to confirm that the
+// account behind a valid token still exists.
+func SetAuthDB(db *gorm.DB) {
+	authDB = db
+}
 
 // AuthRequired middleware validates JWT token
 func AuthRequired() gin.HandlerFunc {
@@ -80,6 +95,21 @@ func AuthRequired() gin.HandlerFunc {
 			})
 			c.Abort()
 			return
+		}
+
+		// A valid JWT for a deleted account must stop working immediately, rather
+		// than staying usable until the token expires. If the lookup itself fails
+		// we fail open so a transient database issue cannot lock everyone out.
+		if authDB != nil {
+			var count int64
+			if err := authDB.WithContext(c.Request.Context()).Model(&models.User{}).
+				Where("id = ?", userID).Count(&count).Error; err == nil && count == 0 {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"error": "account no longer exists",
+				})
+				c.Abort()
+				return
+			}
 		}
 
 		c.Set("user_id", userID)

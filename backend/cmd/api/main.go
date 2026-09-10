@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"backend/internal/api/routes"
+	apiMiddleware "backend/internal/api/middleware"
 	"backend/internal/config"
 	"backend/internal/database"
 	"backend/internal/middleware"
@@ -107,6 +108,10 @@ func main() {
 
 	// Setup routes
 	routes.Setup(router, db, redisCache, cfg)
+
+	// Allow the auth middleware to reject tokens whose account has been deleted.
+	apiMiddleware.SetAuthDB(db)
+
 	router.GET("/api/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Create server

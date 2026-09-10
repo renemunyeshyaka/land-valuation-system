@@ -3,6 +3,9 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
+	"time"
 
 	"backend/internal/models"
 
@@ -94,6 +97,149 @@ func (r *UserRepository) Delete(ctx context.Context, id string) error {
 		return errors.New("user not found")
 	}
 	return nil
+}
+
+// CountByUserType returns the number of active (non-deleted) users of a given type.
+func (r *UserRepository) CountByUserType(ctx context.Context, userType string) (int64, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).Model(&models.User{}).
+		Where("user_type = ?", userType).
+		Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// EraseAccount de-identifies a user's account and then soft-deletes it. Used when
+// a user exercises their right to delete their own account at any time.
+//
+// Everything that identifies the person is removed or replaced:
+//   - credentials and one-time secrets (password, OTP, reset/verification tokens, 2FA)
+//   - personal details (name, email, phone, national ID, photo, bio, location, company)
+//   - the KYC document reference and free-form metadata, when those columns exist
+//   - contact copies held in the lead/CRM table and notifications addressed to them
+//
+// The row itself is retained (soft delete) so property ownership, financial
+// records and audit history stay intact, but nothing in it identifies the user
+// and the account can never authenticate again.
+//
+// originalEmail is the address currently on record, used to find copies of the
+// user's data in other tables before the users row is rewritten.
+func (r *UserRepository) EraseAccount(ctx context.Context, id, originalEmail string) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var user models.User
+		if err := tx.Where("id = ?", id).First(&user).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return errors.New("user not found")
+			}
+			return err
+		}
+
+		// Empty strings are used for NOT NULL columns; NULL is used for nullable
+		// columns that carry a UNIQUE constraint (several deleted accounts must
+		// not collide). Email keeps a unique tombstone because it is NOT NULL.
+		scrub := map[string]interface{}{
+			// Credentials & one-time secrets
+			"password":                      "",
+			"password_hash":                 "",
+			"otp_code":                      "",
+			"otp_expires_at":                nil,
+			"otp_attempts":                  0,
+			"otp_locked_until":              nil,
+			"email_verification_code":       "",
+			"email_verification_expires_at": nil,
+			"password_reset_token":          "",
+			"password_reset_expires_at":     nil,
+			"verification_token":            "",
+			"verification_expires_at":       nil,
+			"two_fa_secret":                 "",
+			"two_fa_enabled":                false,
+			"two_factor_secret":             "",
+			"two_factor_enabled":            false,
+			"login_attempts":                0,
+			"locked_until":                  nil,
+
+			// Personal data
+			"email":               fmt.Sprintf("deleted+%d@deleted.landval.local", user.ID),
+			"phone":               nil,
+			"national_id":         nil,
+			"first_name":          "Deleted",
+			"last_name":           "User",
+			"full_name":           "Deleted User",
+			"profile_image":       "",
+			"profile_picture_url": "",
+			"company_name":        "",
+			"business_license":    "",
+			"bio":                 "",
+			"city":                "",
+			"country":             "",
+			"last_login":          nil,
+			"is_active":           false,
+			"is_verified":         false,
+			"email_verified":      false,
+		}
+
+		// Columns that exist in the database but are not declared on the model
+		// (see migrations/001_init_schema.sql). Added only when present so the
+		// same code path works against any schema version.
+		for _, column := range []string{"kyc_document_url", "metadata"} {
+			if tx.Migrator().HasColumn(&models.User{}, column) {
+				scrub[column] = nil
+			}
+		}
+
+		if err := tx.Model(&models.User{}).Where("id = ?", id).Updates(scrub).Error; err != nil {
+			return err
+		}
+
+		// Copies of the person's contact details in the lead/CRM table.
+		if err := anonymizeLeads(tx, user.ID, originalEmail); err != nil {
+			return err
+		}
+
+		// Notifications are addressed to the person, so they go with the account.
+		if tx.Migrator().HasTable(&models.Notification{}) {
+			if err := tx.Where("user_id = ?", id).Delete(&models.Notification{}).Error; err != nil {
+				return err
+			}
+		}
+
+		// Soft delete (sets deleted_at). GORM's default scope then hides the user
+		// from every lookup, which makes login and authenticated requests fail.
+		result := tx.Delete(&models.User{}, id)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return errors.New("user not found")
+		}
+		return nil
+	})
+}
+
+// anonymizeLeads strips the contact details of any lead record that belongs to
+// the erased user, so the person is not left in the marketing database.
+func anonymizeLeads(tx *gorm.DB, userID uint, email string) error {
+	if !tx.Migrator().HasTable(&models.Lead{}) {
+		return nil
+	}
+
+	query := tx.Model(&models.Lead{}).Where("converted_user_id = ?", userID)
+	if trimmed := strings.TrimSpace(email); trimmed != "" {
+		query = tx.Model(&models.Lead{}).
+			Where("converted_user_id = ? OR email = ?", userID, trimmed)
+	}
+
+	return query.Updates(map[string]interface{}{
+		"first_name":        nil,
+		"last_name":         nil,
+		"email":             nil,
+		"phone":             nil,
+		"company":           nil,
+		"unsubscribe_token": nil,
+		"status":            "unsubscribed",
+		"unsubscribed_at":   time.Now(),
+	}).Error
 }
 
 // HardDelete permanently removes a user and their owned properties from the database.

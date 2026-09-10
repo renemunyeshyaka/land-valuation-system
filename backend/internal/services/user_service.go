@@ -2,14 +2,19 @@ package services
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
 	"backend/internal/models"
 	"backend/internal/repository"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -436,12 +441,90 @@ func (s *UserService) UpdateAccountSettings(ctx context.Context, userID string, 
 	return s.GetAccountSettings(ctx, userID)
 }
 
-// DeleteAccount permanently deletes user account
-func (s *UserService) DeleteAccount(ctx context.Context, userID, password string) error {
-	// TODO: Verify password before deletion
-	_ = password
+// DeleteAccount implements the user's right to delete their own account at any
+// time. The caller must confirm with their current password; the account is then
+// erased — credentials and personal data are removed, copies in the lead table
+// and notifications are deleted — and soft-deleted so it can never be used again.
+func (s *UserService) DeleteAccount(ctx context.Context, userID, password, reason string) error {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return errors.New("user not found")
+	}
 
-	return s.userRepo.Delete(ctx, userID)
+	if strings.TrimSpace(password) == "" {
+		return errors.New("your password is required to delete your account")
+	}
+
+	// Verify the password with the same hash/normalisation rules as Login.
+	hash := user.PasswordHash
+	if hash == "" {
+		hash = user.Password
+	}
+	if strings.HasPrefix(hash, "$2b$") {
+		hash = "$2a$" + hash[4:]
+	}
+	if hash == "" || bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) != nil {
+		return errors.New("incorrect password")
+	}
+
+	// Never allow the last remaining administrator to delete themselves.
+	if strings.EqualFold(user.UserType, "admin") {
+		count, countErr := s.userRepo.CountByUserType(ctx, "admin")
+		if countErr != nil {
+			return errors.New("unable to verify account state, please try again")
+		}
+		if count <= 1 {
+			return errors.New("the last administrator account cannot be deleted")
+		}
+	}
+
+	if err := s.userRepo.EraseAccount(ctx, userID, user.Email); err != nil {
+		return err
+	}
+
+	// Best-effort audit trail — never blocks the deletion itself.
+	s.logSelfAccountDeletion(ctx, user, reason)
+
+	return nil
+}
+
+// logSelfAccountDeletion records a self-service account deletion in activity_logs.
+//
+// The entry deliberately stores a hash of the email rather than the address
+// itself: the audit trail must not re-introduce personal data that the deletion
+// just erased. The hash still lets support match a "I deleted my account"
+// request without holding the address.
+func (s *UserService) logSelfAccountDeletion(ctx context.Context, user *models.User, reason string) {
+	if s.db == nil || user == nil {
+		return
+	}
+
+	emailHash := ""
+	if trimmed := strings.ToLower(strings.TrimSpace(user.Email)); trimmed != "" {
+		sum := sha256.Sum256([]byte(trimmed))
+		emailHash = hex.EncodeToString(sum[:])
+	}
+
+	detailsJSON, err := json.Marshal(map[string]interface{}{
+		"self_deleted": true,
+		"reason":       strings.TrimSpace(reason),
+		"email_sha256": emailHash,
+		"user_type":    user.UserType,
+	})
+	if err != nil {
+		return
+	}
+
+	entry := map[string]interface{}{
+		"user_id":       user.ID,
+		"action":        "account_self_deleted",
+		"resource_type": "user",
+		"resource_id":   user.ID,
+		"details":       string(detailsJSON),
+	}
+	if err := s.db.WithContext(ctx).Table("activity_logs").Create(entry).Error; err != nil {
+		log.Printf("[DeleteAccount] failed to write activity log for user %d: %v", user.ID, err)
+	}
 }
 
 // GetActivityLog retrieves user activity log

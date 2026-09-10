@@ -4,7 +4,7 @@ import {
   ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { COLORS, FONTS, SIZES, SHADOWS } from '../constants/theme';
-import { userAPI, authAPI } from '../services/api';
+import { userAPI, authAPI, clearToken } from '../services/api';
 
 export default function ProfileScreen({ navigation }) {
   const [profile, setProfile] = useState(null);
@@ -12,6 +12,11 @@ export default function ProfileScreen({ navigation }) {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '' });
+
+  // Self-service account deletion (right to delete your own account at any time)
+  const [showDelete, setShowDelete] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => { loadProfile(); }, []);
 
@@ -40,6 +45,43 @@ export default function ProfileScreen({ navigation }) {
 
   const handleChangePassword = () => {
     navigation.navigate('ForgotPassword');
+  };
+
+  const handleDeleteAccount = () => {
+    if (!deletePassword) {
+      Alert.alert('Password required', 'Enter your current password to confirm.');
+      return;
+    }
+
+    Alert.alert(
+      'Delete account?',
+      'This permanently deletes your account and signs you out. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: confirmDeleteAccount },
+      ],
+    );
+  };
+
+  const confirmDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await userAPI.deleteAccount(deletePassword);
+      clearToken();
+      setShowDelete(false);
+      setDeletePassword('');
+      Alert.alert('Account deleted', 'Your account has been deleted.');
+      navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+    } catch (e) {
+      Alert.alert(
+        'Error',
+        e?.response?.data?.error?.details ||
+          e?.response?.data?.error?.message ||
+          'Could not delete your account. Please try again.',
+      );
+    } finally {
+      setDeleting(false);
+    }
   };
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
@@ -100,6 +142,57 @@ export default function ProfileScreen({ navigation }) {
       <TouchableOpacity style={styles.passwordBtn} onPress={handleChangePassword}>
         <Text style={styles.passwordText}>Change Password</Text>
       </TouchableOpacity>
+
+      <View style={styles.dangerCard}>
+        <Text style={styles.dangerTitle}>Danger Zone</Text>
+        <Text style={styles.dangerText}>
+          You have the right to delete your account at any time. Your profile, credentials and personal
+          data are erased and anonymised, and your access to LandVal ends. This cannot be undone.
+        </Text>
+        <Text style={styles.dangerNote}>
+          Property and payment records that we are legally required to keep are retained, but are no
+          longer linked to your identity.
+        </Text>
+
+        {showDelete ? (
+          <>
+            <Text style={styles.label}>Confirm your password</Text>
+            <TextInput
+              style={styles.input}
+              value={deletePassword}
+              onChangeText={setDeletePassword}
+              placeholder="Your current password"
+              placeholderTextColor={COLORS.textSecondary}
+              secureTextEntry
+              editable={!deleting}
+            />
+
+            <TouchableOpacity
+              style={[styles.deleteBtn, deleting && { opacity: 0.6 }]}
+              onPress={handleDeleteAccount}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.deleteText}>Delete My Account</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.passwordBtn}
+              onPress={() => { setShowDelete(false); setDeletePassword(''); }}
+              disabled={deleting}
+            >
+              <Text style={styles.passwordText}>Cancel</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <TouchableOpacity style={styles.deleteOutlineBtn} onPress={() => setShowDelete(true)}>
+            <Text style={styles.deleteOutlineText}>Delete My Account</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -138,4 +231,12 @@ const styles = StyleSheet.create({
   rowValue: { fontSize: SIZES.sm, color: COLORS.text, ...FONTS.medium },
   passwordBtn: { alignItems: 'center', paddingVertical: 16 },
   passwordText: { color: COLORS.primary, fontSize: SIZES.md, ...FONTS.medium },
+  dangerCard: { backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', borderRadius: SIZES.radiusLg, padding: 24, marginTop: 8 },
+  dangerTitle: { fontSize: SIZES.lg, ...FONTS.bold, color: '#b91c1c' },
+  dangerText: { fontSize: SIZES.sm, color: '#7f1d1d', marginTop: 8, lineHeight: 20 },
+  dangerNote: { fontSize: SIZES.xs, color: '#991b1b', marginTop: 8, lineHeight: 16 },
+  deleteBtn: { backgroundColor: '#dc2626', borderRadius: SIZES.radius, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
+  deleteText: { color: COLORS.white, fontSize: SIZES.md, ...FONTS.semibold },
+  deleteOutlineBtn: { borderWidth: 1, borderColor: '#dc2626', borderRadius: SIZES.radius, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
+  deleteOutlineText: { color: '#dc2626', fontSize: SIZES.md, ...FONTS.semibold },
 });

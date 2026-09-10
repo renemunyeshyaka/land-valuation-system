@@ -16,6 +16,7 @@ import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '../../utils/tokenRefresh';
+import { getApiBaseUrl } from '../../utils/api';
 
 interface ProfileData {
   firstName: string;
@@ -104,6 +105,83 @@ const Profile: React.FC = () => {
     profilePicture: '',
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  // Self-service account deletion (right to delete your own account at any time)
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
+  const openDeleteModal = () => {
+    setDeletePassword('');
+    setDeleteConfirmText('');
+    setDeleteReason('');
+    setDeleteError('');
+    setShowDeleteModal(true);
+  };
+
+  const closeDeleteModal = () => {
+    if (deletingAccount) {
+      return;
+    }
+    setShowDeleteModal(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteError('');
+
+    if (!deletePassword) {
+      setDeleteError('Enter your password to confirm.');
+      return;
+    }
+    if (deleteConfirmText.trim().toUpperCase() !== 'DELETE') {
+      setDeleteError('Type DELETE to confirm.');
+      return;
+    }
+
+    setDeletingAccount(true);
+    try {
+      const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+      if (!accessToken) {
+        setDeleteError('Your session has expired. Please log in again.');
+        return;
+      }
+
+      const response = await fetch(`${getApiBaseUrl()}/api/v1/users/account`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          password: deletePassword,
+          reason: deleteReason.trim(),
+        }),
+      });
+
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          payload?.error?.details ||
+            payload?.error?.message ||
+            'Could not delete your account. Please try again.',
+        );
+      }
+
+      setShowDeleteModal(false);
+      toast.success('Your account has been deleted.');
+      clearAuth();
+      localStorage.removeItem('profile_picture');
+      router.replace('/');
+    } catch (err: any) {
+      setDeleteError(err.message || 'Could not delete your account. Please try again.');
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
 
   const clearAuthAndRedirectToLogin = () => {
     clearAuth();
@@ -816,11 +894,156 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
+            <div className="mt-6 bg-white border border-red-200 rounded-lg shadow-sm p-6 sm:p-8">
+              <h2 className="text-xl font-bold text-red-700 flex items-center gap-2">
+                <i className="fas fa-exclamation-triangle"></i>
+                Danger Zone
+              </h2>
+              <p className="text-sm text-gray-600 mt-2">
+                You have the right to delete your account at any time. Your profile, credentials and
+                personal data are erased and anonymised, and your access to LandVal ends. This action
+                cannot be undone.
+              </p>
+              <button
+                type="button"
+                onClick={openDeleteModal}
+                disabled={saving || tokenExpired}
+                className="mt-4 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <i className="fas fa-user-slash"></i>
+                Delete My Account
+              </button>
+            </div>
+
           </div>
         </main>
         <Footer />
 
       </div>
+
+      {showDeleteModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-account-title"
+          onClick={closeDeleteModal}
+        >
+          <div
+            className="w-full max-w-lg bg-white rounded-xl shadow-xl p-6 sm:p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <i className="fas fa-exclamation-triangle text-red-600"></i>
+              </div>
+              <div>
+                <h2 id="delete-account-title" className="text-xl font-bold text-gray-900">
+                  Delete your account
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Your profile, credentials and personal data are erased and anonymised, and you are
+                  signed out immediately. You will no longer be able to sign in to this account. This
+                  action cannot be undone.
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Property and payment records that we are legally required to keep are retained, but
+                  are no longer linked to your identity.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-4">
+              <div>
+                <label htmlFor="deletePassword" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Confirm your password *
+                </label>
+                <input
+                  type="password"
+                  id="deletePassword"
+                  autoComplete="current-password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  disabled={deletingAccount}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50"
+                  placeholder="Your current password"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="deleteReason" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Reason (optional)
+                </label>
+                <select
+                  id="deleteReason"
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  disabled={deletingAccount}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-base bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50"
+                >
+                  <option value="">Prefer not to say</option>
+                  <option value="no_longer_needed">I no longer need the service</option>
+                  <option value="privacy_concerns">Privacy concerns</option>
+                  <option value="too_expensive">Too expensive</option>
+                  <option value="missing_features">Missing features</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="deleteConfirmText" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Type <span className="font-bold">DELETE</span> to confirm *
+                </label>
+                <input
+                  type="text"
+                  id="deleteConfirmText"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  disabled={deletingAccount}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50"
+                  placeholder="DELETE"
+                />
+              </div>
+
+              {deleteError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-start gap-2">
+                  <i className="fas fa-exclamation-circle mt-0.5"></i>
+                  <span>{deleteError}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deletingAccount}
+                className="flex-1 px-5 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {deletingAccount ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-trash-alt"></i>
+                    Delete Account
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={closeDeleteModal}
+                disabled={deletingAccount}
+                className="flex-1 px-5 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

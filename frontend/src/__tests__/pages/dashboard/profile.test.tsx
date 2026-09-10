@@ -142,4 +142,45 @@ describe('Dashboard Profile page flow', () => {
       expect(toastSuccessMock).toHaveBeenCalledWith('Profile updated successfully!');
     });
   });
+
+  it('requires password and typed DELETE before deleting the account', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ success: true, message: 'Account deleted successfully' }),
+    });
+    global.fetch = fetchMock as any;
+
+    render(<ProfilePage />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /Delete My Account/i }));
+
+    // No password yet — nothing is sent.
+    fireEvent.click(screen.getByRole('button', { name: /^Delete Account$/i }));
+    expect(await screen.findByText(/Enter your password to confirm/i)).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    // Password present but the typed confirmation is wrong — still nothing sent.
+    fireEvent.change(screen.getByLabelText(/Confirm your password/i), { target: { value: 'secret' } });
+    fireEvent.change(screen.getByLabelText(/Type DELETE to confirm/i), { target: { value: 'NOPE' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Delete Account$/i }));
+    expect(await screen.findByText(/Type DELETE to confirm/i, { selector: 'span' })).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    // Full confirmation deletes the account through the API.
+    fireEvent.change(screen.getByLabelText(/Type DELETE to confirm/i), { target: { value: 'DELETE' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Delete Account$/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const [url, requestOptions] = fetchMock.mock.calls[0];
+    expect(url).toContain('/api/v1/users/account');
+    expect(requestOptions.method).toBe('DELETE');
+    expect(JSON.parse(requestOptions.body).password).toBe('secret');
+
+    await waitFor(() => {
+      expect(toastSuccessMock).toHaveBeenCalledWith('Your account has been deleted.');
+    });
+    expect(replaceMock).toHaveBeenCalledWith('/');
+  });
 });

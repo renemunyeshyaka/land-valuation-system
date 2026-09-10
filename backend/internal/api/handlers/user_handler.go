@@ -565,23 +565,26 @@ func (h *UserHandler) UpdateAccountSettings(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Account settings updated", settings)
 }
 
-// DeleteAccount deletes user account
+// DeleteAccount lets the authenticated user delete their own account at any time.
+// The current password must be supplied as confirmation.
 // @Router /users/account [delete]
 func (h *UserHandler) DeleteAccount(c *gin.Context) {
 	type DeleteAccountRequest struct {
+		// Password confirms the request; a leaked token alone must not be enough.
 		Password string `json:"password" binding:"required"`
-		Reason   string `json:"reason"`
+		// Reason is an optional free-text explanation stored in the audit log.
+		Reason string `json:"reason"`
 	}
 
 	userID := c.MustGet("user_id").(string)
 
 	var req DeleteAccountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		utils.ErrorResponse(c, http.StatusBadRequest, "Account deletion failed", "Your password is required to delete your account")
 		return
 	}
 
-	if err := h.userService.DeleteAccount(c.Request.Context(), userID, req.Password); err != nil {
+	if err := h.userService.DeleteAccount(c.Request.Context(), userID, req.Password, req.Reason); err != nil {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Account deletion failed", err.Error())
 		return
 	}

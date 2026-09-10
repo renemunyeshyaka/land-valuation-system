@@ -52,6 +52,10 @@ export const authAPI = {
 export const userAPI = {
   getProfile: () => api.get('/users/profile'),
   updateProfile: (data) => api.put('/users/profile', data),
+  // Self-service account deletion (right to delete your own account at any time).
+  // The current password is required as confirmation.
+  deleteAccount: (password, reason = '') =>
+    api.delete('/users/account', { data: { password, reason } }),
 };
 
 // ============================================
