@@ -52,14 +52,14 @@ export const writeLanguageCookie = (lang: string): void => {
 };
 
 /**
- * Detects the user's preferred language from localStorage or URL path.
- * This should ONLY be called on the client side (inside useEffect).
- * During SSR / module init time we always use the fallback ('rw')
- * to keep server and client renders consistent (avoid hydration mismatch).
+ * Detects the user's preferred language from the cookie or localStorage.
+ * This should ONLY be called on the client side, from an effect after hydration,
+ * where it is safe for the result to differ from the server-rendered language.
  */
 const detectClientLanguage = (): string => {
-  // Check localStorage for user preference, then the SSR-visible cookie
-  const stored = localStorage.getItem('preferred_language') || readLanguageCookie();
+  // The cookie wins: it is what the server painted, so agreeing with it avoids a
+  // visible switch right after hydration.
+  const stored = readLanguageCookie() || localStorage.getItem('preferred_language');
   if (stored) return stored;
 
   // Check URL path for locale prefix
@@ -69,16 +69,31 @@ const detectClientLanguage = (): string => {
   return 'rw';
 };
 
-// IMPORTANT: Always use the same initial language on both server and client
-// to prevent hydration mismatch errors (#418, #423, #425).
-// The user's actual preference is detected in a useEffect after first render.
+/**
+ * Language the i18n instance starts with.
+ *
+ * Server and client MUST resolve this to the same value, otherwise React reports
+ * "Text content does not match server-rendered HTML" (#425). The cookie is the
+ * only preference both sides can read, so:
+ *  - client: read it synchronously at module load, matching the language the
+ *    server just painted;
+ *  - server: there is no `document`, so start on the fallback and let
+ *    `_app.getInitialProps` switch to the cookie language before rendering.
+ */
+const getInitialLanguage = (): string => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return 'rw';
+  return readLanguageCookie() || 'rw';
+};
+
+// Resources are bundled inline, so i18next initialises synchronously and the
+// very first client render already uses the right language, not the fallback.
 i18n.use(initReactI18next).init({
   resources: {
     en: { translation: en },
     fr: { translation: fr },
     rw: { translation: rw },
   },
-  lng: 'rw',
+  lng: getInitialLanguage(),
   fallbackLng: 'rw',
   interpolation: {
     escapeValue: false, // React already escapes

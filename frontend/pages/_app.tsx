@@ -56,13 +56,27 @@ function LandValApp({ Component, pageProps: { session, ...pageProps } }: AppProp
  * only one visible to the server, so reading it here means the first paint is
  * already in the right language instead of flashing Kinyarwanda (the bundled
  * fallback) until hydration completes.
+ *
+ * The i18n instance is shared by every request on the server, so the language
+ * must be set explicitly on EVERY server request - including the no-cookie case
+ * (fallback 'rw'). Otherwise the request inherits whatever language the previous
+ * request happened to leave behind, the server paints one language and the
+ * client hydrates another, and React reports
+ * "Text content does not match server-rendered HTML".
+ * On the client this runs for route transitions, where it must not touch the
+ * language at all: the user's choice is owned by the i18n initialisation and by
+ * applySavedLanguage() below.
  */
 LandValApp.getInitialProps = async (appContext: AppContext) => {
   const appProps = await NextApp.getInitialProps(appContext);
-  const lang = readLanguageFromCookieHeader(appContext.ctx.req?.headers?.cookie);
+  const isServerRequest = Boolean(appContext.ctx.req);
 
-  if (lang && i18n.language !== lang) {
-    await i18n.changeLanguage(lang);
+  if (isServerRequest) {
+    const lang = readLanguageFromCookieHeader(appContext.ctx.req?.headers?.cookie) || 'rw';
+
+    if (i18n.language !== lang) {
+      await i18n.changeLanguage(lang);
+    }
   }
 
   return { ...appProps };
