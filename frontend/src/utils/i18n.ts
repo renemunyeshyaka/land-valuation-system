@@ -154,14 +154,27 @@ export const syncLanguageFromBackend = async (): Promise<void> => {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
-    if (data.success && data.data?.preferred_language) {
-      const lang = data.data.preferred_language;
-      if (lang !== i18n.language && SUPPORTED_LANGUAGES.some(l => l.code === lang)) {
-        i18n.changeLanguage(lang);
-        localStorage.setItem('preferred_language', lang);
-        writeLanguageCookie(lang);
-        document.documentElement.lang = lang;
+    const backendLang = data?.data?.preferred_language;
+    if (!data?.success || !backendLang) return;
+    if (!SUPPORTED_LANGUAGES.some((l) => l.code === backendLang)) return;
+
+    // A language the user chose on THIS device wins. The backend copy can be stale
+    // (an earlier sync may have failed), and letting it overwrite the local choice
+    // on every page load looks like the translations are broken.
+    const localPreference = readLanguageCookie() || localStorage.getItem('preferred_language');
+    if (localPreference) {
+      if (localPreference !== backendLang) {
+        syncLanguageToBackend(localPreference);
       }
+      return;
+    }
+
+    // No local choice yet (e.g. first visit on a new device): adopt the stored one.
+    if (backendLang !== i18n.language) {
+      i18n.changeLanguage(backendLang);
+      localStorage.setItem('preferred_language', backendLang);
+      writeLanguageCookie(backendLang);
+      document.documentElement.lang = backendLang;
     }
   } catch {
     // Silently fail — fall back to localStorage preference
