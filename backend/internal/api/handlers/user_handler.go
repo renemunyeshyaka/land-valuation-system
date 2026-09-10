@@ -281,6 +281,9 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 		phoneNumberVal = c.PostForm("phone_number")
 		bioVal = c.PostForm("bio")
 		languageVal = c.PostForm("language_preference")
+		if languageVal == "" {
+			languageVal = c.PostForm("preferred_language")
+		}
 		cityVal = c.PostForm("city")
 		countryVal = c.PostForm("country")
 
@@ -337,6 +340,8 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 			Language       string `json:"language_preference"`
 			City           string `json:"city"`
 			Country        string `json:"country"`
+			// Clients send the language choice as `preferred_language`; accept both names.
+			PreferredLanguage string `json:"preferred_language"`
 		}
 
 		var req UpdateProfileRequest
@@ -351,6 +356,9 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 		profilePictureURL = req.ProfilePicture
 		bioVal = req.Bio
 		languageVal = req.Language
+		if languageVal == "" {
+			languageVal = req.PreferredLanguage
+		}
 		cityVal = req.City
 		countryVal = req.Country
 
@@ -368,6 +376,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 		ProfilePictureURL:  profilePictureURL,
 		Bio:                bioVal,
 		LanguagePreference: languageVal,
+		PreferredLanguage:  languageVal,
 		City:               cityVal,
 		Country:            countryVal,
 	}

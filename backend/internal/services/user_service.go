@@ -71,6 +71,9 @@ func (s *UserService) UpdateUser(ctx context.Context, userID string, updates *mo
 	if updates.LanguagePreference != "" {
 		user.LanguagePreference = updates.LanguagePreference
 	}
+	if updates.PreferredLanguage != "" {
+		user.PreferredLanguage = updates.PreferredLanguage
+	}
 	if updates.City != "" {
 		user.City = updates.City
 	}
