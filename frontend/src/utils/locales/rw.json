@@ -472,6 +472,7 @@
     "mtnManualConfirmation": "Kwemeza"
   },
   "common": {
+    "back": "Inyuma",
     "loading": "Birapakira...",
     "fillRequired": "Uzuza ibisabwa byose.",
     "error": "Ikibazo cyabaye",

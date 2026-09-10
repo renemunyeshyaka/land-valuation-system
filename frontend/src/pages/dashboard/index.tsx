@@ -1226,7 +1226,7 @@ function Dashboard() {
     : false;
 
   if (loading || authRedirecting) {
-    return <DashboardLoading message="Loading your dashboard..." />;
+    return <DashboardLoading message="Loading your dashboard..." showBack={false} />;
   }
 
   if (!user) {

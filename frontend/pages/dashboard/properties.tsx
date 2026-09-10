@@ -9,6 +9,7 @@ import { resolveImageUrl } from '../../src/utils/image';
 import adminHierarchyRaw from '../../src/data/land_admin_hierarchy_from_csv.json';
 import DashboardNavbar from '../../src/components/DashboardNavbar';
 import DashboardSidebar from '../../src/components/DashboardSidebar';
+import DashboardBackButton from '../../src/components/DashboardBackButton';
 
 type Property = {
 	id: number;
@@ -287,7 +288,10 @@ function DashboardPropertiesPage() {
 					<div className="max-w-6xl mx-auto">
 						<div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 md:gap-6">
 							<DashboardSidebar />
-							<div className="min-w-0 py-16 text-center text-gray-600">Loading your properties...</div>
+							<div className="min-w-0">
+								<DashboardBackButton />
+								<div className="py-16 text-center text-gray-600">Loading your properties...</div>
+							</div>
 						</div>
 					</div>
 				</main>
@@ -309,6 +313,7 @@ function DashboardPropertiesPage() {
 					<div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 md:gap-6">
 						<DashboardSidebar />
 						<div className="min-w-0">
+					<DashboardBackButton />
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
 						<div>
 							<h1 className="text-2xl font-bold text-gray-900">My Registered Properties</h1>

@@ -49,12 +49,20 @@ describe('DashboardLayout', () => {
       </DashboardLayout>,
     );
 
-    // Top navigation (dashboard destinations only).
+    // Top navigation: only destinations the left menu does not already offer.
     expect(screen.getByText('Reports')).toBeInTheDocument();
-    expect(screen.getByText('My Properties')).toBeInTheDocument();
+    expect(screen.queryByText('My Properties')).not.toBeInTheDocument();
+    expect(screen.queryByText('Payments')).not.toBeInTheDocument();
+    expect(screen.queryByText('Notifications')).not.toBeInTheDocument();
+    expect(screen.queryByText('Profile')).not.toBeInTheDocument();
 
-    // Left menu.
+    // Left menu: everything else, including the destinations removed above.
     expect(screen.getByTestId('dashboard-sidebar')).toBeInTheDocument();
+    expect(screen.getByTestId('user-dashboard-tab-properties')).toBeInTheDocument();
+    expect(screen.getByTestId('user-dashboard-tab-billing')).toBeInTheDocument();
+
+    // Every sub-page can return to where the user came from.
+    expect(screen.getByTestId('dashboard-back')).toBeInTheDocument();
 
     // Page content and footer keep their place inside the shell.
     expect(screen.getByTestId('page-content')).toBeInTheDocument();

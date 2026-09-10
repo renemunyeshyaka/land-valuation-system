@@ -8,6 +8,8 @@ interface DashboardLoadingProps {
   showAddProperty?: boolean;
   /** Extra controls rendered at the right of the top navigation. */
   navRightSlot?: React.ReactNode;
+  /** Forwarded to DashboardLayout (false on the dashboard home). */
+  showBack?: boolean;
 }
 
 /**
@@ -21,9 +23,10 @@ export default function DashboardLoading({
   message,
   showAddProperty,
   navRightSlot,
+  showBack,
 }: DashboardLoadingProps) {
   return (
-    <DashboardLayout showAddProperty={showAddProperty} navRightSlot={navRightSlot}>
+    <DashboardLayout showAddProperty={showAddProperty} navRightSlot={navRightSlot} showBack={showBack}>
       <div className="py-16 text-center">
         <i className="fas fa-spinner fa-spin text-3xl text-emerald-700" aria-hidden="true"></i>
         {message ? <p className="mt-3 text-sm text-gray-600">{message}</p> : null}

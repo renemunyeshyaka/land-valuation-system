@@ -473,6 +473,7 @@
     "mtnManualConfirmation": "Confirmation"
   },
   "common": {
+    "back": "Back",
     "loading": "Loading...",
     "fillRequired": "Please fill in all required fields.",
     "error": "An error occurred",

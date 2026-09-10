@@ -472,6 +472,7 @@
     "mtnManualConfirmation": "Confirmation"
   },
   "common": {
+    "back": "Retour",
     "loading": "Chargement...",
     "fillRequired": "Veuillez remplir tous les champs obligatoires.",
     "error": "Une erreur est survenue",

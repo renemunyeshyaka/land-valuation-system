@@ -1,6 +1,7 @@
 import React from 'react';
 import DashboardNavbar from './DashboardNavbar';
 import DashboardSidebar from './DashboardSidebar';
+import DashboardBackButton from './DashboardBackButton';
 import type { DashboardTabKey } from './DashboardSidebar';
 
 interface DashboardLayoutProps {
@@ -17,6 +18,11 @@ interface DashboardLayoutProps {
   onSelectTab?: (tab: DashboardTabKey) => void;
   /** Extra classes for the content column wrapper. */
   contentClassName?: string;
+  /**
+   * Shows the back control above the content. Disable it on the dashboard home,
+   * which is the destination rather than a sub-page.
+   */
+  showBack?: boolean;
 }
 
 /**
@@ -34,6 +40,7 @@ export default function DashboardLayout({
   activeTab,
   onSelectTab,
   contentClassName = '',
+  showBack = true,
 }: DashboardLayoutProps) {
   return (
     <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
@@ -43,7 +50,10 @@ export default function DashboardLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
           <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 md:gap-6">
             <DashboardSidebar activeTab={activeTab} onSelect={onSelectTab} />
-            <div className={`min-w-0 ${contentClassName}`.trim()}>{children}</div>
+            <div className={`min-w-0 ${contentClassName}`.trim()}>
+              {showBack && <DashboardBackButton />}
+              {children}
+            </div>
           </div>
         </div>
       </main>
