@@ -94,65 +94,65 @@ export default function DashboardNavbar({ showAddProperty = false, rightSlot }: 
           </Link>
 
           {/* Desktop navigation */}
-          <div className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+          <div className="hidden xl:flex items-center gap-0.5 flex-1 justify-center min-w-0">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-2.5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   isActive(item.href)
                     ? 'bg-emerald-50 text-emerald-700'
                     : 'text-gray-700 hover:text-emerald-700 hover:bg-gray-50'
                 }`}
               >
-                <i className={`${item.icon} mr-1.5`}></i>
+                <i className={`${item.icon} mr-1.5 hidden 2xl:inline`}></i>
                 {item.label}
               </Link>
             ))}
             {showAddProperty && (
               <Link
                 href="/properties/add"
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-2.5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   isActive('/properties')
                     ? 'bg-emerald-50 text-emerald-700'
                     : 'text-gray-700 hover:text-emerald-700 hover:bg-gray-50'
                 }`}
               >
-                <i className="fas fa-plus-circle mr-1.5"></i>
+                <i className="fas fa-plus-circle mr-1.5 hidden 2xl:inline"></i>
                 {t('dashboard.addProperty')}
               </Link>
             )}
           </div>
 
           {/* Desktop actions */}
-          <div className="hidden lg:flex items-center gap-2 shrink-0">
+          <div className="hidden xl:flex items-center gap-1.5 shrink-0">
             {rightSlot}
             <LanguageSwitcher />
             <Link
               href="/dashboard/profile"
-              className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 transition-colors"
+              className="px-2.5 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 whitespace-nowrap transition-colors"
             >
-              <i className="fas fa-user-circle mr-1"></i>
+              <i className="fas fa-user-circle mr-1 hidden 2xl:inline"></i>
               {t('userNav.profile')}
             </Link>
             <Link
               href="/settings"
-              className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 transition-colors"
+              className="px-2.5 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 whitespace-nowrap transition-colors"
             >
-              <i className="fas fa-cog mr-1"></i>
+              <i className="fas fa-cog mr-1 hidden 2xl:inline"></i>
               {t('userNav.settings')}
             </Link>
             <button
               type="button"
               onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+              className="px-3.5 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg whitespace-nowrap transition-colors"
             >
               {t('userNav.logout')}
             </button>
           </div>
 
           {/* Mobile toggle */}
-          <div className="lg:hidden flex items-center">
+          <div className="xl:hidden flex items-center">
             <button
               aria-label={t('userNav.menu')}
               aria-expanded={mobileMenuOpen}
@@ -166,7 +166,7 @@ export default function DashboardNavbar({ showAddProperty = false, rightSlot }: 
         </div>
 
         {mobileMenuOpen && (
-          <div className="lg:hidden fixed left-0 right-0 top-16 bg-white border-b border-gray-200 shadow-lg z-[80] pointer-events-auto">
+          <div className="xl:hidden fixed left-0 right-0 top-16 md:top-20 bg-white border-b border-gray-200 shadow-lg z-[80] pointer-events-auto">
             <div className="flex flex-col gap-1 px-4 py-4">
               {navItems.map((item) => (
                 <Link
