@@ -28,12 +28,10 @@ export default function DashboardNavbar({ showAddProperty = false, rightSlot }: 
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // The left menu already offers Dashboard, Properties, Payments, Notifications and
+  // Analytics, so repeating them here is duplicated navigation. Keep this list short.
   const navItems = useMemo(
     () => [
-      { href: '/dashboard', label: t('userNav.dashboard'), icon: 'fas fa-th-large' },
-      { href: '/dashboard/properties', label: t('userNav.properties'), icon: 'fas fa-building' },
-      { href: '/payments', label: t('userNav.payments'), icon: 'fas fa-receipt' },
-      { href: '/notifications', label: t('userNav.notifications'), icon: 'fas fa-bell' },
       { href: '/reports', label: t('userNav.reports'), icon: 'fas fa-file-alt' },
     ],
     [t],
@@ -43,18 +41,6 @@ export default function DashboardNavbar({ showAddProperty = false, rightSlot }: 
     // Guard: pathname is always set by Next.js, but tests and non-router
     // renders can supply a partial router.
     const path = router.pathname || '';
-
-    if (href === '/dashboard') {
-      return path === '/dashboard';
-    }
-    if (href === '/payments') {
-      return (
-        path.startsWith('/payments') ||
-        path.startsWith('/dashboard/subscription') ||
-        path.startsWith('/dashboard/mtn-payment')
-      );
-    }
-
     return path === href || path.startsWith(`${href}/`);
   };
 
@@ -129,13 +115,6 @@ export default function DashboardNavbar({ showAddProperty = false, rightSlot }: 
             {rightSlot}
             <LanguageSwitcher />
             <Link
-              href="/dashboard/profile"
-              className="px-2.5 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 whitespace-nowrap transition-colors"
-            >
-              <i className="fas fa-user-circle mr-1 hidden 2xl:inline"></i>
-              {t('userNav.profile')}
-            </Link>
-            <Link
               href="/settings"
               className="px-2.5 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 whitespace-nowrap transition-colors"
             >
@@ -192,14 +171,6 @@ export default function DashboardNavbar({ showAddProperty = false, rightSlot }: 
 
               <div className="border-t border-gray-200 my-2"></div>
 
-              <Link
-                href="/dashboard/profile"
-                className={mobileLinkClass}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <i className="fas fa-user-circle mr-2"></i>
-                {t('userNav.profile')}
-              </Link>
               <Link
                 href="/settings"
                 className={mobileLinkClass}

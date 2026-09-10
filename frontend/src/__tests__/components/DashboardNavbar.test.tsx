@@ -38,16 +38,28 @@ jest.mock('react-i18next', () => ({
 const PUBLIC_MENU_LABELS = ['How It Works', 'Benefits', 'Marketplace', 'Contact'];
 
 describe('DashboardNavbar', () => {
-  it('shows the in-dashboard destinations', () => {
+  it('shows only the destinations the left menu does not offer', () => {
     render(<DashboardNavbar />);
 
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('My Properties')).toBeInTheDocument();
-    expect(screen.getByText('Payments')).toBeInTheDocument();
-    expect(screen.getByText('Notifications')).toBeInTheDocument();
     expect(screen.getByText('Reports')).toBeInTheDocument();
     expect(screen.getByText('Settings')).toBeInTheDocument();
     expect(screen.getByText('Logout')).toBeInTheDocument();
+  });
+
+  it('never duplicates a left menu entry', () => {
+    render(<DashboardNavbar />);
+
+    ['Dashboard', 'My Properties', 'Payments', 'Notifications', 'Profile'].forEach((label) => {
+      expect(screen.queryByText(label)).not.toBeInTheDocument();
+    });
+
+    const hrefs = Array.from(document.querySelectorAll('a'))
+      .map((anchor) => anchor.getAttribute('href'))
+      .sort();
+
+    // Logo (dashboard home) plus the two top-bar actions only: everything else
+    // lives in the left menu.
+    expect(hrefs).toEqual(['/dashboard', '/reports', '/settings']);
   });
 
   it('never exposes the public marketing menus', () => {
