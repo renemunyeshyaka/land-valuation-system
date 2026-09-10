@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import MainNavbar from '../../components/MainNavbar';
+import DashboardLayout from '../../components/DashboardLayout';
 import ExchangeRateDisplay from '../../components/ExchangeRateDisplay';
 import { getPaymentSummary, getPaymentHistory, getPaymentDetail, getRefundRequests, createRefundRequest } from '../../utils/paymentApi';
 import Footer from "../../components/Footer";
@@ -361,13 +361,9 @@ const PaymentHistory: React.FC = () => {
       </Head>
 
       {/* MAIN LAYOUT */}
-      <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
+      <DashboardLayout footer={<Footer />}>
 
-        <MainNavbar />
-
-        {/* MAIN CONTENT */}
-        <main className="flex-grow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        <div className="min-w-0">
 
             {/* Page Header */}
             <div className="mb-12">
@@ -818,7 +814,7 @@ const PaymentHistory: React.FC = () => {
                 If a payment failed or you need help with your invoice, please contact our support team. We're here to help!
               </p>
               <Link
-                href="/support"
+                href="/contact"
                 className="inline-block px-6 py-2.5 bg-emerald-700 text-white font-medium rounded-lg hover:bg-emerald-800 transition-colors"
               >
                 <i className="fas fa-headset mr-2"></i>
@@ -827,12 +823,7 @@ const PaymentHistory: React.FC = () => {
             </div>
 
           </div>
-        </main>
-
-        {/* FOOTER */}
-        <Footer />
-
-      </div>
+      </DashboardLayout>
     </>
   );
 };

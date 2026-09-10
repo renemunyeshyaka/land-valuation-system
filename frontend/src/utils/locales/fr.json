@@ -19,6 +19,19 @@
     "partnerDashboard": "Partenaires",
     "language": "Langue"
   },
+  "userNav": {
+    "dashboard": "Tableau de Bord",
+    "properties": "Mes Propriétés",
+    "payments": "Paiements",
+    "notifications": "Notifications",
+    "reports": "Rapports",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "logout": "Déconnexion",
+    "subtitle": "Tableau de Bord",
+    "menu": "Menu du tableau de bord",
+    "analytics": "Analytiques"
+  },
   "home": {
     "heroBadge": "Gazette Officielle du Rwanda 2025",
     "heroTitle": "Évaluation précise des terrains grâce aux données officielles",

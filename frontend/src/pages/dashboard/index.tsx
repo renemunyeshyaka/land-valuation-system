@@ -3,7 +3,8 @@ import FourStepProcess from '../../components/FourStepProcess';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import Footer from "../../components/Footer";
-import LanguageSwitcher from '../../components/LanguageSwitcher';
+import DashboardNavbar from '../../components/DashboardNavbar';
+import DashboardSidebar from '../../components/DashboardSidebar';
 import { useTranslation } from 'react-i18next';
 // Notification type for dashboard notifications
 interface DashboardNotification {
@@ -82,17 +83,6 @@ type DashboardTab = 'overview' | 'profile' | 'estimate' | 'properties' | 'billin
 
 const DASHBOARD_TAB_KEYS: DashboardTab[] = ['overview', 'profile', 'estimate', 'properties', 'billing', 'refunds', 'subscription', 'notifications'];
 
-const DASHBOARD_TAB_ICONS: Record<DashboardTab, string> = {
-  overview: 'fas fa-home',
-  profile: 'fas fa-user-circle',
-  estimate: 'fas fa-search-location',
-  properties: 'fas fa-building',
-  billing: 'fas fa-wallet',
-  refunds: 'fas fa-undo-alt',
-  subscription: 'fas fa-gem',
-  notifications: 'fas fa-bell',
-};
-
 const getValidDashboardTab = (rawTab: unknown): DashboardTab => {
   const tab = typeof rawTab === 'string' ? rawTab : 'overview';
   return DASHBOARD_TAB_KEYS.includes(tab as DashboardTab) ? (tab as DashboardTab) : 'overview';
@@ -132,11 +122,6 @@ const getCachedDashboardUser = (): UserData | null => {
 
 function Dashboard() {
   const { t } = useTranslation();
-
-  const DASHBOARD_TABS: Array<{ key: DashboardTab; icon: string }> = DASHBOARD_TAB_KEYS.map((key) => ({
-    key,
-    icon: DASHBOARD_TAB_ICONS[key],
-  }));
 
         // Handle property edit (PUT request)
         const handleEditProperty = async (updatedProperty: any) => {
@@ -828,7 +813,6 @@ function Dashboard() {
   const [estimateError, setEstimateError] = useState<string | null>(null);
   const [estimateResult, setEstimateResult] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDashboardTab, setActiveDashboardTab] = useState<DashboardTab>('overview');
   const frontendBaseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXTAUTH_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001');
   const logoutCallbackUrl = `${frontendBaseUrl.replace(/\/$/, '')}/auth/login`;
@@ -1292,159 +1276,13 @@ function Dashboard() {
 
       {/* MAIN LAYOUT */}
       <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
-        {/* NAVIGATION */}
-        <nav className="bg-white/90 backdrop-blur-sm sticky top-0 z-30 border-b border-gray-200/70">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16 md:h-20">
-              {/* Logo */}
-              <Link href="/" className="flex items-center gap-2 group">
-                <div className="w-9 h-9 bg-emerald-700 rounded-lg flex items-center justify-center group-hover:bg-emerald-800 transition-colors">
-                  <i className="fas fa-map-marked-alt text-white text-lg"></i>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-base md:text-lg font-bold text-gray-800 leading-tight">LandVal</span>
-                  <span className="text-xs text-gray-500 leading-tight hidden sm:block">User Dashboard</span>
-                </div>
-              </Link>
-              {/* Navigation Menu - Right Side */}
-              <div className="hidden lg:flex items-center gap-2 sm:gap-4">
-                <LanguageSwitcher />
-                <Link href="/dashboard/profile" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 transition-colors">
-                  <i className="fas fa-user-circle mr-1"></i>
-                  View Profile
-                </Link>
-                <Link href="/settings" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 transition-colors">
-                  <i className="fas fa-cog mr-1"></i>
-                  Settings
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
-
-              <div className="lg:hidden flex items-center">
-                <button
-                  aria-label="Toggle dashboard menu"
-                  type="button"
-                  className="inline-flex items-center justify-center p-2 rounded-md text-emerald-800 hover:text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  onClick={() => setMobileMenuOpen((open) => !open)}
-                >
-                  {mobileMenuOpen ? <i className="fas fa-times text-2xl"></i> : <i className="fas fa-bars text-2xl"></i>}
-                </button>
-              </div>
-            </div>
-
-            {mobileMenuOpen && (
-              <div className="lg:hidden fixed left-0 right-0 top-16 bg-white border-b border-gray-200 shadow-lg z-[80] pointer-events-auto">
-                <div className="flex flex-col gap-2 pt-4">
-                  <div className="px-3 pb-2">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('dashboard.title')}</p>
-                  </div>
-                  {DASHBOARD_TABS.map((tab) => (
-                    <button
-                      key={`mobile-${tab.key}`}
-                      type="button"
-                      onClick={() => {
-                        activateDashboardTab(tab.key);
-                        setMobileMenuOpen(false);
-                      }}
-                      className={`px-3 py-2 rounded-md text-left text-sm font-medium ${
-                        activeDashboardTab === tab.key
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'text-gray-800 hover:bg-gray-50'
-                      }`}
-                    >
-                      <i className={`${tab.icon} mr-2`}></i>
-                      {t('dashboard.' + tab.key)}
-                    </button>
-                  ))}
-                  <Link
-                    href="/dashboard/profile"
-                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <i className="fas fa-user-circle mr-2"></i>
-                    {t('dashboard.profile')}
-                  </Link>
-                  <Link
-                    href="/settings"
-                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <i className="fas fa-cog mr-2"></i>
-                    Settings
-                  </Link>
-                  {canAddProperty && (
-                  <Link
-                    href="/properties/add"
-                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <i className="fas fa-plus-circle mr-2"></i>
-                    {t('dashboard.addProperty')}
-                  </Link>
-                  )}
-                  <Link
-                    href="/dashboard/subscription"
-                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <i className="fas fa-gem mr-2"></i>
-                    {t('subscription.upgrade')}
-                  </Link>
-                  <Link
-                    href="/analytics"
-                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <i className="fas fa-chart-line mr-2"></i>
-                    {t('admin.analytics')}
-                  </Link>
-                  <button
-                    onClick={async () => {
-                      setMobileMenuOpen(false);
-                      await handleLogout();
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
-                  >
-                    <i className="fas fa-sign-out-alt mr-2"></i>
-                    {t('auth.logout')}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </nav>
+        <DashboardNavbar showAddProperty={canAddProperty} />
 
         {/* MAIN CONTENT */}
         <main className="flex-grow">
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 md:py-16">
             <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 md:gap-6">
-              <aside className="bg-white border border-gray-100 rounded-lg shadow-sm p-2 md:p-3 h-fit lg:sticky lg:top-24">
-                <h2 className="text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wide px-2 md:px-3 py-2">{t('dashboard.title')}</h2>
-                <nav className="space-y-0.5 md:space-y-1">
-                  {DASHBOARD_TABS.map((tab) => (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      data-testid={`user-dashboard-tab-${tab.key}`}
-                      aria-current={activeDashboardTab === tab.key ? 'page' : undefined}
-                      onClick={() => activateDashboardTab(tab.key)}
-                      className={`w-full text-left px-3 md:px-3 py-2.5 md:py-2 rounded-lg text-sm font-medium transition-colors ${
-                        activeDashboardTab === tab.key
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <i className={`${tab.icon} mr-2 w-4 text-center`}></i>
-                      {t('dashboard.' + tab.key)}
-                    </button>
-                  ))}
-                </nav>
-              </aside>
+              <DashboardSidebar activeTab={activeDashboardTab} onSelect={activateDashboardTab} />
 
               <div>
             {/* Admin Experience Selector for Admins */}

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import SubscriptionSelector from '../../components/SubscriptionSelector';
-import MainNavbar from '../../components/MainNavbar';
+import DashboardLayout from '../../components/DashboardLayout';
 
 const Subscription: React.FC = () => {
   const router = useRouter();
@@ -53,11 +53,10 @@ const Subscription: React.FC = () => {
         <meta name="description" content="Choose monthly or yearly subscription plans" />
       </Head>
 
-      <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
+      <DashboardLayout>
         
 
-        <main className="flex-grow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        <div className="min-w-0">
             <div className="text-center mb-10">
               <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">Choose Your Subscription</h1>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -67,8 +66,7 @@ const Subscription: React.FC = () => {
 
             <SubscriptionSelector currentPlan={currentPlan} />
           </div>
-        </main>
-      </div>
+      </DashboardLayout>
     </>
   );
 };

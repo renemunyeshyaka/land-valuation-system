@@ -19,6 +19,19 @@
     "partnerDashboard": "Partner Dashboard",
     "language": "Language"
   },
+  "userNav": {
+    "dashboard": "Dashboard",
+    "properties": "My Properties",
+    "payments": "Payments",
+    "notifications": "Notifications",
+    "reports": "Reports",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout",
+    "subtitle": "User Dashboard",
+    "menu": "Dashboard menu",
+    "analytics": "Analytics"
+  },
   "home": {
     "heroBadge": "Official Rwanda Gazette 2025",
     "heroTitle": "Accurate land valuation powered by official data",

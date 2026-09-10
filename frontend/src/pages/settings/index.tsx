@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import MainNavbar from '../../components/MainNavbar';
+import DashboardLayout from '../../components/DashboardLayout';
 import Footer from "../../components/Footer";
 
 const SettingsPage: React.FC = () => {
@@ -93,11 +93,8 @@ const SettingsPage: React.FC = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
       </Head>
 
-      <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
-        <MainNavbar />
-
-        <main className="flex-grow">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+      <DashboardLayout footer={<Footer />}>
+        <div className="min-w-0">
             <div className="mb-8">
               <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2">Settings</h1>
               <p className="text-lg text-gray-600">Manage account preferences, notifications, and security</p>
@@ -243,9 +240,7 @@ const SettingsPage: React.FC = () => {
               </div>
             </div>
           </div>
-        </main>
-        <Footer />
-      </div>
+      </DashboardLayout>
     </>
   );
 };

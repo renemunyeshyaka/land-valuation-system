@@ -17,6 +17,7 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '../../utils/tokenRefresh';
 import { getApiBaseUrl } from '../../utils/api';
+import DashboardLayout from '../../components/DashboardLayout';
 
 interface ProfileData {
   firstName: string;
@@ -528,6 +529,42 @@ const Profile: React.FC = () => {
     );
   }
 
+  const adminControls = isAdmin ? (
+    <div className="flex items-center gap-2">
+      <span
+        className={`px-3 py-2 text-xs font-semibold rounded-lg border ${
+          adminExperienceMode === 'user'
+            ? 'bg-blue-50 text-blue-700 border-blue-200'
+            : adminExperienceMode === 'ultimate'
+              ? 'bg-amber-50 text-amber-700 border-amber-200'
+              : 'bg-red-50 text-red-700 border-red-200'
+        }`}
+      >
+        {adminExperienceMode === 'user'
+          ? 'Mode: User View'
+          : adminExperienceMode === 'ultimate'
+            ? 'Mode: Ultimate No Expiry'
+            : 'Mode: Admin'}
+      </span>
+      <select
+        defaultValue=""
+        onChange={(e) => {
+          handleAdminExperienceMenu(e.target.value);
+          e.currentTarget.value = '';
+        }}
+        aria-label="Admin access mode"
+        className="px-3 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg bg-white hover:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+      >
+        <option value="" disabled>
+          Admin Access
+        </option>
+        <option value="user">View as Normal User</option>
+        <option value="ultimate">View as Ultimate (No Expiry)</option>
+        <option value="off">Restore Admin Mode</option>
+      </select>
+    </div>
+  ) : null;
+
   return (
     <>
       <Head>
@@ -537,66 +574,8 @@ const Profile: React.FC = () => {
         <meta property="og:title" content="Edit Profile · LandVal" />
       </Head>
 
-      <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
-
-        <nav className="bg-white/90 backdrop-blur-sm sticky top-0 z-30 border-b border-gray-200/70">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16 md:h-20">
-              <Link href="/" className="flex items-center gap-2 group">
-                <div className="w-9 h-9 bg-emerald-700 rounded-lg flex items-center justify-center group-hover:bg-emerald-800 transition-colors">
-                  <i className="fas fa-map-marked-alt text-white text-lg"></i>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-base md:text-lg font-bold text-gray-800 leading-tight">LandVal</span>
-                  <span className="text-xs text-gray-500 leading-tight hidden sm:block">Rwanda Property Valuation</span>
-                </div>
-              </Link>
-
-              <div className="flex items-center gap-2 sm:gap-4">
-                <Link href="/dashboard" className="px-4 py-2 text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors">
-                  Back to Dashboard
-                </Link>
-                {isAdmin && (
-                  <span
-                    className={`px-3 py-2 text-xs font-semibold rounded-lg border ${
-                      adminExperienceMode === 'user'
-                        ? 'bg-blue-50 text-blue-700 border-blue-200'
-                        : adminExperienceMode === 'ultimate'
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-red-50 text-red-700 border-red-200'
-                    }`}
-                  >
-                    {adminExperienceMode === 'user'
-                      ? 'Mode: User View'
-                      : adminExperienceMode === 'ultimate'
-                        ? 'Mode: Ultimate No Expiry'
-                        : 'Mode: Admin'}
-                  </span>
-                )}
-                {isAdmin && (
-                  <select
-                    defaultValue=""
-                    onChange={(e) => {
-                      handleAdminExperienceMenu(e.target.value);
-                      e.currentTarget.value = '';
-                    }}
-                    className="px-3 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg bg-white hover:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option value="" disabled>
-                      Admin Access
-                    </option>
-                    <option value="user">View as Normal User</option>
-                    <option value="ultimate">View as Ultimate (No Expiry)</option>
-                    <option value="off">Restore Admin Mode</option>
-                  </select>
-                )}
-              </div>
-            </div>
-          </div>
-        </nav>
-
-        <main className="flex-grow">
-          <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+      <DashboardLayout navRightSlot={adminControls} footer={<Footer />}>
+        <div className="max-w-3xl">
             
             <div className="mb-8">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
@@ -916,10 +895,7 @@ const Profile: React.FC = () => {
             </div>
 
           </div>
-        </main>
-        <Footer />
-
-      </div>
+      </DashboardLayout>
 
       {showDeleteModal && (
         <div

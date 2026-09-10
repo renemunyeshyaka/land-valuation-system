@@ -7,6 +7,8 @@ import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { resolveImageUrl } from '../../src/utils/image';
 import adminHierarchyRaw from '../../src/data/land_admin_hierarchy_from_csv.json';
+import DashboardNavbar from '../../src/components/DashboardNavbar';
+import DashboardSidebar from '../../src/components/DashboardSidebar';
 
 type Property = {
 	id: number;
@@ -288,8 +290,13 @@ function DashboardPropertiesPage() {
 				<meta name="description" content="View, update, and delete your registered properties." />
 			</Head>
 
+			<DashboardNavbar />
+
 			<main className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
 				<div className="max-w-6xl mx-auto">
+					<div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 md:gap-6">
+						<DashboardSidebar />
+						<div className="min-w-0">
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
 						<div>
 							<h1 className="text-2xl font-bold text-gray-900">My Registered Properties</h1>
@@ -665,6 +672,8 @@ function DashboardPropertiesPage() {
 						</div>
 					</div>
 				)}
+						</div>
+					</div>
 			</main>
 		</>
 	);

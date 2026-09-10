@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import AddPropertyForm from '../../src/components/AddPropertyForm';
 import FourStepProcess from '../../src/components/FourStepProcess';
 import { fetchWithTokenRefresh } from '../../src/utils/tokenRefresh';
+import DashboardNavbar from '../../src/components/DashboardNavbar';
+import DashboardSidebar from '../../src/components/DashboardSidebar';
 
 export default function AddPropertyPage() {
   const router = useRouter();
@@ -61,8 +63,12 @@ export default function AddPropertyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <DashboardNavbar showAddProperty />
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 md:gap-6">
+          <DashboardSidebar />
+          <div className="min-w-0">
         {/* Four Step Process Overview */}
         <FourStepProcess currentStep={1} />
 
@@ -77,6 +83,8 @@ export default function AddPropertyPage() {
           >
             ← Back to Dashboard
           </button>
+        </div>
+          </div>
         </div>
       </div>
     </div>

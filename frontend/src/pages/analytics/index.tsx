@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import Footer from "../../components/Footer";
+import DashboardLayout from '../../components/DashboardLayout';
 
 /**
  * ANALYTICS DASHBOARD PAGE · Land Valuation System
@@ -146,13 +147,11 @@ const Analytics: React.FC = () => {
       </Head>
 
       {/* MAIN LAYOUT */}
-      <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
+      <DashboardLayout footer={<Footer />}>
 
       
 
-        {/* MAIN CONTENT */}
-        <main className="flex-grow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        <div className="min-w-0">
 
             {/* Land Estimate Search (copied from dashboard) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -375,12 +374,7 @@ const Analytics: React.FC = () => {
             </div>
 
           </div>
-        </main>
-
-        {/* FOOTER */}
-        <Footer />
-
-      </div>
+      </DashboardLayout>
     </>
   );
 };

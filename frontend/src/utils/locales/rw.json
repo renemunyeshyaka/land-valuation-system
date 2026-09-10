@@ -19,6 +19,19 @@
     "partnerDashboard": "Ikibaho cy'Umunyamwuga",
     "language": "Ururimi"
   },
+  "userNav": {
+    "dashboard": "Ikibaho",
+    "properties": "Ubutaka Bwanjye",
+    "payments": "Kwishyura",
+    "notifications": "Amatangazo",
+    "reports": "Raporo",
+    "profile": "Umwirondoro",
+    "settings": "Igenamiterere",
+    "logout": "Sohoka",
+    "subtitle": "Ikibaho cy'Umukoresha",
+    "menu": "Menu y'ikibaho",
+    "analytics": "Isesengura"
+  },
   "home": {
     "heroBadge": "Gazeti ya Leta y'u Rwanda 2025",
     "heroTitle": "Gupima agaciro k'ubutaka neza bishingiye ku makuru ya leta",

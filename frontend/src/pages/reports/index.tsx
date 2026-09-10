@@ -3,7 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
-import MainNavbar from '../../components/MainNavbar';
+import DashboardLayout from '../../components/DashboardLayout';
 import Footer from "../../components/Footer";
 
 const ReportsPage: React.FC = () => {
@@ -33,11 +33,8 @@ const ReportsPage: React.FC = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
       </Head>
 
-      <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
-        <MainNavbar />
-
-        <main className="flex-grow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+      <DashboardLayout footer={<Footer />}>
+        <div className="min-w-0">
             <div className="mb-10">
               <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2">Reports</h1>
               <p className="text-lg text-gray-600">Generate exports, manage schedules, and review report history</p>
@@ -149,9 +146,7 @@ const ReportsPage: React.FC = () => {
               </div>
             </div>
           </div>
-        </main>
-        <Footer />
-      </div>
+      </DashboardLayout>
     </>
   );
 };

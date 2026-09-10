@@ -50,6 +50,12 @@ jest.mock('../../../components/Footer', () => function MockFooter() {
   return <div data-testid="footer">footer</div>;
 });
 
+// The shared dashboard navbar renders the language switcher, which pulls in the
+// real i18n instance. react-i18next is mocked in this file, so stub it out.
+jest.mock('../../../components/LanguageSwitcher', () => function MockLanguageSwitcher() {
+  return <div data-testid="language-switcher" />;
+});
+
 describe('Dashboard Profile page flow', () => {
   beforeEach(() => {
     jest.clearAllMocks();

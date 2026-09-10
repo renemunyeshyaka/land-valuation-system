@@ -4,7 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import MainNavbar from '../../components/MainNavbar';
+import DashboardLayout from '../../components/DashboardLayout';
 import {
   initiateMTNManualPayment,
   submitMTNPaymentProof,
@@ -537,14 +537,11 @@ export default function MTNPaymentPage() {
           <title>{t('subscription.mtnManualTitle')} · Land Valuation System</title>
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         </Head>
-        <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
-          <MainNavbar />
-          <main className="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
-            <div className="flex items-center justify-center py-20">
-              <i className="fas fa-spinner fa-spin text-3xl text-emerald-700"></i>
-            </div>
-          </main>
-        </div>
+        <DashboardLayout>
+          <div className="flex items-center justify-center py-20">
+            <i className="fas fa-spinner fa-spin text-3xl text-emerald-700"></i>
+          </div>
+        </DashboardLayout>
       </>
     );
   }
@@ -555,9 +552,8 @@ export default function MTNPaymentPage() {
         <title>{t('subscription.mtnManualTitle')} · Land Valuation System</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
-      <div className="antialiased text-gray-800 bg-gray-50/50 min-h-screen flex flex-col">
-        <MainNavbar />
-        <main className="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+      <DashboardLayout>
+        <div className="max-w-4xl">
           {/* Back link */}
           <Link
             href="/dashboard/subscription"
@@ -607,8 +603,8 @@ export default function MTNPaymentPage() {
           {step === 'payment_instructions' && renderPaymentInstructions()}
           {step === 'submit_proof' && renderSubmitProof()}
           {step === 'confirmation' && renderConfirmation()}
-        </main>
-      </div>
+        </div>
+      </DashboardLayout>
     </>
   );
 }
