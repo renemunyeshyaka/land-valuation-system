@@ -104,6 +104,7 @@
   },
   "auth": {
     "login": "Connexion",
+    "loginFirst": "Veuillez d'abord vous connecter.",
     "signup": "Inscription",
     "logout": "Déconnexion",
     "email": "Email",
@@ -472,6 +473,7 @@
   },
   "common": {
     "loading": "Chargement...",
+    "fillRequired": "Veuillez remplir tous les champs obligatoires.",
     "error": "Une erreur est survenue",
     "retry": "Réessayer",
     "save": "Enregistrer",

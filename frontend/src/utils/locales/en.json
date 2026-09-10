@@ -104,6 +104,7 @@
   },
   "auth": {
     "login": "Login",
+    "loginFirst": "Please log in first.",
     "signup": "Sign Up",
     "logout": "Logout",
     "email": "Email",
@@ -473,6 +474,7 @@
   },
   "common": {
     "loading": "Loading...",
+    "fillRequired": "Please fill in all required fields.",
     "error": "An error occurred",
     "retry": "Retry",
     "save": "Save",

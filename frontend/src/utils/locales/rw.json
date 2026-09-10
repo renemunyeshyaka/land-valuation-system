@@ -104,6 +104,7 @@
   },
   "auth": {
     "login": "Injira",
+    "loginFirst": "Banza winjire.",
     "signup": "Iyandikishe",
     "logout": "Sohoka",
     "email": "Imeli",
@@ -472,6 +473,7 @@
   },
   "common": {
     "loading": "Birapakira...",
+    "fillRequired": "Uzuza ibisabwa byose.",
     "error": "Ikibazo cyabaye",
     "retry": "Ongera Ugerageze",
     "save": "Bika",
