@@ -20,6 +20,7 @@ jest.mock('react-i18next', () => ({
         'dashboard.subscription': 'Subscription',
         'dashboard.notifications': 'Notifications',
         'userNav.analytics': 'Analytics',
+        'userNav.adminDashboard': 'Admin Dashboard',
       };
       return translations[key] ?? key;
     },
@@ -27,6 +28,27 @@ jest.mock('react-i18next', () => ({
 }));
 
 describe('DashboardSidebar', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  it('offers admins a way back to the admin dashboard', () => {
+    window.localStorage.setItem('user', JSON.stringify({ user_type: 'admin' }));
+
+    render(<DashboardSidebar />);
+
+    expect(screen.getByTestId('user-dashboard-link-admin')).toHaveAttribute('href', '/admin/dashboard');
+    expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+  });
+
+  it('hides the admin dashboard link from non-admin users', () => {
+    window.localStorage.setItem('user', JSON.stringify({ user_type: 'individual' }));
+
+    render(<DashboardSidebar />);
+
+    expect(screen.queryByTestId('user-dashboard-link-admin')).not.toBeInTheDocument();
+  });
+
   it('links every dashboard destination when used outside the dashboard home', () => {
     render(<DashboardSidebar />);
 

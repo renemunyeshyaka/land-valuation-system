@@ -100,6 +100,45 @@ describe('Admin dashboard navigation query sync', () => {
     expect(screen.getByTestId('admin-nav-users')).toHaveAttribute('aria-current', 'page');
   });
 
+  it('sends a non-admin back to their own dashboard', async () => {
+    window.localStorage.setItem('user', JSON.stringify({ user_type: 'individual' }));
+
+    render(<AdminDashboard />);
+
+    await waitFor(() => {
+      expect(replaceMock).toHaveBeenCalledWith('/dashboard');
+    });
+  });
+
+  it('rejects a non-admin identified by the server profile', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: { first_name: 'Normal', last_name: 'User', email: 'user@example.com', user_type: 'individual' } }),
+    } as any);
+
+    render(<AdminDashboard />);
+
+    await waitFor(() => {
+      expect(replaceMock).toHaveBeenCalledWith('/dashboard');
+    });
+  });
+
+  it('keeps an admin on the admin dashboard', async () => {
+    window.localStorage.setItem('user', JSON.stringify({ user_type: 'admin' }));
+
+    render(<AdminDashboard />);
+
+    expect(await screen.findByTestId('admin-nav-overview')).toBeInTheDocument();
+    expect(replaceMock).not.toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('gives the admin a way back to where they came from', async () => {
+    render(<AdminDashboard />);
+
+    expect(await screen.findByTestId('dashboard-back')).toBeInTheDocument();
+  });
+
   it('updates URL query when selecting a nav tab', async () => {
     render(<AdminDashboard />);
 

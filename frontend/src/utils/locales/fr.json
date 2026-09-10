@@ -30,7 +30,8 @@
     "logout": "Déconnexion",
     "subtitle": "Tableau de Bord",
     "menu": "Menu du tableau de bord",
-    "analytics": "Analytiques"
+    "analytics": "Analytiques",
+    "adminDashboard": "Tableau de bord Admin"
   },
   "home": {
     "heroBadge": "Gazette Officielle du Rwanda 2025",

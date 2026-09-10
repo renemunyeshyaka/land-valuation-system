@@ -30,7 +30,8 @@
     "logout": "Logout",
     "subtitle": "User Dashboard",
     "menu": "Dashboard menu",
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "adminDashboard": "Admin Dashboard"
   },
   "home": {
     "heroBadge": "Official Rwanda Gazette 2025",

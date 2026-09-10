@@ -9,6 +9,7 @@ import { clearAuth } from '@/utils/tokenRefresh';
 import { refreshAccessToken } from '@/utils/tokenRefresh';
 import Footer from '@/components/Footer';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import DashboardBackButton from '@/components/DashboardBackButton';
 import UserManagement from '@/components/admin/UserManagement';
 import MarketplaceManagement from '@/components/admin/MarketplaceManagement';
 import PropertyListings from '@/components/admin/PropertyListings';
@@ -35,6 +36,16 @@ const getValidAdminTab = (rawTab: unknown): AdminTabKey => {
   return (ADMIN_NAV_KEYS as readonly string[]).includes(tab) ? (tab as AdminTabKey) : 'overview';
 };
 
+
+/**
+ * True only when a payload actually carries a role and that role is not admin.
+ * A payload without a role is treated as "unknown" so a missing field can never
+ * lock a real admin out of their own dashboard.
+ */
+function isNonAdmin(payload: any): boolean {
+  const role = String(payload?.user_type || payload?.userType || '').toLowerCase();
+  return role !== '' && role !== 'admin';
+}
 
 function AdminDashboard() {
   const { t } = useTranslation();
@@ -170,6 +181,10 @@ function AdminDashboard() {
               if (retryRes.ok) {
                 const retryPayload = await retryRes.json();
                 const retryData = retryPayload?.data || retryPayload;
+                if (isNonAdmin(retryData)) {
+                  router.replace('/dashboard');
+                  return;
+                }
                 setProfile(toDisplayName(retryData));
                 return;
               }
@@ -179,6 +194,11 @@ function AdminDashboard() {
         if (res.ok) {
           const payload = await res.json();
           const data = payload?.data || payload;
+          // Authoritative role check: the profile comes from the server.
+          if (isNonAdmin(data)) {
+            router.replace('/dashboard');
+            return;
+          }
           setProfile(toDisplayName(data));
         } else {
           const stored = getStoredUserProfile();
@@ -200,7 +220,9 @@ function AdminDashboard() {
     fetchProfile();
   }, [session]);
 
-  // Redirect to login if completely unauthenticated
+  // Redirect to login if completely unauthenticated, and to their own
+  // dashboard if the signed-in account is not an admin. The backend already
+  // refuses admin APIs to non-admins (403), this keeps the UI consistent.
   useEffect(() => {
     async function checkAuth() {
       const token = getAuthToken();
@@ -208,7 +230,18 @@ function AdminDashboard() {
         const refreshed = await refreshAccessToken();
         if (!refreshed) {
           router.replace('/auth/login');
+          return;
         }
+      }
+
+      if (typeof window === 'undefined') return;
+      try {
+        const raw = localStorage.getItem('user');
+        if (raw && isNonAdmin(JSON.parse(raw))) {
+          router.replace('/dashboard');
+        }
+      } catch {
+        // Malformed cache: fall through to the role check on the API response.
       }
     }
     // Only check after session has resolved (not during loading)
@@ -474,6 +507,8 @@ function AdminDashboard() {
 
         {/* Section Content */}
         <div className="flex-1 p-3 md:p-4 lg:p-6">
+          {/* Admins arrive here from their user dashboard, so they get a way back. */}
+          <DashboardBackButton />
           {renderSection()}
         </div>
         <Footer />

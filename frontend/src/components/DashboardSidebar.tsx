@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'react-i18next';
@@ -80,6 +80,19 @@ interface DashboardSidebarProps {
 export default function DashboardSidebar({ activeTab, onSelect }: DashboardSidebarProps) {
   const { t } = useTranslation();
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Admins get their way back to the admin dashboard from anywhere in the user
+  // dashboard. This is resolved after mount: localStorage does not exist on the
+  // server, so deciding during render would produce a hydration mismatch.
+  useEffect(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+      setIsAdmin(Boolean(raw) && JSON.parse(raw as string)?.user_type === 'admin');
+    } catch {
+      setIsAdmin(false);
+    }
+  }, []);
 
   const isActive = (key: DashboardTabKey) => {
     if (activeTab) {
@@ -165,6 +178,21 @@ export default function DashboardSidebar({ activeTab, onSelect }: DashboardSideb
             </Link>
           );
         })}
+
+        {isAdmin && (
+          <>
+            <div className="my-1 border-t border-gray-200" />
+            <Link
+              href="/admin/dashboard"
+              data-testid="user-dashboard-link-admin"
+              aria-current={(router.pathname || '') === '/admin/dashboard' ? 'page' : undefined}
+              className={itemClass((router.pathname || '') === '/admin/dashboard')}
+            >
+              <i className="fas fa-user-shield mr-2 w-4 text-center"></i>
+              {t('userNav.adminDashboard')}
+            </Link>
+          </>
+        )}
       </nav>
     </aside>
   );

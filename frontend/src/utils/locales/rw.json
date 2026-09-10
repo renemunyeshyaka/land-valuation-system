@@ -30,7 +30,8 @@
     "logout": "Sohoka",
     "subtitle": "Ikibaho cy'Umukoresha",
     "menu": "Menu y'ikibaho",
-    "analytics": "Isesengura"
+    "analytics": "Isesengura",
+    "adminDashboard": "Ikibaho cy'Ubuyobozi"
   },
   "home": {
     "heroBadge": "Gazeti ya Leta y'u Rwanda 2025",
