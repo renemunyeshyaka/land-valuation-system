@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import Footer from "../../components/Footer";
 import DashboardLayout from '../../components/DashboardLayout';
+import DashboardLoading from '../../components/DashboardLoading';
 
 /**
  * ANALYTICS DASHBOARD PAGE · Land Valuation System
@@ -129,11 +130,7 @@ const Analytics: React.FC = () => {
   };
 
   if (status === 'loading' || loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <i className="fas fa-spinner fa-spin text-4xl text-emerald-700"></i>
-      </div>
-    );
+    return <DashboardLoading />;
   }
 
   return (

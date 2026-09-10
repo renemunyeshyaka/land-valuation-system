@@ -275,11 +275,23 @@ function DashboardPropertiesPage() {
 
 	if (loading) {
 		return (
-			<div className="min-h-screen bg-gray-50 flex items-center justify-center">
-				<div className="text-center">
-					<div className="text-gray-600">Loading your properties...</div>
-				</div>
-			</div>
+			<>
+				<Head>
+					<title>My Properties | Dashboard</title>
+					<meta name="description" content="View, update, and delete your registered properties." />
+				</Head>
+
+				<DashboardNavbar />
+
+				<main className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+					<div className="max-w-6xl mx-auto">
+						<div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 md:gap-6">
+							<DashboardSidebar />
+							<div className="min-w-0 py-16 text-center text-gray-600">Loading your properties...</div>
+						</div>
+					</div>
+				</main>
+			</>
 		);
 	}
 

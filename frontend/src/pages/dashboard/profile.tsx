@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { fetchWithTokenRefresh, startTokenRefreshInterval, clearAuth } from '../../utils/tokenRefresh';
 import { getApiBaseUrl } from '../../utils/api';
 import DashboardLayout from '../../components/DashboardLayout';
+import DashboardLoading from '../../components/DashboardLoading';
 
 interface ProfileData {
   firstName: string;
@@ -522,11 +523,7 @@ const Profile: React.FC = () => {
   };
 
   if (status === 'loading' || userLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <i className="fas fa-spinner fa-spin text-4xl text-emerald-700"></i>
-      </div>
-    );
+    return <DashboardLoading />;
   }
 
   const adminControls = isAdmin ? (

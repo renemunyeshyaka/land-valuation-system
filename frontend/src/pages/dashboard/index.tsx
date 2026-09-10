@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import Footer from "../../components/Footer";
 import DashboardNavbar from '../../components/DashboardNavbar';
 import DashboardSidebar from '../../components/DashboardSidebar';
+import DashboardLoading from '../../components/DashboardLoading';
 import { useTranslation } from 'react-i18next';
 // Notification type for dashboard notifications
 interface DashboardNotification {
@@ -1225,14 +1226,7 @@ function Dashboard() {
     : false;
 
   if (loading || authRedirecting) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <i className="fas fa-spinner fa-spin text-3xl text-emerald-700"></i>
-          <p className="mt-3 text-sm text-gray-600">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
+    return <DashboardLoading message="Loading your dashboard..." />;
   }
 
   if (!user) {

@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import SubscriptionSelector from '../../components/SubscriptionSelector';
 import DashboardLayout from '../../components/DashboardLayout';
+import DashboardLoading from '../../components/DashboardLoading';
 
 const Subscription: React.FC = () => {
   const router = useRouter();
@@ -38,11 +39,7 @@ const Subscription: React.FC = () => {
   }, [router, status]);
 
   if (status === 'loading' || loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <i className="fas fa-spinner fa-spin text-4xl text-emerald-700"></i>
-      </div>
-    );
+    return <DashboardLoading />;
   }
 
   return (
